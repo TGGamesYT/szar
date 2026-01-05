@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:nwordpass"
+    },
+    "title": "Nig-",
+    "description": "Get an N-word pass",
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
