@@ -27,14 +27,9 @@ public class SzarClient implements ClientModInitializer {
                     });
                 }
         );
-        //EntityRendererRegistry.register(
-        //        Szar.NI,
-        //        NiggerEntityRenderer::new
-        //);
-
-        //EntityModelLayerRegistry.registerModelLayer(
-        //        EntityModelLayers.PLAYER,
-        //        BipedEntityModel::getTexturedModelData
-        //);
+        EntityRendererRegistry.register(
+                Szar.NiggerEntityType,
+                NiggerEntityRenderer::new
+        );
     }
 }

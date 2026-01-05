@@ -63,31 +63,30 @@ public class Szar implements ModInitializer {
                 new Identifier(MOD_ID, "fasz"),
                 new FaszItem(FASZ_BLOCK, new Item.Settings())
         );
-        Registry.register(
-                Registries.ITEM,
-                new Identifier(MOD_ID, "nwordpass"),
-                new NwordPassItem(new Item.Settings())
-        );
 
         ServerMessageDecoratorEvent.EVENT.register((player, message) -> CompletableFuture.completedFuture(
                 filterMessage(player, message)
         ));
 
-        final EntityType<NiggerEntity> NiggerEntityType =
-                Registry.register(
-                        Registries.ENTITY_TYPE,
-                        new Identifier("yourmodid", "wandering_npc"),
-                        FabricEntityTypeBuilder
-                                .create(SpawnGroup.CREATURE, NiggerEntity::new)
-                                .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
-                                .build()
-                );
         FabricDefaultAttributeRegistry.register(
                 NiggerEntityType,
                 NiggerEntity.createAttributes()
         );
     }
-
+public static final Item NWORD_PASS = Registry.register(
+                Registries.ITEM,
+                new Identifier(MOD_ID, "nwordpass"),
+                new NwordPassItem(new Item.Settings())
+        );
+    public static final EntityType<NiggerEntity> NiggerEntityType =
+                Registry.register(
+                        Registries.ENTITY_TYPE,
+                        new Identifier("szar", "nigger"),
+                        FabricEntityTypeBuilder
+                                .create(SpawnGroup.CREATURE, NiggerEntity::new)
+                                .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                                .build()
+                );
     private static final List<String> FORBIDDEN_WORDS = List.of(
             "nigger",
             "niger",

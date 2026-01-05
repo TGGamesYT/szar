@@ -1,5 +1,6 @@
 package dev.tggamesyt.szar;
 
+import dev.tggamesyt.szar.Szar;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
@@ -31,6 +32,6 @@ public class NiggerEntity extends PathAwareEntity {
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
-        this.dropItem(new NwordPassItem(new Item.Settings()));
+        this.dropItem(Szar.NWORD_PASS);
     }
 }
