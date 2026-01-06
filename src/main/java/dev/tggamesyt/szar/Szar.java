@@ -48,6 +48,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NWORD_PASS);
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.CANNABIS_ITEM);
+                        entries.add(Szar.WEED_ITEM);
                     })
                     .build()
     );
