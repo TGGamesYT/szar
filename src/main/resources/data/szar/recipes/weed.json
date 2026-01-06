@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smelting",
+  "ingredient": {
+    "item": "szar:cannabis"
+  },
+  "result": "szar:weed",
+  "experience": 0.67,
+  "cookingtime": 100
+}
