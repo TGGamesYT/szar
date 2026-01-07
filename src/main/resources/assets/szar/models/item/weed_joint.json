@@ -6,7 +6,7 @@
 	"overrides": [
 		{
 			"predicate": { "held": 1 },
-			"model": "szar:item/weed_join_3d"
+			"model": "szar:item/weed_joint_3d"
 		},
 		{
 			"predicate": { "using": 1 },
