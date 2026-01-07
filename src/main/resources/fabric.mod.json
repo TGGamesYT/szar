@@ -9,6 +9,7 @@
   "license": "All-Rights-Reserved",
   "icon": "assets/szar/icon.png",
   "environment": "*",
+  "accessWidener" : "szar.accesswidener",
   "entrypoints": {
     "fabric-datagen": [
       "dev.tggamesyt.szar.client.SzarDataGenerator"

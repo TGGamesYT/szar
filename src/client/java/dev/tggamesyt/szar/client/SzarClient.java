@@ -8,14 +8,19 @@ import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 public class SzarClient implements ClientModInitializer {
@@ -42,44 +47,75 @@ public class SzarClient implements ClientModInitializer {
                 Szar.CANNABIS_BLOCK,
                 RenderLayer.getCutout()
         );
-        WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient client = MinecraftClient.getInstance();
 
-            if (client.player != null && client.player.hasStatusEffect(Szar.DROG_EFFECT)) {
-                float time = client.player.age + client.getTickDelta();
-                float hue = (time * 0.01f) % 1f;
-                int rgb = MathHelper.hsvToRgb(hue, 1f, 1f);
+            if (client.player == null) return;
+            if (!client.player.hasStatusEffect(Szar.DROG_EFFECT)) return;
 
-                float alpha = 0.25f;
-                float r = ((rgb >> 16) & 0xFF) / 255f;
-                float g = ((rgb >> 8) & 0xFF) / 255f;
-                float b = (rgb & 0xFF) / 255f;
+            var effect = client.player.getStatusEffect(Szar.DROG_EFFECT);
+            int amplifier = effect.getAmplifier(); // 0 = level I
 
-                int width = client.getWindow().getFramebufferWidth();
-                int height = client.getWindow().getFramebufferHeight();
+            float level = amplifier + 1f;
+            float time = client.player.age + tickDelta;
 
-                RenderSystem.disableDepthTest();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
+            /* ───── Color speed (gentle ramp) ───── */
+            float speed = 0.015f + amplifier * 0.012f;
+            float hue = (time * speed) % 1.0f;
 
-                // ✅ Correct shader for 1.20.1 colored quads
-                RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            int rgb = MathHelper.hsvToRgb(hue, 0.95f, 1f);
 
-                BufferBuilder buffer = Tessellator.getInstance().getBuffer();
-                buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            /* ───── Alpha (mostly stable) ───── */
+            float pulse =
+                    (MathHelper.sin(time * (0.04f + amplifier * 0.015f)) + 1f) * 0.5f;
 
-                buffer.vertex(0, height, 0).color(r, g, b, alpha).next();
-                buffer.vertex(width, height, 0).color(r, g, b, alpha).next();
-                buffer.vertex(width, 0, 0).color(r, g, b, alpha).next();
-                buffer.vertex(0, 0, 0).color(r, g, b, alpha).next();
+            float alpha = MathHelper.clamp(
+                    0.20f + amplifier * 0.10f + pulse * 0.10f,
+                    0.20f,
+                    0.70f
+            );
 
-                Tessellator.getInstance().draw();
+            /* ───── Very subtle jitter ───── */
+            float jitter = 0.15f * amplifier;
+            float jitterX = (client.world.random.nextFloat() - 0.5f) * jitter;
+            float jitterY = (client.world.random.nextFloat() - 0.5f) * jitter;
 
-                RenderSystem.disableBlend();
-                RenderSystem.enableDepthTest();
+            int width = client.getWindow().getScaledWidth();
+            int height = client.getWindow().getScaledHeight();
+
+            int color =
+                    ((int)(alpha * 255) << 24)
+                            | (rgb & 0x00FFFFFF);
+
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+
+            drawContext.getMatrices().push();
+            drawContext.getMatrices().translate(jitterX, jitterY, 0);
+
+            drawContext.fill(0, 0, width, height, color);
+
+            drawContext.getMatrices().pop();
+
+            RenderSystem.disableBlend();
+        });
+
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player == null) return;
+
+            float scale = SmokeZoomHandler.getSmokeScale();
+            if (scale > 0.51f) { // only when smoking
+                client.inGameHud.spyglassScale = scale;
             }
         });
 
+        SmokeZoomHandler.register();
+        // In your mod initialization code
+        FabricModelPredicateProviderRegistry.register(Szar.WEED_JOINT_ITEM, new Identifier("held"),
+                (stack, world, entity, seed) -> {
+                    return entity != null && entity.getMainHandStack() == stack ? 1.0f : 0.0f;
+                });
 
     }
 }

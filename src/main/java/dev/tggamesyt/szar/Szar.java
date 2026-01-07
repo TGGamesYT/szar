@@ -1,5 +1,6 @@
 package dev.tggamesyt.szar;
 
+import dev.tggamesyt.szar.items.Joint;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
@@ -38,7 +39,7 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "nwordpacket");
     public static final ItemGroup SZAR_GROUP = Registry.register(
             Registries.ITEM_GROUP,
-            new Identifier("modid", "szar_group"),
+            new Identifier(MOD_ID, "szar_group"),
             FabricItemGroup.builder()
                     .displayName(Text.translatable("itemgroup.szar_group"))
                     .icon(() -> new ItemStack(Szar.CIGANYBLOCK)) // icon item
@@ -49,6 +50,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
+                        entries.add(Szar.WEED_JOINT_ITEM);
                     })
                     .build()
     );
@@ -102,6 +104,11 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "weed"),
             new Item(new Item.Settings())
+    );
+    public static final Item WEED_JOINT_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "weed_joint"),
+            new Joint(new Item.Settings())
     );
     public static final Item CIGANYBLOCK = Registry.register(
             Registries.ITEM,
