@@ -2,6 +2,7 @@ package dev.tggamesyt.szar;
 
 import dev.tggamesyt.szar.items.Joint;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -51,6 +52,16 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
+                        entries.add(Szar.NIGGERITE_INGOT);
+                        entries.add(Szar.NIGGERITE_SWORD);
+                        entries.add(Szar.NIGGERITE_AXE);
+                        entries.add(Szar.NIGGERITE_PICKAXE);
+                        entries.add(Szar.NIGGERITE_SHOVEL);
+                        entries.add(Szar.NIGGERITE_HOE);
+                        entries.add(Szar.NIGGERITE_HELMET);
+                        entries.add(Szar.NIGGERITE_CHESTPLATE);
+                        entries.add(Szar.NIGGERITE_LEGGINGS);
+                        entries.add(Szar.NIGGERITE_BOOTS);
                     })
                     .build()
     );
@@ -98,6 +109,97 @@ public class Szar implements ModInitializer {
             new BlockItem(
                     CANNABIS_BLOCK,
                     new Item.Settings()
+            )
+    );
+    public static final Item NIGGERITE_INGOT = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_ingot"),
+            new Item(new FabricItemSettings().fireproof())
+    );
+    public static final Item NIGGERITE_SWORD = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_sword"),
+            new SwordItem(
+                    NiggeriteMaterial.INSTANCE,
+                    4,
+                    -2.4F,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_AXE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_axe"),
+            new AxeItem(
+                    NiggeriteMaterial.INSTANCE,
+                    4,
+                    -2.4F,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_PICKAXE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_pickaxe"),
+            new PickaxeItem(
+                    NiggeriteMaterial.INSTANCE,
+                    4,
+                    -2.4F,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_HOE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_hoe"),
+            new HoeItem(
+                    NiggeriteMaterial.INSTANCE,
+                    4,
+                    -2.4F,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_SHOVEL = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_shovel"),
+            new ShovelItem(
+                    NiggeriteMaterial.INSTANCE,
+                    4,
+                    -2.4F,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_HELMET = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_helmet"),
+            new ArmorItem(
+                    NiggeriteArmorMaterial.INSTANCE,
+                    ArmorItem.Type.HELMET,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_CHESTPLATE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_chestplate"),
+            new ArmorItem(
+                    NiggeriteArmorMaterial.INSTANCE,
+                    ArmorItem.Type.CHESTPLATE,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_LEGGINGS = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_leggings"),
+            new ArmorItem(
+                    NiggeriteArmorMaterial.INSTANCE,
+                    ArmorItem.Type.LEGGINGS,
+                    new FabricItemSettings().fireproof()
+            )
+    );
+    public static final Item NIGGERITE_BOOTS = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_boots"),
+            new ArmorItem(
+                    NiggeriteArmorMaterial.INSTANCE,
+                    ArmorItem.Type.BOOTS,
+                    new FabricItemSettings().fireproof()
             )
     );
     public static final Item WEED_ITEM = Registry.register(

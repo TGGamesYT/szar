@@ -1,0 +1,16 @@
+{
+	"parent": "item/generated",
+	"textures": {
+		"layer0": "szar:item/weed_joint"
+	},
+	"overrides": [
+		{
+			"predicate": { "held": 1 },
+			"model": "szar:item/weed_joint_3d"
+		},
+		{
+			"predicate": { "using": 1 },
+			"model": "szar:item/weed_joint_held"
+		}
+	]
+}
