@@ -5,6 +5,9 @@ import net.minecraft.item.ArmorMaterial;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
+
+import static dev.tggamesyt.szar.Szar.MOD_ID;
 
 public class NiggeriteArmorMaterial implements ArmorMaterial {
 
@@ -40,7 +43,7 @@ public class NiggeriteArmorMaterial implements ArmorMaterial {
 
     @Override
     public String getName() {
-        return "mythril";
+        return MOD_ID + ":niggerite";
     }
 
     @Override

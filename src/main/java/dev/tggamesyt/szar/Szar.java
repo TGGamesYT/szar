@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.advancement.Advancement;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.TallPlantBlock;
@@ -34,6 +35,8 @@ public class Szar implements ModInitializer {
 
     public static final Block SZAR_BLOCK =
             new SzarBlock();
+    public static final Block NIGGERITEBLOCK =
+            new Block(AbstractBlock.Settings.copy(Blocks.NETHERITE_BLOCK));
     public static final Block FASZ_BLOCK =
             new FaszBlock();
     public static final Identifier NWORDPACKET =
@@ -49,6 +52,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.NWORD_PASS);
                         entries.add(Szar.NIGGER_SPAWNEGG);
+                        entries.add(Szar.GYPSY_SPAWNEGG);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
@@ -62,6 +66,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_CHESTPLATE);
                         entries.add(Szar.NIGGERITE_LEGGINGS);
                         entries.add(Szar.NIGGERITE_BOOTS);
+                        entries.add(Szar.NIGGERITE_BLOCK);
                     })
                     .build()
     );
@@ -73,6 +78,11 @@ public class Szar implements ModInitializer {
                 Registries.BLOCK,
                 new Identifier(MOD_ID, "cigany"),
                 SZAR_BLOCK
+        );
+        Registry.register(
+                Registries.BLOCK,
+                new Identifier(MOD_ID, "niggerite_block"),
+                NIGGERITEBLOCK
         );
 
 
@@ -89,6 +99,10 @@ public class Szar implements ModInitializer {
         FabricDefaultAttributeRegistry.register(
                 NiggerEntityType,
                 NiggerEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
+                GYPSY_ENTITY_TYPE,
+                GypsyEntity.createAttributes()
         );
     }
     public static final StatusEffect DROG_EFFECT = Registry.register(
@@ -217,6 +231,11 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "cigany"),
             new BlockItem(SZAR_BLOCK, new Item.Settings())
     );
+    public static final Item NIGGERITE_BLOCK = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "niggerite_block"),
+            new BlockItem(NIGGERITEBLOCK, new Item.Settings())
+    );
     public static final Item FASZITEM = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "fasz"),
@@ -236,6 +255,15 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+    public static final EntityType<GypsyEntity> GYPSY_ENTITY_TYPE =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "gypsy"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, GypsyEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final Item NIGGER_SPAWNEGG = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "nigger_spawn_egg"),
@@ -243,6 +271,16 @@ public class Szar implements ModInitializer {
                     NiggerEntityType,
                     0x964B00,
                     0x654321,
+                    new Item.Settings()
+            )
+    );
+    public static final Item GYPSY_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "gypsy_spawn_egg"),
+            new SpawnEggItem(
+                    GYPSY_ENTITY_TYPE,
+                    0x964B00,
+                    0xF1C27D,
                     new Item.Settings()
             )
     );

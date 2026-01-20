@@ -32,6 +32,6 @@ public class NiggerEntity extends PathAwareEntity {
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
-        this.dropItem(Szar.NWORD_PASS);
+        this.dropItem(Szar.NIGGERITE_INGOT);
     }
 }

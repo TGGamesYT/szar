@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "szar:niggerite_block"
+    }
+  ],
+  "result": {
+    "item": "szar:niggerite_ingot",
+    "count": 9
+  }
+}
