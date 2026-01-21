@@ -1,6 +1,6 @@
 package dev.tggamesyt.szar.client;
 
-import dev.tggamesyt.szar.items.Joint;
+import dev.tggamesyt.szar.Joint;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.item.ItemStack;
 

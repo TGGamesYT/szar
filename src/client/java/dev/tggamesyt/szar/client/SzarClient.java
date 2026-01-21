@@ -1,34 +1,32 @@
 package dev.tggamesyt.szar.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.tggamesyt.szar.NiggerEntity;
 import dev.tggamesyt.szar.Szar;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SzarClient implements ClientModInitializer {
-
+    private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();
     @Override
     public void onInitializeClient() {
         ClientPlayNetworking.registerGlobalReceiver(
-                Szar.NWORDPACKET,
+                Szar.TOTEMPACKET,
                 (client, handler, buf, responseSender) -> {
 
                     ItemStack stack = buf.readItemStack();
@@ -60,6 +58,7 @@ public class SzarClient implements ClientModInitializer {
 
             var effect = client.player.getStatusEffect(Szar.DROG_EFFECT);
             int amplifier = effect.getAmplifier(); // 0 = level I
+            if (amplifier > 2) {amplifier = 2;}
 
             float level = amplifier + 1f;
             float time = client.player.age + tickDelta;
@@ -104,6 +103,18 @@ public class SzarClient implements ClientModInitializer {
 
             RenderSystem.disableBlend();
         });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player == null) return;
+            if (!client.player.hasStatusEffect(Szar.DROG_EFFECT)) return;
+
+            var effect = client.player.getStatusEffect(Szar.DROG_EFFECT);
+            int amplifier = effect.getAmplifier();
+            float level = amplifier + 1f;
+            float chance = 0;
+            if (level > 6) {chance = 0.20f * (level-6);}
+            scrambleMovement(client, chance);
+        });
+
 
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient client = MinecraftClient.getInstance();
@@ -123,4 +134,63 @@ public class SzarClient implements ClientModInitializer {
                 });
 
     }
+    private static void scrambleMovement(MinecraftClient client, float chance) {
+        var options = client.options;
+        long window = client.getWindow().getHandle();
+        Random random = client.player.getRandom();
+
+        KeyBinding[] movementKeys = {
+                options.forwardKey,
+                options.backKey,
+                options.leftKey,
+                options.rightKey
+        };
+
+        /* ───── Clear logical movement every tick ───── */
+        for (KeyBinding key : movementKeys) {
+            KeyBinding.setKeyPressed(key.getDefaultKey(), false);
+        }
+
+        /* ───── Handle each movement key ───── */
+        for (KeyBinding key : movementKeys) {
+            InputUtil.Key bound = key.getDefaultKey();
+
+            if (bound.getCategory() != InputUtil.Type.KEYSYM) continue;
+
+            boolean physicallyDown =
+                    InputUtil.isKeyPressed(window, bound.getCode());
+
+            if (physicallyDown) {
+                /* ───── Key is held ───── */
+
+                // If first tick of press → decide direction
+                if (!activeScramble.containsKey(key)) {
+                    KeyBinding chosen = key;
+
+                    if (random.nextFloat() < chance) {
+                        do {
+                            chosen = movementKeys[random.nextInt(movementKeys.length)];
+                        } while (chosen == key);
+                    }
+
+                    activeScramble.put(key, chosen);
+                }
+
+                // Apply stored direction
+                KeyBinding result = activeScramble.get(key);
+                KeyBinding.setKeyPressed(result.getDefaultKey(), true);
+
+            } else {
+                /* ───── Key released ───── */
+                activeScramble.remove(key);
+            }
+        }
+    }
+    public enum MouseScrambleMode {
+        NONE,
+        INVERT_X,
+        INVERT_Y,
+        INVERT_BOTH
+    }
+
 }

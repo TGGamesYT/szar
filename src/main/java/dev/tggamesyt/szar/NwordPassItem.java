@@ -31,7 +31,7 @@ public class NwordPassItem extends Item {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeItemStack(stack);
 
-                ServerPlayNetworking.send(serverPlayer, Szar.NWORDPACKET, buf);
+                ServerPlayNetworking.send(serverPlayer, Szar.TOTEMPACKET, buf);
             }
             //world.sendEntityStatus(user, (byte) 35);
 
