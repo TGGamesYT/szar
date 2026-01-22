@@ -5,8 +5,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -19,28 +17,27 @@ import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 public class Szar implements ModInitializer {
 
     public static final String MOD_ID = "szar";
-
+    public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final Block NIGGERITEBLOCK =
@@ -112,14 +109,10 @@ public class Szar implements ModInitializer {
                 GYPSY_ENTITY_TYPE,
                 GypsyEntity.createAttributes()
         );
-        ServerTickEvents.END_WORLD_TICK.register(world -> {
-            for (var entity : world.getPlayers()) {
-                if (entity.getHealth() <= 0f) {
-                    tryDrugTotem(entity);
-                }
-            }
-        });
+        ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
     }
+    public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
+    public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
     public static final StatusEffect DROG_EFFECT = Registry.register(
             Registries.STATUS_EFFECT,
             new Identifier(MOD_ID, "drog"),
@@ -359,50 +352,4 @@ public class Szar implements ModInitializer {
                 .getProgress(advancement)
                 .isDone();
     }
-    public static boolean tryDrugTotem(PlayerEntity player) {
-        StatusEffectInstance effect = player.getStatusEffect(Szar.DROG_EFFECT);
-        if (effect == null || effect.getAmplifier() < 5) return false;
-
-        // Only trigger if holding Joint
-        ItemStack stack = player.getMainHandStack();
-        if (!(stack.getItem() instanceof Joint)) return false;
-
-        World world = player.getWorld();
-
-        // Prevent death
-        player.setHealth(1f);
-
-        // Clear negative effects
-        player.clearStatusEffects();
-
-        // Vanilla totem effects
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
-
-        // Sound
-        player.playSound(SoundEvents.ITEM_TOTEM_USE, 1f, 1f);
-
-        // Animation via packet
-        if (!world.isClient() && player instanceof ServerPlayerEntity serverPlayer) {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeItemStack(stack);
-            ServerPlayNetworking.send(serverPlayer, Szar.TOTEMPACKET, buf);
-        }
-
-        // Reduce drug level safely
-        int duration = effect.getDuration();
-        int amplifier = effect.getAmplifier();
-        player.addStatusEffect(new StatusEffectInstance(
-                Szar.DROG_EFFECT,
-                duration,
-                Math.max(0, amplifier - 2),
-                false,
-                true,
-                true
-        ));
-
-        return true;
-    }
-
 }
