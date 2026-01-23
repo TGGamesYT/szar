@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.AbstractBlock;
@@ -28,6 +29,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
@@ -155,6 +157,21 @@ public class Szar implements ModInitializer {
                 1,
                 1,
                 CHEMICAL_WORKBENCH
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                1, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 2),
+                                    new ItemStack(Items.GUNPOWDER, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
         );
 
         ServerMessageDecoratorEvent.EVENT.register((player, message) -> CompletableFuture.completedFuture(
