@@ -1,5 +1,6 @@
 package dev.tggamesyt.szar;
 
+import com.google.common.collect.ImmutableSet;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -8,6 +9,7 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -20,10 +22,14 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +52,8 @@ public class Szar implements ModInitializer {
             new FaszBlock();
     public static final Identifier TOTEMPACKET =
             new Identifier(MOD_ID, "nwordpacket");
+    public static PointOfInterestType CHEMICAL_WORKBENCH_POI;
+    public static VillagerProfession DROG_DEALER;
     public static final ItemGroup SZAR_GROUP = Registry.register(
             Registries.ITEM_GROUP,
             new Identifier(MOD_ID, "szar_group"),
@@ -96,6 +104,58 @@ public class Szar implements ModInitializer {
                 new Identifier(MOD_ID, "fasz"),
                 FASZ_BLOCK
         );
+        Registry.register(
+                Registries.BLOCK,
+                new Identifier(MOD_ID, "chemical_workbench"),
+                CHEMICAL_WORKBENCH
+        );
+
+        Registry.register(
+                Registries.ITEM,
+                new Identifier(MOD_ID, "chemical_workbench"),
+                new BlockItem(CHEMICAL_WORKBENCH, new FabricItemSettings())
+        );
+        CHEMICAL_WORKBENCH_POI = Registry.register(
+                Registries.POINT_OF_INTEREST_TYPE,
+                new Identifier(MOD_ID, "chemical_workbench_poi"),
+                new PointOfInterestType(
+                        ImmutableSet.copyOf(
+                                CHEMICAL_WORKBENCH
+                                        .getStateManager()
+                                        .getStates()
+                        ),
+                        1, // max tickets
+                        1  // search distance
+                )
+        );
+        DROG_DEALER = Registry.register(
+                Registries.VILLAGER_PROFESSION,
+                new Identifier(MOD_ID, "drog_dealer"),
+                new VillagerProfession(
+                        "drog_dealer",
+                        entry -> entry.matchesKey(
+                                RegistryKey.of(
+                                        Registries.POINT_OF_INTEREST_TYPE.getKey(),
+                                        new Identifier(MOD_ID, "chemical_workbench_poi")
+                                )
+                        ),
+                        entry -> entry.matchesKey(
+                                RegistryKey.of(
+                                        Registries.POINT_OF_INTEREST_TYPE.getKey(),
+                                        new Identifier(MOD_ID, "chemical_workbench_poi")
+                                )
+                        ),
+                        ImmutableSet.of(),
+                        ImmutableSet.of(),
+                        SoundEvents.ENTITY_VILLAGER_WORK_CLERIC
+                )
+        );
+        PointOfInterestHelper.register(
+                new Identifier(MOD_ID, "chemical_workbench_poi"),
+                1,
+                1,
+                CHEMICAL_WORKBENCH
+        );
 
         ServerMessageDecoratorEvent.EVENT.register((player, message) -> CompletableFuture.completedFuture(
                 filterMessage(player, message)
@@ -111,6 +171,8 @@ public class Szar implements ModInitializer {
         );
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
     }
+    public static final Block CHEMICAL_WORKBENCH =
+            new Block(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS));
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
     public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
     public static final StatusEffect DROG_EFFECT = Registry.register(
