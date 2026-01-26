@@ -22,5 +22,7 @@
   "item.szar.niggerite_boots":  "Niggerite Boots",
   "item.szar.niggerite_helmet":  "Niggerite Helmet",
   "death.attack.heart_attack": "%1$s got a heart attack",
-  "death.attack.drog_overdose": "%1$s got a drog overdose"
+  "death.attack.drog_overdose": "%1$s got a drog overdose",
+  "block.szar.chemical_workbench": "Chemical Workbench",
+  "entity.minecraft.villager.drog_dealer": "Drog dealer"
 }

@@ -24,6 +24,7 @@ import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -54,8 +55,24 @@ public class Szar implements ModInitializer {
             new FaszBlock();
     public static final Identifier TOTEMPACKET =
             new Identifier(MOD_ID, "nwordpacket");
-    public static PointOfInterestType CHEMICAL_WORKBENCH_POI;
-    public static VillagerProfession DROG_DEALER;
+    public static final Block CHEMICAL_WORKBENCH =
+            new Block(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS));
+    public static final RegistryKey<PointOfInterestType> CHEMICAL_WORKBENCH_POI_KEY =
+            RegistryKey.of(RegistryKeys.POINT_OF_INTEREST_TYPE, new Identifier(MOD_ID, "chemical_workbench_poi"));
+    public static PointOfInterestType CHEMICAL_WORKBENCH_POI =
+            PointOfInterestHelper.register(new Identifier(MOD_ID, "chemical_workbench_poi"), 1, 1, CHEMICAL_WORKBENCH);
+    public static VillagerProfession DROG_DEALER = Registry.register(
+            Registries.VILLAGER_PROFESSION,
+            new Identifier(MOD_ID, "drog_dealer"),
+            new VillagerProfession(
+                    "drog_dealer",
+                    entry -> entry.matchesKey(CHEMICAL_WORKBENCH_POI_KEY),
+                    entry -> entry.matchesKey(CHEMICAL_WORKBENCH_POI_KEY),
+                    ImmutableSet.of(),
+                    ImmutableSet.of(),
+                    SoundEvents.ENTITY_VILLAGER_WORK_CLERIC
+            )
+    );
     public static final ItemGroup SZAR_GROUP = Registry.register(
             Registries.ITEM_GROUP,
             new Identifier(MOD_ID, "szar_group"),
@@ -82,6 +99,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_LEGGINGS);
                         entries.add(Szar.NIGGERITE_BOOTS);
                         entries.add(Szar.NIGGERITE_BLOCK);
+                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
                     })
                     .build()
     );
@@ -111,52 +129,20 @@ public class Szar implements ModInitializer {
                 new Identifier(MOD_ID, "chemical_workbench"),
                 CHEMICAL_WORKBENCH
         );
-
-        Registry.register(
-                Registries.ITEM,
-                new Identifier(MOD_ID, "chemical_workbench"),
-                new BlockItem(CHEMICAL_WORKBENCH, new FabricItemSettings())
-        );
-        CHEMICAL_WORKBENCH_POI = Registry.register(
-                Registries.POINT_OF_INTEREST_TYPE,
-                new Identifier(MOD_ID, "chemical_workbench_poi"),
-                new PointOfInterestType(
-                        ImmutableSet.copyOf(
-                                CHEMICAL_WORKBENCH
-                                        .getStateManager()
-                                        .getStates()
-                        ),
-                        1, // max tickets
-                        1  // search distance
-                )
-        );
-        DROG_DEALER = Registry.register(
-                Registries.VILLAGER_PROFESSION,
-                new Identifier(MOD_ID, "drog_dealer"),
-                new VillagerProfession(
-                        "drog_dealer",
-                        entry -> entry.matchesKey(
-                                RegistryKey.of(
-                                        Registries.POINT_OF_INTEREST_TYPE.getKey(),
-                                        new Identifier(MOD_ID, "chemical_workbench_poi")
-                                )
-                        ),
-                        entry -> entry.matchesKey(
-                                RegistryKey.of(
-                                        Registries.POINT_OF_INTEREST_TYPE.getKey(),
-                                        new Identifier(MOD_ID, "chemical_workbench_poi")
-                                )
-                        ),
-                        ImmutableSet.of(),
-                        ImmutableSet.of(),
-                        SoundEvents.ENTITY_VILLAGER_WORK_CLERIC
-                )
-        );
-        PointOfInterestHelper.register(
-                new Identifier(MOD_ID, "chemical_workbench_poi"),
-                1,
-                1,
-                CHEMICAL_WORKBENCH
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                1, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 3),
+                                    new ItemStack(Items.PAPER, 6),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
         );
         TradeOfferHelper.registerVillagerOffers(
                 DROG_DEALER,
@@ -164,8 +150,83 @@ public class Szar implements ModInitializer {
                 factories -> {
                     factories.add((entity, random) ->
                             new TradeOffer(
-                                    new ItemStack(Items.EMERALD, 2),
-                                    new ItemStack(Items.GUNPOWDER, 1),
+                                    new ItemStack(Items.SUGAR_CANE, 6),
+                                    new ItemStack(Items.EMERALD, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                2, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 10),
+                                    new ItemStack(CANNABIS_ITEM, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                3, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 15),
+                                    new ItemStack(WEED_ITEM, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                3, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 64),
+                                    new ItemStack(WEED_JOINT_ITEM, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                4, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(Items.EMERALD, 4),
+                                    new ItemStack(Items.CAMPFIRE, 1),
+                                    12,   // max uses
+                                    2,    // villager XP
+                                    0.05f // price multiplier
+                            )
+                    );
+                }
+        );
+        TradeOfferHelper.registerVillagerOffers(
+                DROG_DEALER,
+                5, // villager level
+                factories -> {
+                    factories.add((entity, random) ->
+                            new TradeOffer(
+                                    new ItemStack(NIGGERITE_INGOT, 10),
+                                    new ItemStack(WEED_JOINT_ITEM, 1),
                                     12,   // max uses
                                     2,    // villager XP
                                     0.05f // price multiplier
@@ -188,8 +249,6 @@ public class Szar implements ModInitializer {
         );
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
     }
-    public static final Block CHEMICAL_WORKBENCH =
-            new Block(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS));
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
     public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
     public static final StatusEffect DROG_EFFECT = Registry.register(
@@ -197,6 +256,11 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "drog"),
             new DrogEffect()
     );
+    public static final Item CHEMICAL_WORKBENCH_ITEM = Registry.register(
+    Registries.ITEM,
+            new Identifier(MOD_ID, "chemical_workbench"),
+                new BlockItem(CHEMICAL_WORKBENCH, new FabricItemSettings())
+            );
     public static final Block CANNABIS_BLOCK = Registry.register(
             Registries.BLOCK,
             new Identifier(MOD_ID, "cannabis"),
