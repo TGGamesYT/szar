@@ -1,6 +1,5 @@
 {
   "variants": {
-    "half=lower": { "model": "szar:block/cannabis_bottom" },
-    "half=upper": { "model": "szar:block/cannabis" }
+    "": { "model": "szar:block/cannabis" }
   }
 }

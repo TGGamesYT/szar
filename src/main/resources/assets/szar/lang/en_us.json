@@ -24,5 +24,7 @@
   "death.attack.heart_attack": "%1$s got a heart attack",
   "death.attack.drog_overdose": "%1$s got a drog overdose",
   "block.szar.chemical_workbench": "Chemical Workbench",
-  "entity.minecraft.villager.drog_dealer": "Drog dealer"
+  "entity.minecraft.villager.drog_dealer": "Drog dealer",
+  "entity.szar.islam_terrorist": "Islam Terrorist",
+  "item.szar.terrorist_spawn_egg": "Islam Terrorist Spawn Egg"
 }

@@ -41,10 +41,18 @@ public class SzarClient implements ClientModInitializer {
                 Szar.NiggerEntityType,
                 NiggerEntityRenderer::new
         );
+        EntityRendererRegistry.register(
+                Szar.TERRORIST_ENTITY_TYPE,
+                TerroristEntityRenderer::new
+        );
 
         EntityRendererRegistry.register(
                 Szar.GYPSY_ENTITY_TYPE,
                 GypsyEntityRenderer::new
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                Szar.TALL_CANNABIS_BLOCK,
+                RenderLayer.getCutout()
         );
         BlockRenderLayerMap.INSTANCE.putBlock(
                 Szar.CANNABIS_BLOCK,

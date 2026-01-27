@@ -2,6 +2,8 @@ package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -12,10 +14,7 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
 import net.minecraft.advancement.Advancement;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.TallPlantBlock;
+import net.minecraft.block.*;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
@@ -32,6 +31,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,6 +73,33 @@ public class Szar implements ModInitializer {
                     SoundEvents.ENTITY_VILLAGER_WORK_CLERIC
             )
     );
+    public static final EntityType<NiggerEntity> NiggerEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "nigger"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, NiggerEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<GypsyEntity> GYPSY_ENTITY_TYPE =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "gypsy"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, GypsyEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<IslamTerrorist> TERRORIST_ENTITY_TYPE =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "islam_terrorist"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, IslamTerrorist::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final ItemGroup SZAR_GROUP = Registry.register(
             Registries.ITEM_GROUP,
             new Identifier(MOD_ID, "szar_group"),
@@ -85,6 +112,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NWORD_PASS);
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.GYPSY_SPAWNEGG);
+                        entries.add(Szar.TERRORIST_SPAWNEGG);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
@@ -152,7 +180,7 @@ public class Szar implements ModInitializer {
                             new TradeOffer(
                                     new ItemStack(Items.SUGAR_CANE, 6),
                                     new ItemStack(Items.EMERALD, 1),
-                                    12,   // max uses
+                                    10,   // max uses
                                     2,    // villager XP
                                     0.05f // price multiplier
                             )
@@ -167,8 +195,8 @@ public class Szar implements ModInitializer {
                             new TradeOffer(
                                     new ItemStack(Items.EMERALD, 10),
                                     new ItemStack(CANNABIS_ITEM, 1),
-                                    12,   // max uses
-                                    2,    // villager XP
+                                    20,   // max uses
+                                    4,    // villager XP
                                     0.05f // price multiplier
                             )
                     );
@@ -182,8 +210,8 @@ public class Szar implements ModInitializer {
                             new TradeOffer(
                                     new ItemStack(Items.EMERALD, 15),
                                     new ItemStack(WEED_ITEM, 1),
-                                    12,   // max uses
-                                    2,    // villager XP
+                                    16,   // max uses
+                                    8,    // villager XP
                                     0.05f // price multiplier
                             )
                     );
@@ -197,8 +225,8 @@ public class Szar implements ModInitializer {
                             new TradeOffer(
                                     new ItemStack(Items.EMERALD, 64),
                                     new ItemStack(WEED_JOINT_ITEM, 1),
-                                    12,   // max uses
-                                    2,    // villager XP
+                                    5,   // max uses
+                                    12,    // villager XP
                                     0.05f // price multiplier
                             )
                     );
@@ -212,8 +240,8 @@ public class Szar implements ModInitializer {
                             new TradeOffer(
                                     new ItemStack(Items.EMERALD, 4),
                                     new ItemStack(Items.CAMPFIRE, 1),
-                                    12,   // max uses
-                                    2,    // villager XP
+                                    16,   // max uses
+                                    10,    // villager XP
                                     0.05f // price multiplier
                             )
                     );
@@ -247,7 +275,25 @@ public class Szar implements ModInitializer {
                 GYPSY_ENTITY_TYPE,
                 GypsyEntity.createAttributes()
         );
+        /*FabricDefaultAttributeRegistry.register(
+                TERRORIST_ENTITY_TYPE,
+                IslamTerrorist.createAttributes()
+        );*/
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(
+                        BiomeKeys.DESERT,
+                        BiomeKeys.BADLANDS,
+                        BiomeKeys.ERODED_BADLANDS,
+                        BiomeKeys.WOODED_BADLANDS
+                ),
+                SpawnGroup.MONSTER,
+                TERRORIST_ENTITY_TYPE,
+                20, // weight (lower = rarer)
+                1,  // min group size
+                1   // max group size
+        );
+
     }
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
     public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
@@ -261,11 +307,19 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "chemical_workbench"),
                 new BlockItem(CHEMICAL_WORKBENCH, new FabricItemSettings())
             );
+    public static final Block TALL_CANNABIS_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "tall_cannabis"),
+            new TallPlantBlock(
+                    FabricBlockSettings.copyOf(Blocks.LARGE_FERN)
+            )
+    );
     public static final Block CANNABIS_BLOCK = Registry.register(
             Registries.BLOCK,
             new Identifier(MOD_ID, "cannabis"),
-            new TallPlantBlock(
-                    FabricBlockSettings.copyOf(Blocks.LARGE_FERN)
+            new CannabisBlock(
+                    FabricBlockSettings.copyOf(Blocks.FERN)
+                            .ticksRandomly()
             )
     );
     public static final Item CANNABIS_ITEM = Registry.register(
@@ -397,24 +451,6 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "nwordpass"),
             new NwordPassItem(new Item.Settings())
     );
-    public static final EntityType<NiggerEntity> NiggerEntityType =
-            Registry.register(
-                    Registries.ENTITY_TYPE,
-                    new Identifier(MOD_ID, "nigger"),
-                    FabricEntityTypeBuilder
-                            .create(SpawnGroup.CREATURE, NiggerEntity::new)
-                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
-                            .build()
-            );
-    public static final EntityType<GypsyEntity> GYPSY_ENTITY_TYPE =
-            Registry.register(
-                    Registries.ENTITY_TYPE,
-                    new Identifier(MOD_ID, "gypsy"),
-                    FabricEntityTypeBuilder
-                            .create(SpawnGroup.CREATURE, GypsyEntity::new)
-                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
-                            .build()
-            );
     public static final Item NIGGER_SPAWNEGG = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "nigger_spawn_egg"),
@@ -435,7 +471,16 @@ public class Szar implements ModInitializer {
                     new Item.Settings()
             )
     );
-
+    public static final Item TERRORIST_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "terrorist_spawn_egg"),
+            new SpawnEggItem(
+                    TERRORIST_ENTITY_TYPE,
+                    0xFF0000,
+                    0x8B0000,
+                    new Item.Settings()
+            )
+    );
     private static final List<String> FORBIDDEN_WORDS = List.of(
             "nigger",
             "niger",
