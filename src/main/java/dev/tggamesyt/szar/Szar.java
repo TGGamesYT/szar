@@ -5,6 +5,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
@@ -20,18 +21,23 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.*;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.*;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.collection.DataPool;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.gen.feature.*;
+import net.minecraft.world.gen.placementmodifier.BiomePlacementModifier;
+import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
+import net.minecraft.world.gen.placementmodifier.SquarePlacementModifier;
+import net.minecraft.world.gen.stateprovider.BlockStateProvider;
+import net.minecraft.world.gen.stateprovider.WeightedBlockStateProvider;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -275,10 +281,10 @@ public class Szar implements ModInitializer {
                 GYPSY_ENTITY_TYPE,
                 GypsyEntity.createAttributes()
         );
-        /*FabricDefaultAttributeRegistry.register(
+        FabricDefaultAttributeRegistry.register(
                 TERRORIST_ENTITY_TYPE,
                 IslamTerrorist.createAttributes()
-        );*/
+        );
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
         BiomeModifications.addSpawn(
                 BiomeSelectors.includeByKey(
@@ -293,8 +299,52 @@ public class Szar implements ModInitializer {
                 1,  // min group size
                 1   // max group size
         );
-
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(
+                        BiomeKeys.JUNGLE,
+                        BiomeKeys.BAMBOO_JUNGLE,
+                        BiomeKeys.SPARSE_JUNGLE
+                ),
+                SpawnGroup.MONSTER,
+                NiggerEntityType,
+                20, // weight (lower = rarer)
+                1,  // min group size
+                2   // max group size
+        );
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(
+                        BiomeKeys.JUNGLE,
+                        BiomeKeys.BAMBOO_JUNGLE,
+                        BiomeKeys.SPARSE_JUNGLE
+                ),
+                SpawnGroup.MONSTER,
+                GYPSY_ENTITY_TYPE,
+                20, // weight (lower = rarer)
+                1,  // min group size
+                5   // max group size
+        );
     }
+    BlockStateProvider provider =
+            new WeightedBlockStateProvider(
+                    DataPool.<BlockState>builder()
+                            .add(Szar.CANNABIS_BLOCK.getDefaultState(), 8)
+                            .add(Szar.TALL_CANNABIS_BLOCK.getDefaultState(), 1)
+                            .build()
+            );
+
+    ConfiguredFeature<RandomPatchFeatureConfig, ?> patch =
+            new ConfiguredFeature<>(
+                    Feature.RANDOM_PATCH,
+                    new RandomPatchFeatureConfig(
+                            32,
+                            6,
+                            3,
+                            PlacedFeatures.createEntry(
+                                    Feature.SIMPLE_BLOCK,
+                                    new SimpleBlockFeatureConfig(provider)
+                            )
+                    )
+            );
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
     public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
     public static final StatusEffect DROG_EFFECT = Registry.register(
