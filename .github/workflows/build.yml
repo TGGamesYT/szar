@@ -23,7 +23,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: 9.6  # or whatever version your mod uses
+          gradle-version: 9.2.1  # or whatever version your mod uses
 
       - name: Build mod
         run: gradle build
