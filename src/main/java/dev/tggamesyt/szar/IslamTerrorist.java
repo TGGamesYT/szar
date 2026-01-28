@@ -22,6 +22,7 @@ import java.util.*;
 
 public class IslamTerrorist extends PathAwareEntity {
 
+    public static boolean arrestable = false;
     private int BlowUpCooldown = 0;
     private int panicTicks = 0;
     private UUID fleeingFrom = null;
@@ -186,6 +187,7 @@ public class IslamTerrorist extends PathAwareEntity {
 
             if (mob.distanceTo(target) < 1.3) {
                 mob.triggerExposion(target);
+                arrestable = true;
             }
         }
     }

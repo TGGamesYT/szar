@@ -19,9 +19,11 @@ import net.minecraft.block.*;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.SpawnRestriction;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.*;
 import net.minecraft.registry.*;
+import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -30,8 +32,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DataPool;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.feature.*;
 import net.minecraft.world.gen.placementmodifier.BiomePlacementModifier;
 import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
@@ -88,6 +92,15 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+    public static final EntityType<PoliceEntity> PoliceEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "police"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, PoliceEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final EntityType<GypsyEntity> GYPSY_ENTITY_TYPE =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -119,6 +132,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.GYPSY_SPAWNEGG);
                         entries.add(Szar.TERRORIST_SPAWNEGG);
+                        entries.add(Szar.POLICE_SPAWNEGG);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
@@ -278,12 +292,22 @@ public class Szar implements ModInitializer {
                 NiggerEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                PoliceEntityType,
+                NiggerEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 GYPSY_ENTITY_TYPE,
                 GypsyEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
                 TERRORIST_ENTITY_TYPE,
                 IslamTerrorist.createAttributes()
+        );
+        SpawnRestriction.register(
+                Szar.PoliceEntityType,
+                SpawnRestriction.Location.ON_GROUND,      // spawn on solid blocks
+                Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, // avoids leaves
+                PoliceEntity::canSpawnHere                  // your custom condition
         );
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
         BiomeModifications.addSpawn(
@@ -323,27 +347,21 @@ public class Szar implements ModInitializer {
                 1,  // min group size
                 5   // max group size
         );
-    }
-    BlockStateProvider provider =
-            new WeightedBlockStateProvider(
-                    DataPool.<BlockState>builder()
-                            .add(Szar.CANNABIS_BLOCK.getDefaultState(), 8)
-                            .add(Szar.TALL_CANNABIS_BLOCK.getDefaultState(), 1)
-                            .build()
-            );
+        BiomeModifications.addFeature(
+                BiomeSelectors.tag(BiomeTags.IS_JUNGLE),
+                GenerationStep.Feature.VEGETAL_DECORATION,
+                RegistryKey.of(
+                        RegistryKeys.PLACED_FEATURE,
+                        new Identifier("szar", "cannabis_patch")
+                )
+        );
 
-    ConfiguredFeature<RandomPatchFeatureConfig, ?> patch =
-            new ConfiguredFeature<>(
-                    Feature.RANDOM_PATCH,
-                    new RandomPatchFeatureConfig(
-                            32,
-                            6,
-                            3,
-                            PlacedFeatures.createEntry(
-                                    Feature.SIMPLE_BLOCK,
-                                    new SimpleBlockFeatureConfig(provider)
-                            )
-                    )
+    }
+    public static final Feature<CannabisPatchFeatureConfig> CANNABIS_PATCH =
+            Registry.register(
+                    Registries.FEATURE,
+                    new Identifier("szar", "cannabis_patch"),
+                    new CannabisPatchFeature(CannabisPatchFeatureConfig.CODEC)
             );
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
     public static final Map<UUID, Boolean> PLAYER_ADDICTION_LEVEL = new HashMap<>();
@@ -352,6 +370,7 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "drog"),
             new DrogEffect()
     );
+    public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier("szar", "arrested"), new ArrestedEffect());
     public static final Item CHEMICAL_WORKBENCH_ITEM = Registry.register(
     Registries.ITEM,
             new Identifier(MOD_ID, "chemical_workbench"),
@@ -508,6 +527,16 @@ public class Szar implements ModInitializer {
                     NiggerEntityType,
                     0x964B00,
                     0x654321,
+                    new Item.Settings()
+            )
+    );
+    public static final Item POLICE_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "police_spawn_egg"),
+            new SpawnEggItem(
+                    PoliceEntityType,
+                    0x0000FF,
+                    0xFF0000,
                     new Item.Settings()
             )
     );

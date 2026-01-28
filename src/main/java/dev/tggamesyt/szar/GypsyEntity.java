@@ -20,6 +20,8 @@ import java.util.*;
 
 public class GypsyEntity extends PathAwareEntity {
 
+    public static boolean arrestable = false;
+
     private final DefaultedList<ItemStack> stolenItems = DefaultedList.of();
     private final Set<UUID> stolenFromPlayers = new HashSet<>();
 
@@ -247,6 +249,7 @@ public class GypsyEntity extends PathAwareEntity {
 
             if (mob.distanceTo(target) < 1.3) {
                 mob.trySteal(target);
+                arrestable = true;
             }
         }
     }

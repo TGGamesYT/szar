@@ -42,6 +42,10 @@ public class SzarClient implements ClientModInitializer {
                 NiggerEntityRenderer::new
         );
         EntityRendererRegistry.register(
+                Szar.PoliceEntityType,
+                PoliceEntityRenderer::new
+        );
+        EntityRendererRegistry.register(
                 Szar.TERRORIST_ENTITY_TYPE,
                 TerroristEntityRenderer::new
         );

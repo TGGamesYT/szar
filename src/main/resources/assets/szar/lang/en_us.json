@@ -26,5 +26,8 @@
   "block.szar.chemical_workbench": "Chemical Workbench",
   "entity.minecraft.villager.drog_dealer": "Drog dealer",
   "entity.szar.islam_terrorist": "Islam Terrorist",
-  "item.szar.terrorist_spawn_egg": "Islam Terrorist Spawn Egg"
+  "item.szar.terrorist_spawn_egg": "Islam Terrorist Spawn Egg",
+  "entity.szar.police": "Police Man",
+  "item.szar.police_spawn_egg": "Police Man Spawn Egg",
+  "effect.szar.arrested": "Arrested"
 }
