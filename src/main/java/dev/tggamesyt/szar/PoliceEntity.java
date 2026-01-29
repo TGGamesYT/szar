@@ -49,6 +49,11 @@ public class PoliceEntity extends PathAwareEntity {
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
-        this.dropItem(Items.DEBUG_STICK);
+        this.dropItem(Szar.KEY_ITEM);
+        int randomnum = this.random.nextInt(20);
+        if (randomnum == 6 || randomnum == 7) { // SIX OR SEVEENNN (1 in 10)
+            this.dropItem(Items.DEBUG_STICK);
+        }
     }
+
 }

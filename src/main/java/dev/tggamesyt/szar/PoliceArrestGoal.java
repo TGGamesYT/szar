@@ -25,35 +25,55 @@ public class PoliceArrestGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        // 1️⃣ Find nearest arrestable mob
-        List<? extends MobEntity> nearby = police.getWorld().getEntitiesByClass(
+        target = null;
+
+        // 1️⃣ Find nearest arrestable mob (NOT police)
+        List<? extends MobEntity> arrestables = police.getWorld().getEntitiesByClass(
                 MobEntity.class,
                 police.getBoundingBox().expand(16),
-                mob -> isArrestable(mob)
+                mob -> mob != police && isArrestable(mob)
         );
 
-        if (!nearby.isEmpty()) {
-            target = nearby.get(0);
-            return true;
+        if (!arrestables.isEmpty()) {
+            target = police.getWorld().getClosestEntity(
+                    arrestables,
+                    TargetPredicate.DEFAULT,
+                    police,
+                    police.getX(),
+                    police.getY(),
+                    police.getZ()
+            );
+            return target != null;
         }
 
-        // 2️⃣ Find entities attacking villagers or police
-        List<LivingEntity> possibleTargets = police.getWorld().getEntitiesByClass(
+        // 2️⃣ Find actual criminals (players or mobs attacking protected entities)
+        List<LivingEntity> criminals = police.getWorld().getEntitiesByClass(
                 LivingEntity.class,
                 police.getBoundingBox().expand(16),
-                entity -> isAttackingProtected(entity)
+                entity -> entity != police && isAttackingProtected(entity)
         );
 
-        if (!possibleTargets.isEmpty()) {
-            target = possibleTargets.get(0);
-            return true;
+        if (!criminals.isEmpty()) {
+            target = police.getWorld().getClosestEntity(
+                    criminals,
+                    TargetPredicate.DEFAULT,
+                    police,
+                    police.getX(),
+                    police.getY(),
+                    police.getZ()
+            );
+            return target != null;
         }
 
         return false;
     }
 
+
     @Override
     public void start() {
+        if (target == null || !target.isAlive()) {
+            return;
+        }
         police.getNavigation().startMovingTo(target, 1.2D);
     }
 
@@ -93,28 +113,25 @@ public class PoliceArrestGoal extends Goal {
     }
 
     private boolean isArrestable(MobEntity mob) {
-        try {
-            return mob.getClass().getField("arrestable").getBoolean(null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            return false;
-        }
+        if (mob == police) return false;
+        return mob instanceof Arrestable arrestable && arrestable.isArrestable();
     }
 
+
     private boolean isAttackingProtected(LivingEntity entity) {
-        // Check if entity is currently attacking a villager or police
-        if (entity instanceof MobEntity mob) {
-            LivingEntity targetEntity = mob.getTarget();
-            if (targetEntity instanceof PlayerEntity player) {
-                return false; // optional: ignore if player attacking non-protected
-            }
-            return targetEntity instanceof MobEntity protectedEntity &&
-                    (protectedEntity instanceof PathAwareEntity p && p.getClass() == police.getClass()
-                            || protectedEntity.getType().getSpawnGroup().isPeaceful());
-        } else if (entity instanceof PlayerEntity) {
-            // Check if player recently attacked villager or police
-            // You may need to track recent attacks in an event listener
-            return false; // placeholder, can be implemented via attack events
+        if (entity == police) return false;
+        if (entity instanceof PlayerEntity player) {
+            long lastCrime = player.getDataTracker().get(Szar.LAST_CRIME_TICK);
+            return police.getWorld().getTime() - lastCrime < 200; // 10 sec window
         }
+
+        if (entity instanceof MobEntity mob) {
+            LivingEntity target = mob.getTarget();
+            return target instanceof PoliceEntity
+                    || target != null && target.getType().getSpawnGroup().isPeaceful();
+        }
+
         return false;
     }
+
 }

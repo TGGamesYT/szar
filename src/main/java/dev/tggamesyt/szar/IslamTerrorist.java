@@ -20,7 +20,7 @@ import net.minecraft.world.World;
 
 import java.util.*;
 
-public class IslamTerrorist extends PathAwareEntity {
+public class IslamTerrorist extends PathAwareEntity implements Arrestable{
 
     public static boolean arrestable = false;
     private int BlowUpCooldown = 0;
@@ -222,5 +222,9 @@ public class IslamTerrorist extends PathAwareEntity {
             }
             return best;
         }
+    }
+    @Override
+    public boolean isArrestable() {
+        return arrestable;
     }
 }

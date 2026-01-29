@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class NiggerEntity extends PathAwareEntity {
+public class NiggerEntity extends PathAwareEntity implements Arrestable{
 
     public static boolean arrestable = true;
 
@@ -44,5 +44,10 @@ public class NiggerEntity extends PathAwareEntity {
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
         this.dropItem(Szar.NIGGERITE_INGOT);
+    }
+
+    @Override
+    public boolean isArrestable() {
+        return arrestable;
     }
 }

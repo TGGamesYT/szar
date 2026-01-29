@@ -5,6 +5,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
@@ -16,17 +17,20 @@ import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.SpawnRestriction;
+import net.minecraft.entity.*;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.registry.*;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DataPool;
@@ -59,6 +63,8 @@ public class Szar implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static final Block SZAR_BLOCK =
             new SzarBlock();
+    public static final TrackedData<Long> LAST_CRIME_TICK =
+            DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.LONG);
     public static final Block NIGGERITEBLOCK =
             new Block(AbstractBlock.Settings.copy(Blocks.NETHERITE_BLOCK));
     public static final Block FASZ_BLOCK =
@@ -133,6 +139,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.GYPSY_SPAWNEGG);
                         entries.add(Szar.TERRORIST_SPAWNEGG);
                         entries.add(Szar.POLICE_SPAWNEGG);
+                        entries.add(Szar.KEY_ITEM);
+                        entries.add(Szar.HANDCUFF_ITEM);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
@@ -355,6 +363,20 @@ public class Szar implements ModInitializer {
                         new Identifier("szar", "cannabis_patch")
                 )
         );
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (!world.isClient && entity instanceof LivingEntity victim) {
+
+                // Villagers or police are protected
+                if (victim instanceof PoliceEntity || victim instanceof VillagerEntity) {
+
+                    player.getDataTracker().set(
+                            Szar.LAST_CRIME_TICK,
+                            world.getTime()
+                    );
+                }
+            }
+            return ActionResult.PASS;
+        });
 
     }
     public static final Feature<CannabisPatchFeatureConfig> CANNABIS_PATCH =
@@ -398,6 +420,16 @@ public class Szar implements ModInitializer {
                     CANNABIS_BLOCK,
                     new Item.Settings()
             )
+    );
+    public static final Item KEY_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "police_key"),
+            new KeyItem(new Item.Settings())
+    );
+    public static final Item HANDCUFF_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "police_handcuff"),
+            new HandcuffItem(new Item.Settings())
     );
     public static final Item NIGGERITE_INGOT = Registry.register(
             Registries.ITEM,

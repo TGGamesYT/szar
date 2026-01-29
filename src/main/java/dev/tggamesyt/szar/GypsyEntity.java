@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 
 import java.util.*;
 
-public class GypsyEntity extends PathAwareEntity {
+public class GypsyEntity extends PathAwareEntity implements Arrestable{
 
     public static boolean arrestable = false;
 
@@ -284,5 +284,9 @@ public class GypsyEntity extends PathAwareEntity {
             }
             return best;
         }
+    }
+    @Override
+    public boolean isArrestable() {
+        return arrestable;
     }
 }

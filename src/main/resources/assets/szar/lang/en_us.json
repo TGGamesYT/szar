@@ -29,5 +29,8 @@
   "item.szar.terrorist_spawn_egg": "Islam Terrorist Spawn Egg",
   "entity.szar.police": "Police Man",
   "item.szar.police_spawn_egg": "Police Man Spawn Egg",
-  "effect.szar.arrested": "Arrested"
+  "effect.szar.arrested": "Arrested",
+  "item.szar.police_key": "Police Key",
+  "item.szar.police_handcuff": "Police Handcuff",
+  "entity.szar.gypsy": "Cigány"
 }
