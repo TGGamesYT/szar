@@ -1,11 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "BBB",
-    "NNB"
+    "III",
+    "NNI"
   ],
   "key": {
-    "B": {
+    "I": {
       "item": "minecraft:iron_ingot"
     },
     "N": {

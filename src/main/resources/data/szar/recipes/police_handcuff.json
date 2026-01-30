@@ -1,15 +1,19 @@
 {
     "type": "minecraft:crafting_shaped",
     "pattern": [
-        "###",
-        "i i"
+        "NNN",
+        "I I"
     ],
     "key": {
-        "#": "minecraft:iron_nugget",
-        "i": "minecraft:iron_ingot"
+        "I": {
+            "item": "minecraft:iron_ingot"
+        },
+        "N": {
+            "item": "minecraft:iron_nugget"
+        }
     },
     "result": {
-        "id": "szar:police_handcuff",
+        "item": "szar:police_handcuff",
         "count": 1
     }
 }

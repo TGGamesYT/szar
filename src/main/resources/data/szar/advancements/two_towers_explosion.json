@@ -1,0 +1,15 @@
+{
+  "criteria": {
+    "boom": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": { "item": "minecraft:tnt" },
+    "title": "Too Close",
+    "description": "You were there when the towers fell",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  }
+}

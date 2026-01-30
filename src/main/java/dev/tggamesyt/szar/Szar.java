@@ -29,6 +29,7 @@ import net.minecraft.registry.*;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.structure.StructurePieceType;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
@@ -46,6 +47,7 @@ import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
 import net.minecraft.world.gen.placementmodifier.SquarePlacementModifier;
 import net.minecraft.world.gen.stateprovider.BlockStateProvider;
 import net.minecraft.world.gen.stateprovider.WeightedBlockStateProvider;
+import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -379,6 +381,31 @@ public class Szar implements ModInitializer {
         });
 
     }
+    public static final StructurePieceType TNT_OBELISK_PIECE =
+            Registry.register(
+                    Registries.STRUCTURE_PIECE,
+                    new Identifier(MOD_ID, "tower"),
+                    TntObeliskPiece::new
+            );
+    public static final StructureType<TntObeliskStructure> TNT_OBELISK_TYPE =
+            Registry.register(
+                    Registries.STRUCTURE_TYPE,
+                    new Identifier(MOD_ID, "two_towers"),
+                    () -> TntObeliskStructure.CODEC
+            );
+    public static final Block OBELISK_CORE = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "obelisk_core"),
+            new ObeliskCoreBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.DIRT) // soft block
+                            .strength(0.5f, 1.0f)    // very easy to break, low blast resistance
+            )
+    );
+
+
+
+
     public static final Feature<CannabisPatchFeatureConfig> CANNABIS_PATCH =
             Registry.register(
                     Registries.FEATURE,
