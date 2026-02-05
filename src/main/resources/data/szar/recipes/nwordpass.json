@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " G ",
+    "GNG",
+    " G "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "N": {
+      "item": "szar:niggerite_ingot"
+    }
+  },
+  "result": {
+    "item": "szar:nwordpass",
+    "count": 1
+  }
+}

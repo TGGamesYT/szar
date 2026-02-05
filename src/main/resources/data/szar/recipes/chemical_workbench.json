@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SSS",
+    "PCP",
+    "PPP"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "C": {
+      "item": "szar:cannabis"
+    }
+  },
+  "result": {
+    "item": "szar:chemical_workbench",
+    "count": 1
+  }
+}

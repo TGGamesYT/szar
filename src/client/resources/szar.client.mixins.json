@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.tggamesyt.szar.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "MouseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

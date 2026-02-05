@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "szar",
+  "version": "${version}",
+  "name": "szar",
+  "description": "Valami szar mod",
+  "authors": ["TGdoesCode"],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/szar/icon.png",
+  "environment": "*",
+  "accessWidener" : "szar.accesswidener",
+  "entrypoints": {
+    "fabric-datagen": [
+      "dev.tggamesyt.szar.client.SzarDataGenerator"
+    ],
+    "client": [
+      "dev.tggamesyt.szar.client.SzarClient"
+    ],
+    "main": [
+      "dev.tggamesyt.szar.Szar"
+    ]
+  },
+  "mixins": [
+    "szar.mixins.json",
+    {
+      "config": "szar.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

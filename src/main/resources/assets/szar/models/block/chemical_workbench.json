@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"north": "szar:block/chemical_1",
+		"east":  "szar:block/chemical_2",
+		"south": "szar:block/chemical_3",
+		"west":  "szar:block/chemical_4",
+		"up":    "szar:block/chemical_top",
+		"down":  "szar:block/chemical_bottom",
+		"particle": "szar:block/chemical_1"
+	}
+}

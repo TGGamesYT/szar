@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "szar:niggerite_ingot"
+    }
+  },
+  "result": {
+    "item": "szar:niggerite_helmet",
+    "count": 1
+  }
+}

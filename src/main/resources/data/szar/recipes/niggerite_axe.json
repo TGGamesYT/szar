@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "II ",
+    "IS ",
+    " S "
+  ],
+  "key": {
+    "I": {
+      "item": "szar:niggerite_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "szar:niggerite_axe",
+    "count": 1
+  }
+}
