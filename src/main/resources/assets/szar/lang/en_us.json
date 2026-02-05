@@ -35,5 +35,10 @@
   "entity.szar.gypsy": "Cigány",
   "entity.szar.plane": "Plane",
   "entity.szar.hitler": "Hitler",
-  "item.szar.hitler_spawn_egg":"Hitler Spawn Egg"
+  "item.szar.hitler_spawn_egg":"Hitler Spawn Egg",
+  "entity.szar.nazi": "Nazi",
+  "item.szar.nazi_spawn_egg":"Nazi Spawn Egg",
+  "item.szar.bullet": "Bullet",
+  "item.szar.ak47": "AK47",
+  "entity.szar.bullet": "Bullet"
 }

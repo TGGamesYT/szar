@@ -15,22 +15,22 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 public class NaziEntity extends PathAwareEntity implements Arrestable{
 
-    public static boolean arrestable = true;
-
+    public static boolean arrestable = false;
+    @Nullable
+    private HitterEntity leader;
     public NaziEntity(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
     }
 
     @Override
     protected void initGoals() {
-        this.goalSelector.add(0, new MeleeAttackGoal(this, 1.2D, true));
-        this.goalSelector.add(2, new WanderAroundFarGoal(this, 1.0D));
-        this.goalSelector.add(3, new LookAroundGoal(this));
-
-        this.targetSelector.add(1, new AggroOnHitRevengeGoal(this));
+        this.goalSelector.add(2, new FollowLeaderWanderGoal(this, 1.0D, 6.0F));
+        this.goalSelector.add(3, new WanderAroundFarGoal(this, 0.8D));
+        this.goalSelector.add(1, new MeleeAttackGoal(this, 1.2D, true));
     }
 
 
@@ -62,4 +62,14 @@ public class NaziEntity extends PathAwareEntity implements Arrestable{
     public boolean isArrestable() {
         return arrestable;
     }
+
+    public void setLeader(HitterEntity leader) {
+        this.leader = leader;
+    }
+
+    @Nullable
+    public HitterEntity getLeader() {
+        return this.leader;
+    }
+
 }

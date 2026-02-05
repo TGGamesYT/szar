@@ -43,6 +43,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DataPool;
+import net.minecraft.util.math.Box;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
@@ -175,6 +176,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.CIGANYBLOCK);
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.NWORD_PASS);
+                        entries.add(Szar.HITTER_SPAWNEGG);
+                        entries.add(Szar.NAZI_SPAWNEGG);
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.GYPSY_SPAWNEGG);
                         entries.add(Szar.TERRORIST_SPAWNEGG);
@@ -196,6 +199,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_BOOTS);
                         entries.add(Szar.NIGGERITE_BLOCK);
                         entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
+                        entries.add(Szar.AK_AMMO);
+                        entries.add(Szar.AK47);
                     })
                     .build()
     );
@@ -347,6 +352,10 @@ public class Szar implements ModInitializer {
                 NiggerEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                NaziEntityType,
+                NaziEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 HitterEntityType,
                 HitterEntity.createAttributes()
         );
@@ -401,37 +410,6 @@ public class Szar implements ModInitializer {
                 HitterEntityType,
                 5, 1, 1
         );
-
-        ServerTickEvents.END_WORLD_TICK.register(world -> {
-            if (world.isClient) return;
-
-            if (world.random.nextInt(200) != 0) return;
-
-            world.getEntitiesByClass(
-                    HitterEntity.class, // <-- your A entity class
-                    entityA -> entityA.isAlive() && !entityA.hasTag("b_group_spawned")
-            ).forEach(entityA -> {
-                if (entityA.isAlive() && !entityA.getCommandTags().contains("b_group_spawned")) return;
-                entityA.addCommandTag("b_group_spawned");
-
-                int groupSize = 2 + world.random.nextInt(9); // 2–10 Bs
-                for (int i = 0; i < groupSize; i++) {
-                    Entity entityB = NaziEntityType.create(world);
-                    if (entityB != null) {
-                        double offsetX = (world.random.nextDouble() - 0.5) * 4;
-                        double offsetZ = (world.random.nextDouble() - 0.5) * 4;
-                        entityB.refreshPositionAndAngles(
-                                entityA.getX() + offsetX,
-                                entityA.getY(),
-                                entityA.getZ() + offsetZ,
-                                world.random.nextFloat() * 360,
-                                0
-                        );
-                        world.spawnEntity(entityB);
-                    }
-                }
-            });
-        });
 
 
         BiomeModifications.addSpawn(
@@ -509,6 +487,27 @@ public class Szar implements ModInitializer {
             new DrogEffect()
     );
     public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier("szar", "arrested"), new ArrestedEffect());
+    public static final Item AK_AMMO = Registry.register(
+            Registries.ITEM,
+            new Identifier("szar", "bullet"),
+            new Item(new Item.Settings())
+    );
+    public static final EntityType<BulletEntity> BULLET =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier("szar", "bullet"),
+                    FabricEntityTypeBuilder.<BulletEntity>create(SpawnGroup.MISC, BulletEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.25F, 0.25F))
+                            .trackRangeBlocks(64)
+                            .trackedUpdateRate(20)
+                            .build()
+            );
+    public static final Item AK47 = Registry.register(
+            Registries.ITEM,
+            new Identifier("szar", "ak47"),
+            new AK47Item(new Item.Settings().maxCount(1))
+    );
+
     public static final Item CHEMICAL_WORKBENCH_ITEM = Registry.register(
     Registries.ITEM,
             new Identifier(MOD_ID, "chemical_workbench"),
@@ -683,17 +682,17 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "hitler_spawn_egg"),
             new SpawnEggItem(
                     HitterEntityType,
-                    0x000000,
+                    0xC4A484,
                     0xFF0000,
                     new Item.Settings()
             )
     );
     public static final Item NAZI_SPAWNEGG = Registry.register(
             Registries.ITEM,
-            new Identifier(MOD_ID, "hitler_spawn_egg"),
+            new Identifier(MOD_ID, "nazi_spawn_egg"),
             new SpawnEggItem(
                     NaziEntityType,
-                    0x000000,
+                    0x654321,
                     0xFF0000,
                     new Item.Settings()
             )
