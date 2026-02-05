@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.animation.Animation;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.util.InputUtil;
@@ -91,8 +92,9 @@ public class SzarClient implements ClientModInitializer {
         );
         EntityRendererRegistry.register(
                 Szar.BULLET,
-                BulletRenderer::new
+                ctx -> new FlyingItemEntityRenderer<>(ctx)
         );
+
 
         EntityRendererRegistry.register(
                 Szar.PoliceEntityType,

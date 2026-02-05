@@ -22,19 +22,13 @@ public class AK47Item extends Item {
         if (!player.isUsingItem()) return;
         if (world.isClient) return;
 
+        if (player.getItemCooldownManager().isCoolingDown(this)) return;
         if (!consumeAmmo(player)) return;
 
         BulletEntity bullet = new BulletEntity(world, player);
-        bullet.setVelocity(
-                player,
-                player.getPitch(),
-                player.getYaw(),
-                0.0F,
-                4.5F, // speed
-                1.0F  // spread
-        );
-
+        bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 1.0f);
         world.spawnEntity(bullet);
+
         player.getItemCooldownManager().set(this, 2); // fire rate
     }
 

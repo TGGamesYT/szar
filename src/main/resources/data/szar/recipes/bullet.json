@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " M ",
+    " B ",
+    "B B"
+  ],
+  "key": {
+    "M": {
+      "item": "minecraft:milk_bucket"
+    },
+    "B": {
+      "item": "minecraft:beef"
+    }
+  },
+  "result": {
+    "item": "szar:bullet",
+    "count": 1
+  }
+}
