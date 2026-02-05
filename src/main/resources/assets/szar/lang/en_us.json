@@ -32,5 +32,8 @@
   "effect.szar.arrested": "Arrested",
   "item.szar.police_key": "Police Key",
   "item.szar.police_handcuff": "Police Handcuff",
-  "entity.szar.gypsy": "Cigány"
+  "entity.szar.gypsy": "Cigány",
+  "entity.szar.plane": "Plane",
+  "entity.szar.hitler": "Hitler",
+  "item.szar.hitler_spawn_egg":"Hitler Spawn Egg"
 }

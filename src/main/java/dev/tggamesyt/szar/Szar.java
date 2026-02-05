@@ -1,15 +1,20 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
+import dev.tggamesyt.szar.PlaneAnimation;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -25,9 +30,12 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.*;
 import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.structure.StructurePieceType;
 import net.minecraft.text.Text;
@@ -63,6 +71,9 @@ public class Szar implements ModInitializer {
 
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+    public static MinecraftServer SERVER;
+    public static final Identifier PLANE_ANIM_PACKET =
+            new Identifier("szar", "plane_anim");
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final TrackedData<Long> LAST_CRIME_TICK =
@@ -100,6 +111,24 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+    public static final EntityType<HitterEntity> HitterEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "hitler"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, HitterEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<NaziEntity> NaziEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "nazi"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, NaziEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final EntityType<PoliceEntity> PoliceEntityType =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -116,6 +145,15 @@ public class Szar implements ModInitializer {
                     FabricEntityTypeBuilder
                             .create(SpawnGroup.CREATURE, GypsyEntity::new)
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<PlaneEntity> PLANE_ENTITY_TYPE =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "plane"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, PlaneEntity::new)
+                            .dimensions(EntityDimensions.fixed(5.0F, 2.0F))
                             .build()
             );
     public static final EntityType<IslamTerrorist> TERRORIST_ENTITY_TYPE =
@@ -163,6 +201,13 @@ public class Szar implements ModInitializer {
     );
     @Override
     public void onInitialize() {
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            SERVER = server;
+        });
+
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            SERVER = null;
+        });
 
         // register block
         Registry.register(
@@ -302,8 +347,12 @@ public class Szar implements ModInitializer {
                 NiggerEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                HitterEntityType,
+                HitterEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 PoliceEntityType,
-                NiggerEntity.createAttributes()
+                PoliceEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
                 GYPSY_ENTITY_TYPE,
@@ -345,6 +394,46 @@ public class Szar implements ModInitializer {
                 1,  // min group size
                 2   // max group size
         );
+        // 1. Allow entity A to spawn naturally in your biomes
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
+                SpawnGroup.MONSTER,
+                HitterEntityType,
+                5, 1, 1
+        );
+
+        ServerTickEvents.END_WORLD_TICK.register(world -> {
+            if (world.isClient) return;
+
+            if (world.random.nextInt(200) != 0) return;
+
+            world.getEntitiesByClass(
+                    HitterEntity.class, // <-- your A entity class
+                    entityA -> entityA.isAlive() && !entityA.hasTag("b_group_spawned")
+            ).forEach(entityA -> {
+                if (entityA.isAlive() && !entityA.getCommandTags().contains("b_group_spawned")) return;
+                entityA.addCommandTag("b_group_spawned");
+
+                int groupSize = 2 + world.random.nextInt(9); // 2–10 Bs
+                for (int i = 0; i < groupSize; i++) {
+                    Entity entityB = NaziEntityType.create(world);
+                    if (entityB != null) {
+                        double offsetX = (world.random.nextDouble() - 0.5) * 4;
+                        double offsetZ = (world.random.nextDouble() - 0.5) * 4;
+                        entityB.refreshPositionAndAngles(
+                                entityA.getX() + offsetX,
+                                entityA.getY(),
+                                entityA.getZ() + offsetZ,
+                                world.random.nextFloat() * 360,
+                                0
+                        );
+                        world.spawnEntity(entityB);
+                    }
+                }
+            });
+        });
+
+
         BiomeModifications.addSpawn(
                 BiomeSelectors.includeByKey(
                         BiomeKeys.JUNGLE,
@@ -589,6 +678,26 @@ public class Szar implements ModInitializer {
                     new Item.Settings()
             )
     );
+    public static final Item HITTER_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "hitler_spawn_egg"),
+            new SpawnEggItem(
+                    HitterEntityType,
+                    0x000000,
+                    0xFF0000,
+                    new Item.Settings()
+            )
+    );
+    public static final Item NAZI_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "hitler_spawn_egg"),
+            new SpawnEggItem(
+                    NaziEntityType,
+                    0x000000,
+                    0xFF0000,
+                    new Item.Settings()
+            )
+    );
     public static final Item POLICE_SPAWNEGG = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "police_spawn_egg"),
@@ -677,5 +786,35 @@ public class Szar implements ModInitializer {
                 .getAdvancementTracker()
                 .getProgress(advancement)
                 .isDone();
+    }
+    public static void playPlaneAnimation(PlaneAnimation animation, int entityId) {
+        for (ServerWorld world : SERVER.getWorlds()) {
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeInt(entityId); // <-- important change
+            buf.writeEnumConstant(animation);  // PlaneAnimation
+            ServerPlayNetworking.send(player, PLANE_ANIM_PACKET, buf);
+        }
+        }
+    }
+    public static final Map<PlaneAnimation, Integer> ANIMATION_TIMINGS = new HashMap<>();
+
+    static {
+        ANIMATION_TIMINGS.put(PlaneAnimation.START_ENGINE, 46);    // 2.2917s * 20 ticks
+        ANIMATION_TIMINGS.put(PlaneAnimation.STOP_ENGINE, 40);     // 2.0s * 20 ticks
+        ANIMATION_TIMINGS.put(PlaneAnimation.FLYING, -1);          // looping
+        ANIMATION_TIMINGS.put(PlaneAnimation.LANDING, 40);         // 2.0s * 20 ticks
+        ANIMATION_TIMINGS.put(PlaneAnimation.LAND_STARTED, -1);    // looping
+        ANIMATION_TIMINGS.put(PlaneAnimation.LIFT_UP, 30);         // 1.5s * 20 ticks
+    }
+    public static final Map<PlaneAnimation, Float> ANIMATION_TIMINGS_SECONDS = new HashMap<>();
+
+    static {
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.START_ENGINE, 2.2917f);    // 2.2917s * 20 ticks
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.STOP_ENGINE, 20f);     // 2.0s * 20 ticks
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.FLYING, -1f);          // looping
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LANDING, 2f);         // 2.0s * 20 ticks
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LAND_STARTED, -1f);    // looping
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LIFT_UP, 1.5f);         // 1.5s * 20 ticks
     }
 }
