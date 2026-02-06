@@ -1,6 +1,6 @@
 # Szar
 
-Ez egy privát, kísérleti Minecraft 1.20.1 mod.
+Ez egy privát, kísérleti fabric Minecraft 1.20.1 mod.
 
 ## FIGYELMEZTETÉS
 Ez a mod 18+ tartalmat tartalmaz, beleértve:
@@ -17,7 +17,7 @@ A mod használata **kizárólag saját felelősségre történik**.
 
 # Shit
 
-This is a private 1.20.1 fabric Minecraft  mod
+This is a private, experimental 1.20.1 fabric Minecraft mod.
 
 ## WARNING (EN)
 
