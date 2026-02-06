@@ -14,12 +14,17 @@ Kizárólag saját használatra készült.
 Ha ezek a tartalmak zavaróak számodra, **NE használd**.
 A mod használata **kizárólag saját felelősségre történik**.
 
+
+# Shit
+
+This is a private 1.20.1 fabric Minecraft  mod
+
 ## WARNING (EN)
 
-This is a private, experimental Minecraft mod.
-
-This mod contains **18+ content**, including offensive, provocative, or otherwise inappropriate themes.
-It may include fictional representations of content that would be unacceptable or illegal in real life.
+This mod contains **18+ content**, including the following:
+- offensive, provocative, or otherwise inappropriate themes
+- adult themed content
+- fictional representations of content that would be unacceptable or illegal in real life
 
 This mod is **not intended for public use**, does **not endorse** any of the themes depicted, and was created **for personal use only**.
 
