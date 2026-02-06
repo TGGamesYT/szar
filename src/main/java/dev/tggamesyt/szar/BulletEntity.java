@@ -3,9 +3,11 @@ package dev.tggamesyt.szar;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
@@ -34,12 +36,18 @@ public class BulletEntity extends ThrownItemEntity {
         Entity owner = getOwner();
 
         if (owner instanceof LivingEntity livingOwner) {
-            target.damage(
-                    getWorld().getDamageSources().mobProjectile(this, livingOwner),
-                    13.0F
+            DamageSource source = new DamageSource(
+                    getWorld().getRegistryManager()
+                            .get(RegistryKeys.DAMAGE_TYPE)
+                            .entryOf(Szar.BULLET_DAMAGE),
+                    this,
+                    livingOwner
             );
+
+            target.damage(source, 13.0F);
         }
 
         discard();
     }
+
 }

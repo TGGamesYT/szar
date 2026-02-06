@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
 import net.minecraft.entity.*;
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -91,6 +92,12 @@ public class Szar implements ModInitializer {
             RegistryKey.of(RegistryKeys.POINT_OF_INTEREST_TYPE, new Identifier(MOD_ID, "chemical_workbench_poi"));
     public static PointOfInterestType CHEMICAL_WORKBENCH_POI =
             PointOfInterestHelper.register(new Identifier(MOD_ID, "chemical_workbench_poi"), 1, 1, CHEMICAL_WORKBENCH);
+
+    public static final RegistryKey<DamageType> BULLET_DAMAGE =
+            RegistryKey.of(
+                    RegistryKeys.DAMAGE_TYPE,
+                    new Identifier("szar", "bullet")
+            );
     public static VillagerProfession DROG_DEALER = Registry.register(
             Registries.VILLAGER_PROFESSION,
             new Identifier(MOD_ID, "drog_dealer"),
@@ -446,7 +453,6 @@ public class Szar implements ModInitializer {
             }
             return ActionResult.PASS;
         });
-
     }
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(

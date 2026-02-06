@@ -1,6 +1,7 @@
 package dev.tggamesyt.szar;
 
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
@@ -24,13 +25,14 @@ public class NaziEntity extends PathAwareEntity implements Arrestable{
     private HitterEntity leader;
     public NaziEntity(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
+        this.equipStack(EquipmentSlot.MAINHAND, new ItemStack(Szar.AK47));
     }
 
     @Override
     protected void initGoals() {
         this.goalSelector.add(2, new FollowLeaderWanderGoal(this, 1.0D, 6.0F));
         this.goalSelector.add(3, new WanderAroundFarGoal(this, 0.8D));
-        this.goalSelector.add(1, new MeleeAttackGoal(this, 1.2D, true));
+        this.goalSelector.add(1, new AK47AttackGoal(this, 16.0F, 2));
     }
 
 
