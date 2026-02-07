@@ -37,6 +37,7 @@ import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.structure.StructurePieceType;
 import net.minecraft.text.Text;
@@ -110,6 +111,15 @@ public class Szar implements ModInitializer {
                     SoundEvents.ENTITY_VILLAGER_WORK_CLERIC
             )
     );
+    public static final EntityType<NyanEntity> NyanEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "nyan_cat"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, NyanEntity::new)
+                            .dimensions(EntityDimensions.fixed(1.0F, 1.4F))
+                            .build()
+            );
     public static final EntityType<NiggerEntity> NiggerEntityType =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -208,6 +218,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
                         entries.add(Szar.AK_AMMO);
                         entries.add(Szar.AK47);
+                        entries.add(Szar.POPTART);
+                        entries.add(Szar.NYAN_SPAWNEGG);
                     })
                     .build()
     );
@@ -357,6 +369,10 @@ public class Szar implements ModInitializer {
         FabricDefaultAttributeRegistry.register(
                 NiggerEntityType,
                 NiggerEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
+                NyanEntityType,
+                NyanEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
                 NaziEntityType,
@@ -668,6 +684,15 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "fasz"),
             new FaszItem(FASZ_BLOCK, new Item.Settings())
     );
+    public static final Item POPTART = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "pop_tart"),
+            new Item(new Item.Settings()
+                    .food(new FoodComponent.Builder()
+                            .saturationModifier(0.6f).
+                            hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
+                            .build()))
+    );
     public static final Item NWORD_PASS = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "nwordpass"),
@@ -680,6 +705,16 @@ public class Szar implements ModInitializer {
                     NiggerEntityType,
                     0x964B00,
                     0x654321,
+                    new Item.Settings()
+            )
+    );
+    public static final Item NYAN_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "nyan_cat_spawn_egg"),
+            new SpawnEggItem(
+                    NyanEntityType,
+                    0xFF99FF,
+                    0xFF3399,
                     new Item.Settings()
             )
     );

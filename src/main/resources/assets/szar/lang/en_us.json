@@ -43,5 +43,9 @@
   "item.szar.ak47": "AK47",
   "entity.szar.bullet": "Bullet",
   "death.attack.bullet": "%1$s was shot by %2$s",
-  "death.attack.bullet.player": "%1$s was shot by %2$s"
+  "death.attack.bullet.player": "%1$s was shot by %2$s",
+
+  "item.szar.pop_tart": "Pop Tart",
+  "entity.szar.nyan_cat": "Nyan Cat",
+  "item.szar.nyan_cat_spawn_egg": "Nyan Cat Spawn Egg"
 }

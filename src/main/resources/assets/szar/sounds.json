@@ -1,0 +1,18 @@
+{
+  "nyan_cat_first_loop": {
+    "sounds": [
+      {
+        "name": "szar:nyan_cat_first_loop",
+        "stream": true
+      }
+    ]
+  },
+  "nyan_cat_loop": {
+    "sounds": [
+      {
+        "name": "szar:nyan_cat_loop",
+        "stream": true
+      }
+    ]
+  }
+}
