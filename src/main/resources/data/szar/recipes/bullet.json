@@ -1,20 +1,14 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " M ",
-    " B ",
-    "B B"
-  ],
-  "key": {
-    "M": {
-      "item": "minecraft:milk_bucket"
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:gunpowder"
     },
-    "B": {
-      "item": "minecraft:beef"
+    {
+      "item": "minecraft:iron_nugget"
     }
-  },
+  ],
   "result": {
-    "item": "szar:bullet",
-    "count": 1
+    "item": "szar:bullet"
   }
 }

@@ -129,6 +129,15 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+    public static final EntityType<EpsteinEntity> EpsteinEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "epstein"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, EpsteinEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final EntityType<HitterEntity> HitterEntityType =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -220,6 +229,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.AK47);
                         entries.add(Szar.POPTART);
                         entries.add(Szar.NYAN_SPAWNEGG);
+                        entries.add(Szar.EPSTEIN_FILES);
+                        entries.add(Szar.EPSTEIN_SPAWNEGG);
                     })
                     .build()
     );
@@ -371,6 +382,10 @@ public class Szar implements ModInitializer {
                 NiggerEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                EpsteinEntityType,
+                NiggerEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 NyanEntityType,
                 NyanEntity.createAttributes()
         );
@@ -410,9 +425,9 @@ public class Szar implements ModInitializer {
                 ),
                 SpawnGroup.MONSTER,
                 TERRORIST_ENTITY_TYPE,
-                20, // weight (lower = rarer)
+                10, // weight (lower = rarer)
                 1,  // min group size
-                1   // max group size
+                2   // max group size
         );
         BiomeModifications.addSpawn(
                 BiomeSelectors.includeByKey(
@@ -422,30 +437,37 @@ public class Szar implements ModInitializer {
                 ),
                 SpawnGroup.MONSTER,
                 NiggerEntityType,
-                20, // weight (lower = rarer)
+                5, // weight (lower = rarer)
                 1,  // min group size
                 2   // max group size
         );
-        // 1. Allow entity A to spawn naturally in your biomes
+
         BiomeModifications.addSpawn(
-                BiomeSelectors.includeByKey(BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
+                BiomeSelectors.includeByKey(BiomeKeys.WINDSWEPT_HILLS, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, BiomeKeys.STONY_PEAKS),
                 SpawnGroup.MONSTER,
                 HitterEntityType,
-                5, 1, 1
+                1, 1, 1
         );
 
 
         BiomeModifications.addSpawn(
-                BiomeSelectors.includeByKey(
-                        BiomeKeys.JUNGLE,
-                        BiomeKeys.BAMBOO_JUNGLE,
-                        BiomeKeys.SPARSE_JUNGLE
-                ),
+                BiomeSelectors.includeByKey(BiomeKeys.JUNGLE, BiomeKeys.BAMBOO_JUNGLE, BiomeKeys.SPARSE_JUNGLE),
                 SpawnGroup.MONSTER,
                 GYPSY_ENTITY_TYPE,
-                20, // weight (lower = rarer)
-                1,  // min group size
-                5   // max group size
+                5, 1, 5
+        );
+
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
+                SpawnGroup.AMBIENT,
+                NyanEntityType,
+                1, 1, 1
+        );
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
+                SpawnGroup.MONSTER,
+                EpsteinEntityType,
+                1, 1, 1
         );
         BiomeModifications.addFeature(
                 BiomeSelectors.tag(BiomeTags.IS_JUNGLE),
@@ -562,6 +584,11 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "police_key"),
             new KeyItem(new Item.Settings())
+    );
+    public static final Item EPSTEIN_FILES = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "epstein_files"),
+            new Item(new Item.Settings())
     );
     public static final Item HANDCUFF_ITEM = Registry.register(
             Registries.ITEM,
@@ -684,14 +711,16 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "fasz"),
             new FaszItem(FASZ_BLOCK, new Item.Settings())
     );
+    public static final SoundEvent NYAN_MUSIC =
+            SoundEvent.of(new Identifier("szar", "nyan_music"));
     public static final Item POPTART = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "pop_tart"),
-            new Item(new Item.Settings()
+            new MusicDiscItem(13, NYAN_MUSIC,  new Item.Settings()
                     .food(new FoodComponent.Builder()
                             .saturationModifier(0.6f).
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
-                            .build()))
+                            .build()), 217)
     );
     public static final Item NWORD_PASS = Registry.register(
             Registries.ITEM,
@@ -745,6 +774,16 @@ public class Szar implements ModInitializer {
                     PoliceEntityType,
                     0x0000FF,
                     0xFF0000,
+                    new Item.Settings()
+            )
+    );
+    public static final Item EPSTEIN_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "epstein_spawn_egg"),
+            new SpawnEggItem(
+                    EpsteinEntityType,
+                    0xB47459,
+                    0x151D2D,
                     new Item.Settings()
             )
     );

@@ -1,6 +1,7 @@
 package dev.tggamesyt.szar;
 
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
@@ -13,6 +14,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 
 public class NyanEntity extends PathAwareEntity {
 
@@ -32,6 +34,49 @@ public class NyanEntity extends PathAwareEntity {
                 .add(EntityAttributes.GENERIC_MAX_HEALTH, 20.0)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25)
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 2);
+    }
+    @Override
+    public boolean canSpawn(WorldAccess world, SpawnReason spawnReason) {
+        // Only above ground
+        boolean aboveGround = this.getY() >= world.getBottomY() + 1 && this.getY() <= world.getTopY();
+
+        // Only allow 5% of spawn attempts to succeed
+        boolean rareChance = this.random.nextFloat() < 0.05f;
+
+        // Standard mob spawn rules + above ground + rare chance
+        return super.canSpawn(world, spawnReason) && aboveGround && rareChance;
+    }
+
+    @Override
+    public boolean damage(DamageSource source, float amount) {
+        boolean result = super.damage(source, amount);
+        if (result) {
+            // Trigger panic
+            this.setPanic(200); // panic for 100 ticks (5 seconds)
+        }
+        return result;
+    }
+
+    private int panicTicks = 0;
+
+    private void setPanic(int ticks) {
+        this.panicTicks = ticks;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (panicTicks > 0) {
+            panicTicks--;
+
+            // Move in a random direction away from attacker
+            double speed = 1.5D;
+            double dx = (this.random.nextDouble() - 0.5) * 2;
+            double dz = (this.random.nextDouble() - 0.5) * 2;
+
+            this.getNavigation().startMovingTo(this.getX() + dx * 5, this.getY(), this.getZ() + dz * 5, speed);
+        }
     }
 
 

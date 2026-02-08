@@ -45,19 +45,30 @@ public class NaziEntity extends PathAwareEntity implements Arrestable{
 
     @Override
     protected void dropLoot(DamageSource source, boolean causedByPlayer) {
-        ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+        var rand = this.getRandom();
+        if (rand.nextFloat() < 0.01F) {
+            this.dropItem(Szar.AK47);
+        }
+        if (rand.nextFloat() < 0.01F) {
+            ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 
-        NbtCompound nbt = book.getOrCreateNbt();
-        nbt.putString("title", "Nazi's message");
-        nbt.putString("author", "Nazi");
+            NbtCompound nbt = book.getOrCreateNbt();
+            nbt.putString("title", "Nazi's message");
+            nbt.putString("author", "Nazi");
 
-        // Pages need to be JSON text components
-        NbtList pages = new NbtList();
-        pages.add(NbtString.of("{\"text\":\"Hail Hitler\"}"));
+            // Pages need to be JSON text components
+            NbtList pages = new NbtList();
+            pages.add(NbtString.of("{\"text\":\"Hail Hitler\"}"));
 
-        nbt.put("pages", pages);
+            nbt.put("pages", pages);
 
-        this.dropStack(book);
+            this.dropStack(book);
+        }
+
+        int count = rand.nextInt(17);
+        if (count > 0) {
+            this.dropStack(new ItemStack(Szar.AK_AMMO, count));
+        }
     }
 
     @Override

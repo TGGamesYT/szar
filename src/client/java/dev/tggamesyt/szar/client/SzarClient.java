@@ -18,6 +18,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.animation.Animation;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.client.sound.EntityTrackingSoundInstance;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundManager;
@@ -31,6 +32,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
 import java.util.*;
@@ -52,69 +54,67 @@ public class SzarClient implements ClientModInitializer {
                     "main"
             );
     // Outside of your tick handler
-    private final Map<NyanEntity, PositionedSoundInstance> activeSounds = new HashMap<>();
+    private final Map<NyanEntity, EntityTrackingSoundInstance> activeSounds = new HashMap<>();
     private static final SoundEvent NYAN_LOOP = SoundEvent.of(new Identifier("szar", "nyan_cat_loop"));
     private static final SoundEvent NYAN_START = SoundEvent.of(new Identifier("szar", "nyan_cat_first_loop"));
-    int startOffset = 10;     // first tick when start sound plays
-    int startLength = 39;     // length of one start sound
-    int loopLength = 542;     // ticks per loop
+    int startOffset = 10;
+    int startLength = 596;
+    int loopLength = 541;
+    int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.world == null) return;
 
-            SoundManager soundManager = client.getSoundManager();
-            Box box = new Box(client.player.getX()-128, client.player.getY()-128, client.player.getZ()-128,
-                    client.player.getX()+128, client.player.getY()+128, client.player.getZ()+128);
-
+            Box box = new Box(
+                    client.player.getX() - 128, client.player.getY() - 128, client.player.getZ() - 128,
+                    client.player.getX() + 128, client.player.getY() + 128, client.player.getZ() + 128
+            );
 
             for (NyanEntity nyan : client.world.getEntitiesByClass(NyanEntity.class, box, e -> true)) {
-                // Skip dead ones (just in case)
                 if (!nyan.isAlive()) continue;
 
                 int age = nyan.age;
 
-                // Play first start
-                if (age == 10) {
-                    PositionedSoundInstance start1 = PositionedSoundInstance.ambient(
-                            NYAN_START, Random.create(),
-                            nyan.getX(), nyan.getY(), nyan.getZ()
+                // ---- PLAY START ONCE ----
+                if (age >= startOffset && !activeSounds.containsKey(nyan)) {
+                    EntityTrackingSoundInstance startSound = new EntityTrackingSoundInstance(
+                            NYAN_START,
+                            SoundCategory.NEUTRAL,
+                            1.0f,
+                            1.0f,
+                            nyan,
+                            nyan.getId() // seed can be entity ID for stable pitch
                     );
-                    client.getSoundManager().play(start1);
-                    activeSounds.put(nyan, start1);
+                    client.getSoundManager().play(startSound);
+                    activeSounds.put(nyan, startSound);
                 }
 
-                // Play second start
-                if (age == 49) {
-                    PositionedSoundInstance start2 = PositionedSoundInstance.ambient(
-                            NYAN_START, Random.create(),
-                            nyan.getX(), nyan.getY(), nyan.getZ()
+                // ---- LOOP AFTER START FINISHES ----
+                if (age >= loopStart && (age - loopStart) % loopLength == 0) {
+                    EntityTrackingSoundInstance loopSound = new EntityTrackingSoundInstance(
+                            NYAN_LOOP,
+                            SoundCategory.NEUTRAL,
+                            1.0f,
+                            1.0f,
+                            nyan,
+                            nyan.getId() // seed
                     );
-                    client.getSoundManager().play(start2);
-                    activeSounds.put(nyan, start2);
-                }
-
-                // Play looping
-                if (age >= 88 && (age - 88) % 542 == 0) {
-                    PositionedSoundInstance loop = PositionedSoundInstance.ambient(
-                            NYAN_LOOP, Random.create(),
-                            nyan.getX(), nyan.getY(), nyan.getZ()
-                    );
-                    client.getSoundManager().play(loop);
-                    activeSounds.put(nyan, loop);
+                    client.getSoundManager().play(loopSound);
+                    activeSounds.put(nyan, loopSound);
                 }
             }
-            Iterator<Map.Entry<NyanEntity, PositionedSoundInstance>> it = activeSounds.entrySet().iterator();
+
+            // Stop sounds for dead entities
+            Iterator<Map.Entry<NyanEntity, EntityTrackingSoundInstance>> it = activeSounds.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<NyanEntity, PositionedSoundInstance> entry = it.next();
-                NyanEntity nyan = entry.getKey();
-                if (!nyan.isAlive()) {
-                    client.getSoundManager().stop(entry.getValue()); // stop the sound immediately
-                    it.remove(); // remove from map
+                Map.Entry<NyanEntity, EntityTrackingSoundInstance> entry = it.next();
+                if (!entry.getKey().isAlive()) {
+                    client.getSoundManager().stop(entry.getValue());
+                    it.remove();
                 }
             }
         });
-
         ClientPlayNetworking.registerGlobalReceiver(
                 PLANE_ANIM_PACKET,
                 (client, handler, buf, sender) -> {
@@ -166,7 +166,10 @@ public class SzarClient implements ClientModInitializer {
                 Szar.BULLET,
                 ctx -> new FlyingItemEntityRenderer<>(ctx)
         );
-
+        EntityRendererRegistry.register(
+                Szar.EpsteinEntityType,
+                EpsteinEntityRenderer::new
+        );
 
         EntityRendererRegistry.register(
                 Szar.PoliceEntityType,

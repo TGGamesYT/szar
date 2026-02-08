@@ -1,5 +1,6 @@
 {
-  "nyan_cat_first_loop": {
+  "nyan_cat_first_loop_old": {
+    "subtitle": "szar.nyan_cat_start",
     "sounds": [
       {
         "name": "szar:nyan_cat_first_loop",
@@ -7,10 +8,37 @@
       }
     ]
   },
-  "nyan_cat_loop": {
+  "nyan_cat_loop_old": {
+    "subtitle": "szar.nyan_cat_performs",
     "sounds": [
       {
         "name": "szar:nyan_cat_loop",
+        "stream": true
+      }
+    ]
+  },
+  "nyan_cat_first_loop": {
+    "subtitle": "szar.nyan_cat_start",
+    "sounds": [
+      {
+        "name": "szar:nyan_cat_start",
+        "stream": true
+      }
+    ]
+  },
+  "nyan_cat_loop": {
+    "subtitle": "szar.nyan_cat_performs",
+    "sounds": [
+      {
+        "name": "szar:nyan_cat",
+        "stream": true
+      }
+    ]
+  },
+  "nyan_music": {
+    "sounds": [
+      {
+        "name": "szar:nyan_music",
         "stream": true
       }
     ]

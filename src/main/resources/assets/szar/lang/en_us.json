@@ -47,5 +47,11 @@
 
   "item.szar.pop_tart": "Pop Tart",
   "entity.szar.nyan_cat": "Nyan Cat",
-  "item.szar.nyan_cat_spawn_egg": "Nyan Cat Spawn Egg"
+  "item.szar.nyan_cat_spawn_egg": "Nyan Cat Spawn Egg",
+  "item.szar.pop_tart.desc": "daniwellP - Nyanyanyanyanyanyanya!",
+  "szar.nyan_cat_performs": "Nyan Cat Performs",
+  "szar.nyan_cat_start": "Nyan Cat Starts Performing",
+  "item.szar.epstein_files": "Epstein Files",
+  "entity.szar.epstein": "Epstein",
+  "item.szar.epstein_spawn_egg": "Epstein Spawn Egg"
 }
