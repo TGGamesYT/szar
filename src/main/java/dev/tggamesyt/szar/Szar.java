@@ -77,6 +77,8 @@ public class Szar implements ModInitializer {
     public static MinecraftServer SERVER;
     public static final Identifier PLANE_ANIM_PACKET =
             new Identifier("szar", "plane_anim");
+    public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
+
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final TrackedData<Long> LAST_CRIME_TICK =
@@ -588,7 +590,7 @@ public class Szar implements ModInitializer {
     public static final Item EPSTEIN_FILES = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "epstein_files"),
-            new Item(new Item.Settings())
+            new EpsteinFile(new Item.Settings())
     );
     public static final Item HANDCUFF_ITEM = Registry.register(
             Registries.ITEM,

@@ -30,6 +30,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -63,6 +64,16 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_URL,
+                (client, handler, buf, responseSender) -> {
+                    String url = "https://files.tggamesyt.dev/f/1770574109164-655298600-2022.03.17-1%20Exhibit%201.pdf";
+                    // maybe https://www.justice.gov/epstein/doj-disclosures
+
+                    client.execute(() -> {
+                        Util.getOperatingSystem().open(url);
+                    });
+                }
+        );
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.world == null) return;
 
