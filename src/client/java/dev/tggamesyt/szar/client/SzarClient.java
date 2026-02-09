@@ -38,8 +38,7 @@ import net.minecraft.util.math.random.Random;
 
 import java.util.*;
 
-import static dev.tggamesyt.szar.Szar.HitterEntityType;
-import static dev.tggamesyt.szar.Szar.PLANE_ANIM_PACKET;
+import static dev.tggamesyt.szar.Szar.*;
 import static javax.swing.text.html.HTML.Attribute.ID;
 
 public class SzarClient implements ClientModInitializer {
@@ -52,6 +51,11 @@ public class SzarClient implements ClientModInitializer {
     public static final EntityModelLayer NYAN =
             new EntityModelLayer(
                 new Identifier(Szar.MOD_ID, "nyan_cat"),
+                    "main"
+            );
+    public static final EntityModelLayer ATOM =
+            new EntityModelLayer(
+                    new Identifier(Szar.MOD_ID, "atom"),
                     "main"
             );
     // Outside of your tick handler
@@ -164,6 +168,14 @@ public class SzarClient implements ClientModInitializer {
         EntityRendererRegistry.register(
                 Szar.NiggerEntityType,
                 NiggerEntityRenderer::new
+        );
+        EntityRendererRegistry.register(
+                Szar.AtomEntityType,
+                AtomEntityRenderer::new
+        );
+        EntityModelLayerRegistry.registerModelLayer(
+                ATOM,
+                Atom::getTexturedModelData
         );
         EntityRendererRegistry.register(
                 Szar.HitterEntityType,

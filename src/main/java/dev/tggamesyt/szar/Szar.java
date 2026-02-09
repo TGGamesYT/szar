@@ -76,7 +76,7 @@ public class Szar implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
     public static final Identifier PLANE_ANIM_PACKET =
-            new Identifier("szar", "plane_anim");
+            new Identifier(MOD_ID, "plane_anim");
     public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
 
     public static final Block SZAR_BLOCK =
@@ -99,7 +99,7 @@ public class Szar implements ModInitializer {
     public static final RegistryKey<DamageType> BULLET_DAMAGE =
             RegistryKey.of(
                     RegistryKeys.DAMAGE_TYPE,
-                    new Identifier("szar", "bullet")
+                    new Identifier(MOD_ID, "bullet")
             );
     public static VillagerProfession DROG_DEALER = Registry.register(
             Registries.VILLAGER_PROFESSION,
@@ -233,6 +233,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NYAN_SPAWNEGG);
                         entries.add(Szar.EPSTEIN_FILES);
                         entries.add(Szar.EPSTEIN_SPAWNEGG);
+                        entries.add(Szar.ATOM_DETONATOR);
                     })
                     .build()
     );
@@ -476,7 +477,7 @@ public class Szar implements ModInitializer {
                 GenerationStep.Feature.VEGETAL_DECORATION,
                 RegistryKey.of(
                         RegistryKeys.PLACED_FEATURE,
-                        new Identifier("szar", "cannabis_patch")
+                        new Identifier(MOD_ID, "cannabis_patch")
                 )
         );
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
@@ -522,7 +523,7 @@ public class Szar implements ModInitializer {
     public static final Feature<CannabisPatchFeatureConfig> CANNABIS_PATCH =
             Registry.register(
                     Registries.FEATURE,
-                    new Identifier("szar", "cannabis_patch"),
+                    new Identifier(MOD_ID, "cannabis_patch"),
                     new CannabisPatchFeature(CannabisPatchFeatureConfig.CODEC)
             );
     public static final Map<UUID, Integer> PLAYER_JOINT_LEVEL = new HashMap<>();
@@ -532,25 +533,36 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "drog"),
             new DrogEffect()
     );
-    public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier("szar", "arrested"), new ArrestedEffect());
+    public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "arrested"), new ArrestedEffect());
     public static final Item AK_AMMO = Registry.register(
             Registries.ITEM,
-            new Identifier("szar", "bullet"),
+            new Identifier(MOD_ID, "bullet"),
             new Item(new Item.Settings())
     );
     public static final EntityType<BulletEntity> BULLET =
             Registry.register(
                     Registries.ENTITY_TYPE,
-                    new Identifier("szar", "bullet"),
+                    new Identifier(MOD_ID, "bullet"),
                     FabricEntityTypeBuilder.<BulletEntity>create(SpawnGroup.MISC, BulletEntity::new)
                             .dimensions(EntityDimensions.fixed(0.25F, 0.25F))
                             .trackRangeBlocks(64)
                             .trackedUpdateRate(20)
                             .build()
             );
+    public static final EntityType<AtomEntity> AtomEntityType  =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "atom"),
+                    FabricEntityTypeBuilder.create()
+                            .entityFactory(AtomEntity::new)
+                            .dimensions(EntityDimensions.fixed(2.0F, 6.0F))
+                            .trackRangeBlocks(256)
+                            .trackedUpdateRate(1)
+                            .build()
+            );
     public static final Item AK47 = Registry.register(
             Registries.ITEM,
-            new Identifier("szar", "ak47"),
+            new Identifier(MOD_ID, "ak47"),
             new AK47Item(new Item.Settings().maxCount(1))
     );
 
@@ -714,7 +726,7 @@ public class Szar implements ModInitializer {
             new FaszItem(FASZ_BLOCK, new Item.Settings())
     );
     public static final SoundEvent NYAN_MUSIC =
-            SoundEvent.of(new Identifier("szar", "nyan_music"));
+            SoundEvent.of(new Identifier(MOD_ID, "nyan_music"));
     public static final Item POPTART = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "pop_tart"),
@@ -723,6 +735,11 @@ public class Szar implements ModInitializer {
                             .saturationModifier(0.6f).
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
                             .build()), 217)
+    );
+    public static final Item ATOM_DETONATOR = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "detonator"),
+            new AtomSummonerItem(new Item.Settings())
     );
     public static final Item NWORD_PASS = Registry.register(
             Registries.ITEM,

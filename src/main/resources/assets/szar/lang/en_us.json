@@ -53,5 +53,8 @@
   "szar.nyan_cat_start": "Nyan Cat Starts Performing",
   "item.szar.epstein_files": "Epstein Files",
   "entity.szar.epstein": "Epstein",
-  "item.szar.epstein_spawn_egg": "Epstein Spawn Egg"
+  "item.szar.epstein_spawn_egg": "Epstein Spawn Egg",
+
+  "item.szar.detonator": "Detonator",
+  "entity.szar.atom": "Atom"
 }
