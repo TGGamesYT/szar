@@ -1,6 +1,7 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.serialization.Codec;
 import dev.tggamesyt.szar.PlaneAnimation;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -33,28 +34,36 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.*;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.structure.StructurePieceType;
+import net.minecraft.structure.rule.RuleTest;
+import net.minecraft.structure.rule.RuleTestType;
+import net.minecraft.structure.rule.TagMatchRuleTest;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DataPool;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.gen.GenerationStep;
+import net.minecraft.world.gen.YOffset;
 import net.minecraft.world.gen.feature.*;
 import net.minecraft.world.gen.placementmodifier.BiomePlacementModifier;
 import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
+import net.minecraft.world.gen.placementmodifier.HeightRangePlacementModifier;
 import net.minecraft.world.gen.placementmodifier.SquarePlacementModifier;
 import net.minecraft.world.gen.stateprovider.BlockStateProvider;
 import net.minecraft.world.gen.stateprovider.WeightedBlockStateProvider;
@@ -81,6 +90,39 @@ public class Szar implements ModInitializer {
 
     public static final Block SZAR_BLOCK =
             new SzarBlock();
+    public static final Block URANIUM_BLOCK =
+            new Block(
+                    FabricBlockSettings.create()
+                            .strength(7.0f, 1200.0f) // very hard, bedrock-tier vibe
+                            .requiresTool()
+            );
+    public static final ConfiguredFeature<OreFeatureConfig, ?> URANIUM_ORE_CONFIGURED =
+            new ConfiguredFeature<>(
+                    Feature.ORE,
+                    new OreFeatureConfig(
+                            new TagMatchRuleTest(BlockTags.STONE_ORE_REPLACEABLES),
+                            Szar.URANIUM_BLOCK.getDefaultState(),
+                            4
+                    )
+            );
+    public static final PlacedFeature URANIUM_ORE_PLACED =
+            new PlacedFeature(
+                    RegistryEntry.of(URANIUM_ORE_CONFIGURED),
+                    List.of(
+                            CountPlacementModifier.of(2), // veins per chunk
+                            HeightRangePlacementModifier.uniform(
+                                    YOffset.fixed(-63), // 1 block above bottom
+                                    YOffset.fixed(-60)  // 4 blocks above bedrock, adjust for vein height
+                            ),
+                            SquarePlacementModifier.of(),
+                            BiomePlacementModifier.of()
+                    )
+            );
+    public static final RegistryKey<PlacedFeature> URANIUM_ORE_PLACED_KEY =
+            RegistryKey.of(
+                    RegistryKeys.PLACED_FEATURE,
+                    new Identifier(MOD_ID, "uranium_ore")
+            );
     public static final TrackedData<Long> LAST_CRIME_TICK =
             DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.LONG);
     public static final Block NIGGERITEBLOCK =
@@ -234,6 +276,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.EPSTEIN_FILES);
                         entries.add(Szar.EPSTEIN_SPAWNEGG);
                         entries.add(Szar.ATOM_DETONATOR);
+                        entries.add(Szar.URANIUM_ORE);
                     })
                     .build()
     );
@@ -258,7 +301,11 @@ public class Szar implements ModInitializer {
                 new Identifier(MOD_ID, "niggerite_block"),
                 NIGGERITEBLOCK
         );
-
+        Registry.register(
+                Registries.BLOCK,
+                new Identifier(MOD_ID, "uranium_ore"),
+                URANIUM_BLOCK
+        );
 
         Registry.register(
                 Registries.BLOCK,
@@ -594,6 +641,14 @@ public class Szar implements ModInitializer {
                     new Item.Settings()
             )
     );
+    public static final Item URANIUM_ORE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "uranium_ore"),
+            new BlockItem(
+                    URANIUM_BLOCK,
+                    new Item.Settings()
+            )
+    );
     public static final Item KEY_ITEM = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "police_key"),
@@ -916,3 +971,4 @@ public class Szar implements ModInitializer {
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LIFT_UP, 1.5f);         // 1.5s * 20 ticks
     }
 }
+
