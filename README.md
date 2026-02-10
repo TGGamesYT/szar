@@ -1,3 +1,5 @@
+![Showcase](https://tggamesyt.dev/assets/szar.gif)
+
 # Szar
 
 Ez egy privát, kísérleti fabric Minecraft 1.20.1 mod.
