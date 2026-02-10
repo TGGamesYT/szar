@@ -555,7 +555,7 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "atom"),
                     FabricEntityTypeBuilder.create()
                             .entityFactory(AtomEntity::new)
-                            .dimensions(EntityDimensions.fixed(2.0F, 6.0F))
+                            .dimensions(EntityDimensions.fixed(1.0F, 1.6F))
                             .trackRangeBlocks(256)
                             .trackedUpdateRate(1)
                             .build()
