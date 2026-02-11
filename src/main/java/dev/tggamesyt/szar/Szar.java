@@ -984,7 +984,7 @@ public class Szar implements ModInitializer {
                     List.of(
                             CountPlacementModifier.of(2),
                             SquarePlacementModifier.of(),
-                            HeightRangePlacementModifier.uniform(YOffset.fixed(-63), YOffset.fixed(-20)),
+                            HeightRangePlacementModifier.uniform(YOffset.fixed(-63), YOffset.fixed(-58)),
                             BiomePlacementModifier.of()
                     )
             ));

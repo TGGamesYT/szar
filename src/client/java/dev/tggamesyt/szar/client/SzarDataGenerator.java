@@ -2,6 +2,7 @@ package dev.tggamesyt.szar.client;
 
 import dev.tggamesyt.szar.ModItemTagProvider;
 import dev.tggamesyt.szar.ModPoiTagProvider;
+import dev.tggamesyt.szar.ModWorldGenerator;
 import dev.tggamesyt.szar.Szar;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -16,6 +17,7 @@ public class SzarDataGenerator implements DataGeneratorEntrypoint {
         FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
         pack.addProvider(ModPoiTagProvider::new);
         pack.addProvider(ModItemTagProvider::new);
+        pack.addProvider(ModWorldGenerator::new);
     }
     @Override
     public void buildRegistry(RegistryBuilder registryBuilder) {
