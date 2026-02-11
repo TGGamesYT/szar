@@ -56,5 +56,6 @@
   "item.szar.epstein_spawn_egg": "Epstein Spawn Egg",
 
   "item.szar.detonator": "Detonator",
-  "entity.szar.atom": "Atom"
+  "entity.szar.atom": "Atom",
+  "block.szar.uranium_ore":  "Uranium Ore"
 }

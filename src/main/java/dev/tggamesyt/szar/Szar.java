@@ -96,33 +96,14 @@ public class Szar implements ModInitializer {
                             .strength(7.0f, 1200.0f) // very hard, bedrock-tier vibe
                             .requiresTool()
             );
-    public static final ConfiguredFeature<OreFeatureConfig, ?> URANIUM_ORE_CONFIGURED =
-            new ConfiguredFeature<>(
-                    Feature.ORE,
-                    new OreFeatureConfig(
-                            new TagMatchRuleTest(BlockTags.STONE_ORE_REPLACEABLES),
-                            Szar.URANIUM_BLOCK.getDefaultState(),
-                            4
-                    )
-            );
-    public static final PlacedFeature URANIUM_ORE_PLACED =
-            new PlacedFeature(
-                    RegistryEntry.of(URANIUM_ORE_CONFIGURED),
-                    List.of(
-                            CountPlacementModifier.of(2), // veins per chunk
-                            HeightRangePlacementModifier.uniform(
-                                    YOffset.fixed(-63), // 1 block above bottom
-                                    YOffset.fixed(-60)  // 4 blocks above bedrock, adjust for vein height
-                            ),
-                            SquarePlacementModifier.of(),
-                            BiomePlacementModifier.of()
-                    )
-            );
+    // ConfiguredFeature Key
+    public static final RegistryKey<ConfiguredFeature<?, ?>> URANIUM_ORE_KEY =
+            RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, new Identifier(MOD_ID, "uranium_ore"));
+
+    // PlacedFeature Key
     public static final RegistryKey<PlacedFeature> URANIUM_ORE_PLACED_KEY =
-            RegistryKey.of(
-                    RegistryKeys.PLACED_FEATURE,
-                    new Identifier(MOD_ID, "uranium_ore")
-            );
+            RegistryKey.of(RegistryKeys.PLACED_FEATURE, new Identifier(MOD_ID, "uranium_ore_placed"));
+
     public static final TrackedData<Long> LAST_CRIME_TICK =
             DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.LONG);
     public static final Block NIGGERITEBLOCK =
@@ -526,6 +507,12 @@ public class Szar implements ModInitializer {
                         RegistryKeys.PLACED_FEATURE,
                         new Identifier(MOD_ID, "cannabis_patch")
                 )
+        );
+        // Hook generation (RegistryKey only)
+        BiomeModifications.addFeature(
+                BiomeSelectors.foundInOverworld(),
+                GenerationStep.Feature.UNDERGROUND_ORES,
+                URANIUM_ORE_PLACED_KEY
         );
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClient && entity instanceof LivingEntity victim) {
@@ -969,6 +956,39 @@ public class Szar implements ModInitializer {
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LANDING, 2f);         // 2.0s * 20 ticks
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LAND_STARTED, -1f);    // looping
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LIFT_UP, 1.5f);         // 1.5s * 20 ticks
+    }
+    // Kaupenjoe-style ConfiguredFeature bootstrap
+    public static class ModConfiguredFeatures {
+        public static void boostrap(Registerable<ConfiguredFeature<?, ?>> context) {
+            var stoneTag = new TagMatchRuleTest(BlockTags.STONE_ORE_REPLACEABLES);
+            var deepslateTag = new TagMatchRuleTest(BlockTags.DEEPSLATE_ORE_REPLACEABLES);
+
+            List<OreFeatureConfig.Target> targets = List.of(
+                    OreFeatureConfig.createTarget(stoneTag, URANIUM_BLOCK.getDefaultState()),
+                    OreFeatureConfig.createTarget(deepslateTag, URANIUM_BLOCK.getDefaultState())
+            );
+
+            context.register(URANIUM_ORE_KEY, new ConfiguredFeature<>(Feature.ORE, new OreFeatureConfig(targets, 4)));
+        }
+    }
+
+    // Kaupenjoe-style PlacedFeature bootstrap
+    public static class ModPlacedFeatures {
+        public static void boostrap(Registerable<PlacedFeature> context) {
+            RegistryEntry<ConfiguredFeature<?, ?>> configuredEntry =
+                    context.getRegistryLookup(RegistryKeys.CONFIGURED_FEATURE)
+                            .getOrThrow(URANIUM_ORE_KEY);
+
+            context.register(URANIUM_ORE_PLACED_KEY, new PlacedFeature(
+                    configuredEntry,
+                    List.of(
+                            CountPlacementModifier.of(2),
+                            SquarePlacementModifier.of(),
+                            HeightRangePlacementModifier.uniform(YOffset.fixed(-63), YOffset.fixed(-20)),
+                            BiomePlacementModifier.of()
+                    )
+            ));
+        }
     }
 }
 
