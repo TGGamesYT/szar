@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "NNN",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "N": {
+      "item": "szar:nuke_core"
+    }
+  },
+  "result": {
+    "item": "szar:atom",
+    "count": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  U",
+    " U ",
+    "U  "
+  ],
+  "key": {
+    "U": {
+      "item": "szar:uranium"
+    }
+  },
+  "result": {
+    "item": "szar:uranium_rod",
+    "count": 1
+  }
+}

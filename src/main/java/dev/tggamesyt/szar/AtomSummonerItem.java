@@ -3,6 +3,7 @@ package dev.tggamesyt.szar;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -50,12 +51,28 @@ public class AtomSummonerItem extends Item {
         }
 
         BlockPos hitPos = hit.getBlockPos();
-        Vec3d spawnPos = Vec3d.ofCenter(hitPos).add(0, 100, 0);
+
+// Get highest solid block at that X/Z
+        int topY = serverWorld.getTopY(
+                net.minecraft.world.Heightmap.Type.WORLD_SURFACE,
+                hitPos.getX(),
+                hitPos.getZ()
+        );
+
+        BlockPos topPos = new BlockPos(hitPos.getX(), topY, hitPos.getZ());
+
+        Vec3d spawnPos = Vec3d.ofCenter(topPos).add(0, 100, 0);
 
         AtomEntity atom = new AtomEntity(Szar.AtomEntityType, serverWorld);
         atom.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
 
+        // 🔴 Set armed via NBT
+        atom.readCustomDataFromNbt(new NbtCompound() {{
+            putBoolean("Armed", true);
+        }});
+
         serverWorld.spawnEntity(atom);
+
 
         // Cooldown + durability
         player.getItemCooldownManager().set(this, COOLDOWN_TICKS);

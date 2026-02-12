@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "TUT",
+    "UTU",
+    "TUT"
+  ],
+  "key": {
+    "U": {
+      "item": "szar:uranium_rod"
+    },
+    "T": {
+      "item": "minecraft:tnt"
+    }
+  },
+  "result": {
+    "item": "szar:nuke_core",
+    "count": 1
+  }
+}

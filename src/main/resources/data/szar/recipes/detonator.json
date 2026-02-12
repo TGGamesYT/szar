@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RRR",
+    "AAI",
+    "III"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "A": {
+      "item": "szar:atom"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "szar:detonator",
+    "count": 1
+  }
+}

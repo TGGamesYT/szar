@@ -5,18 +5,46 @@
       "rolls": 1,
       "entries": [
         {
-          "type": "minecraft:item",
-          "name": "szar:uranium_ore"
-        }
-      ],
-      "conditions": [
-        {
-          "condition": "minecraft:match_tool",
-          "predicate": {
-            "items": [
-              "minecraft:netherite_pickaxe"
-            ]
-          }
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "szar:uranium_ore",
+              "conditions": [
+                {
+                  "condition": "minecraft:match_tool",
+                  "predicate": {
+                    "enchantments": [
+                      {
+                        "enchantment": "minecraft:silk_touch",
+                        "levels": {
+                          "min": 1
+                        }
+                      }
+                    ],
+                    "items": [
+                      "minecraft:diamond_pickaxe",
+                      "minecraft:netherite_pickaxe"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "szar:uranium",
+              "conditions": [
+                {
+                  "condition": "minecraft:match_tool",
+                  "predicate": {
+                    "items": [
+                      "minecraft:netherite_pickaxe"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     }

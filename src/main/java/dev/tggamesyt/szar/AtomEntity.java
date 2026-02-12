@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 
 public class AtomEntity extends Entity {
     private static final int NUKE_RADIUS = 100;
+    private boolean armed = false;
+    private boolean wasFallingFast = false;
     public AtomEntity(EntityType<?> type, World world) {
         super(type, world);
     }
@@ -26,13 +28,30 @@ public class AtomEntity extends Entity {
             this.setVelocity(this.getVelocity().add(0, -0.08, 0));
         }
 
+        // Track if it was falling fast enough to count as impact
+        if (this.getVelocity().y < -0.5) {
+            wasFallingFast = true;
+        }
+
         this.move(MovementType.SELF, this.getVelocity());
 
-        if (!getWorld().isClient && this.isOnGround()) {
-            explode();
-            this.discard();
+        if (!getWorld().isClient) {
+
+            // 🔥 If on fire, arm it
+            if (this.isOnFire()) {
+                armed = true;
+            }
+
+            // 💥 Explode only if:
+            // 1. It was falling fast OR
+            // 2. It is armed
+            if (this.isOnGround() && (wasFallingFast || armed)) {
+                explode();
+                this.discard();
+            }
         }
     }
+
 
     private void explode() {
         ServerWorld world = (ServerWorld) this.getWorld();

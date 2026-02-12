@@ -57,5 +57,9 @@
 
   "item.szar.detonator": "Detonator",
   "entity.szar.atom": "Atom",
-  "block.szar.uranium_ore":  "Uranium Ore"
+  "block.szar.uranium_ore":  "Uranium Ore",
+  "item.szar.uranium": "Uranium",
+  "item.szar.uranium_rod": "Uranium Rod",
+  "item.szar.nuke_core": "Nuke Core",
+  "item.szar.atom": "Nuke"
 }

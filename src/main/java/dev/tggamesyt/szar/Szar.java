@@ -93,8 +93,7 @@ public class Szar implements ModInitializer {
     public static final Block URANIUM_BLOCK =
             new Block(
                     FabricBlockSettings.create()
-                            .strength(7.0f, 1200.0f) // very hard, bedrock-tier vibe
-                            .requiresTool()
+                            .strength(20.0f, 1200.0f).requiresTool()
             );
     // ConfiguredFeature Key
     public static final RegistryKey<ConfiguredFeature<?, ?>> URANIUM_ORE_KEY =
@@ -258,6 +257,10 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.EPSTEIN_SPAWNEGG);
                         entries.add(Szar.ATOM_DETONATOR);
                         entries.add(Szar.URANIUM_ORE);
+                        entries.add(Szar.URANIUM);
+                        entries.add(Szar.URANIUM_ROD);
+                        entries.add(Szar.ATOM_CORE);
+                        entries.add(Szar.ATOM);
                     })
                     .build()
     );
@@ -636,6 +639,21 @@ public class Szar implements ModInitializer {
                     new Item.Settings()
             )
     );
+    public static final Item URANIUM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "uranium"),
+            new Item(new Item.Settings())
+    );
+    public static final Item URANIUM_ROD = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "uranium_rod"),
+            new Item(new Item.Settings())
+    );
+    public static final Item ATOM_CORE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "nuke_core"),
+            new Item(new Item.Settings())
+    );
     public static final Item KEY_ITEM = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "police_key"),
@@ -818,6 +836,13 @@ public class Szar implements ModInitializer {
                     new Item.Settings()
             )
     );
+    public static final Item ATOM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "atom"),
+            new AtomItem(
+                    new Item.Settings()
+            )
+    );
     public static final Item NAZI_SPAWNEGG = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "nazi_spawn_egg"),
@@ -951,7 +976,7 @@ public class Szar implements ModInitializer {
 
     static {
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.START_ENGINE, 2.2917f);    // 2.2917s * 20 ticks
-        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.STOP_ENGINE, 20f);     // 2.0s * 20 ticks
+        ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.STOP_ENGINE, 2f);     // 2.0s * 20 ticks
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.FLYING, -1f);          // looping
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LANDING, 2f);         // 2.0s * 20 ticks
         ANIMATION_TIMINGS_SECONDS.put(PlaneAnimation.LAND_STARTED, -1f);    // looping
