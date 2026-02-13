@@ -809,7 +809,7 @@ public class Szar implements ModInitializer {
     public static final Item BAITER_DISK = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "baiter"),
-            new MusicDiscItem(12, BAITER,  new Item.Settings(), 172)
+            new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1), 172)
     );
     public static final Item ATOM_DETONATOR = Registry.register(
             Registries.ITEM,
