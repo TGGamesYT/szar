@@ -91,7 +91,7 @@ public class Szar implements ModInitializer {
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final Block URANIUM_BLOCK =
-            new Block(
+            new RadiatedBlock(
                     FabricBlockSettings.create()
                             .strength(20.0f, 1200.0f).requiresTool()
             );
@@ -261,6 +261,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.URANIUM_ROD);
                         entries.add(Szar.ATOM_CORE);
                         entries.add(Szar.ATOM);
+                        entries.add(Szar.BAITER_DISK);
                     })
                     .build()
     );
@@ -571,6 +572,13 @@ public class Szar implements ModInitializer {
             new DrogEffect()
     );
     public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "arrested"), new ArrestedEffect());
+    public static final StatusEffect RADIATION = Registry.register(
+            Registries.STATUS_EFFECT,
+            new Identifier(MOD_ID, "radiation"),
+            new RadiationStatusEffect()
+    );
+    public static final RegistryKey<DamageType> RADIATION_DAMAGE =
+            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier("yourmod", "radiation"));
     public static final Item AK_AMMO = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "bullet"),
@@ -642,17 +650,17 @@ public class Szar implements ModInitializer {
     public static final Item URANIUM = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "uranium"),
-            new Item(new Item.Settings())
+            new RadiatedItem(new Item.Settings(), 0.1, 1.1)
     );
     public static final Item URANIUM_ROD = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "uranium_rod"),
-            new Item(new Item.Settings())
+            new RadiatedItem(new Item.Settings(), 0.2, 1.2)
     );
     public static final Item ATOM_CORE = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "nuke_core"),
-            new Item(new Item.Settings())
+            new RadiatedItem(new Item.Settings(), 1, 2)
     );
     public static final Item KEY_ITEM = Registry.register(
             Registries.ITEM,
@@ -795,6 +803,13 @@ public class Szar implements ModInitializer {
                             .saturationModifier(0.6f).
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
                             .build()), 217)
+    );
+    public static final SoundEvent BAITER =
+            SoundEvent.of(new Identifier(MOD_ID, "baiter"));
+    public static final Item BAITER_DISK = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "baiter"),
+            new MusicDiscItem(12, BAITER,  new Item.Settings(), 172)
     );
     public static final Item ATOM_DETONATOR = Registry.register(
             Registries.ITEM,

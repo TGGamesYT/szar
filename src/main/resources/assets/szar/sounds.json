@@ -42,5 +42,13 @@
         "stream": true
       }
     ]
+  },
+  "baiter": {
+    "sounds": [
+      {
+        "name": "szar:baiter",
+        "stream": true
+      }
+    ]
   }
 }
