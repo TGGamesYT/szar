@@ -39,7 +39,7 @@ import net.minecraft.util.math.random.Random;
 import java.util.*;
 
 import static dev.tggamesyt.szar.Szar.*;
-import static javax.swing.text.html.HTML.Attribute.ID;
+import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
     private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();
@@ -193,7 +193,7 @@ public class SzarClient implements ClientModInitializer {
                 Szar.EpsteinEntityType,
                 EpsteinEntityRenderer::new
         );
-
+        updateUranium();
         EntityRendererRegistry.register(
                 Szar.PoliceEntityType,
                 PoliceEntityRenderer::new

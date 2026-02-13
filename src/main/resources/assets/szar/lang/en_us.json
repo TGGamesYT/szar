@@ -63,8 +63,8 @@
   "item.szar.nuke_core": "Nuke Core",
   "item.szar.atom": "Nuke",
   "effect.szar.radiation": "Radiation",
-  "item.szar.baiter": "Music Disk",
+  "item.szar.baiter": "Music Disc",
   "item.szar.baiter.desc": "HaVexy - Hyperabaiter Disstrack",
-  "death.attack.radiation": "%1$s succumbed to radiation sickness",
+  "death.attack.radiation": "%1$s radiated away",
   "death.attack.radiation.player": "%1$s was lethally irradiated by %2$s"
 }

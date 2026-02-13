@@ -2,9 +2,15 @@ package dev.tggamesyt.szar;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+
+import static dev.tggamesyt.szar.Szar.*;
 
 public class RadiationStatusEffect extends StatusEffect {
 
@@ -26,8 +32,13 @@ public class RadiationStatusEffect extends StatusEffect {
 
         float damage = (float) getInterpolatedDamage(level);
 
+        RegistryEntry<DamageType> radiationEntry = SERVER.getRegistryManager()
+                .get(RegistryKeys.DAMAGE_TYPE)
+                .getEntry(RADIATION_DAMAGE)
+                .orElseThrow(() -> new IllegalStateException("Radiation DamageType not registered!"));
+
         entity.damage(
-                entity.getDamageSources().magic(),
+                new DamageSource(radiationEntry),
                 damage
         );
     }

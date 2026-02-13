@@ -50,6 +50,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Rarity;
 import net.minecraft.util.collection.DataPool;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.random.Random;
@@ -578,7 +579,7 @@ public class Szar implements ModInitializer {
             new RadiationStatusEffect()
     );
     public static final RegistryKey<DamageType> RADIATION_DAMAGE =
-            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier("yourmod", "radiation"));
+            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "radiation"));
     public static final Item AK_AMMO = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "bullet"),
@@ -809,7 +810,7 @@ public class Szar implements ModInitializer {
     public static final Item BAITER_DISK = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "baiter"),
-            new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1), 172)
+            new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 172)
     );
     public static final Item ATOM_DETONATOR = Registry.register(
             Registries.ITEM,
