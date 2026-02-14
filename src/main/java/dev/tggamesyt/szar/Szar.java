@@ -82,7 +82,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 public class Szar implements ModInitializer {
-
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
@@ -292,7 +291,6 @@ public class Szar implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             SERVER = null;
         });
-
         // register block
         Registry.register(
                 Registries.BLOCK,
