@@ -66,5 +66,7 @@
   "item.szar.baiter": "Music Disc",
   "item.szar.baiter.desc": "HaVexy - Hyperabaiter Disstrack",
   "death.attack.radiation": "%1$s radiated away",
-  "death.attack.radiation.player": "%1$s was lethally irradiated by %2$s"
+  "death.attack.radiation.player": "%1$s was lethally irradiated by %2$s",
+  "entity.szar.merl": "Merl",
+  "item.szar.merl_spawn_egg": "Merl Spawn Egg"
 }

@@ -50,5 +50,13 @@
         "stream": true
       }
     ]
+  },
+  "merl": {
+    "sounds": [
+      {
+        "name": "szar:merl",
+        "stream": true
+      }
+    ]
   }
 }

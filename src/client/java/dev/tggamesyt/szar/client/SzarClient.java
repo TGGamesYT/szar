@@ -68,6 +68,15 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_MERL_SCREEN,
+                (client, handler, buf, responseSender) -> {
+                    int entityId = buf.readInt();
+
+                    client.execute(() -> {
+                        client.setScreen(new MerlQuestionScreen(entityId));
+                    });
+                });
+        SzarTosHandler.checkAndShow();
         ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_URL,
                 (client, handler, buf, responseSender) -> {
                     String url = "https://files.tggamesyt.dev/f/1770574109164-655298600-2022.03.17-1%20Exhibit%201.pdf";
@@ -182,6 +191,10 @@ public class SzarClient implements ClientModInitializer {
                 HitterEntityRenderer::new
         );
         EntityRendererRegistry.register(
+                Szar.MerlEntityType,
+                MerlEntityRenderer::new
+        );
+        EntityRendererRegistry.register(
                 Szar.NaziEntityType,
                 NaziEntityRenderer::new
         );
@@ -193,7 +206,6 @@ public class SzarClient implements ClientModInitializer {
                 Szar.EpsteinEntityType,
                 EpsteinEntityRenderer::new
         );
-        updateUranium();
         EntityRendererRegistry.register(
                 Szar.PoliceEntityType,
                 PoliceEntityRenderer::new

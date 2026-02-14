@@ -40,6 +40,7 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.structure.StructurePieceType;
@@ -85,6 +86,8 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final SoundEvent MERL_SOUND =
+            SoundEvent.of(new Identifier("szar", "merl"));
     public static final Identifier PLANE_ANIM_PACKET =
             new Identifier(MOD_ID, "plane_anim");
     public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
@@ -112,6 +115,10 @@ public class Szar implements ModInitializer {
             new FaszBlock();
     public static final Identifier TOTEMPACKET =
             new Identifier(MOD_ID, "nwordpacket");
+    public static final Identifier OPEN_MERL_SCREEN =
+            new Identifier(MOD_ID, "open_merl_screen");
+    public static final Identifier MERL_QUESTION =
+            new Identifier("szar", "merl_question");
     public static final Block CHEMICAL_WORKBENCH =
             new Block(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS));
     public static final RegistryKey<PointOfInterestType> CHEMICAL_WORKBENCH_POI_KEY =
@@ -169,6 +176,15 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "hitler"),
                     FabricEntityTypeBuilder
                             .create(SpawnGroup.CREATURE, HitterEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<MerlEntity> MerlEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "merl"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, MerlEntity::new)
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
@@ -263,6 +279,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ATOM_CORE);
                         entries.add(Szar.ATOM);
                         entries.add(Szar.BAITER_DISK);
+                        entries.add(Szar.MERL_SPAWNEGG);
                     })
                     .build()
     );
@@ -434,6 +451,10 @@ public class Szar implements ModInitializer {
                 HitterEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                MerlEntityType,
+                MerlEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 PoliceEntityType,
                 PoliceEntity.createAttributes()
         );
@@ -484,7 +505,12 @@ public class Szar implements ModInitializer {
                 HitterEntityType,
                 1, 1, 1
         );
-
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(BiomeKeys.PLAINS, BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
+                SpawnGroup.MONSTER,
+                MerlEntityType,
+                1, 1, 1
+        );
 
         BiomeModifications.addSpawn(
                 BiomeSelectors.includeByKey(BiomeKeys.JUNGLE, BiomeKeys.BAMBOO_JUNGLE, BiomeKeys.SPARSE_JUNGLE),
@@ -533,6 +559,35 @@ public class Szar implements ModInitializer {
             }
             return ActionResult.PASS;
         });
+        ServerPlayNetworking.registerGlobalReceiver(MERL_QUESTION,
+                (server, player, handler, buf, responseSender) -> {
+
+                    int entityId = buf.readInt();
+                    String question = buf.readString();
+
+                    server.execute(() -> {
+                        Entity entity = player.getWorld().getEntityById(entityId);
+
+                        if (entity instanceof MerlEntity merl) {
+                            player.sendMessage(
+                                    Text.literal("Merl whispers to you: I don't know.")
+                                            .formatted(Formatting.GRAY, Formatting.ITALIC),
+                                    false
+                            );
+                            merl.getWorld().playSound(
+                                    null,
+                                    merl.getX(),
+                                    merl.getY(),
+                                    merl.getZ(),
+                                    MERL_SOUND,
+                                    SoundCategory.NEUTRAL,
+                                    1.0F,
+                                    1.0F
+                            );
+                        }
+                    });
+                });
+
     }
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(
@@ -554,6 +609,7 @@ public class Szar implements ModInitializer {
                             .copy(Blocks.DIRT) // soft block
                             .strength(0.5f, 1.0f)    // very easy to break, low blast resistance
             )
+
     );
 
 
@@ -849,6 +905,16 @@ public class Szar implements ModInitializer {
                     HitterEntityType,
                     0xC4A484,
                     0xFF0000,
+                    new Item.Settings()
+            )
+    );
+    public static final Item MERL_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "merl_spawn_egg"),
+            new SpawnEggItem(
+                    MerlEntityType,
+                    0xD08B4F,
+                    0xCD75A8,
                     new Item.Settings()
             )
     );
