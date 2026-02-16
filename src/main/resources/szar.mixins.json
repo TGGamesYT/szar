@@ -6,6 +6,7 @@
   "mixins": [
     "PlayerEntityMixin",
     "CraftingScreenHandlerMixin",
+    "CraftingScreenHandlerMixin2",
     "RadiatedItemMixin"
   ],
   "injectors": {

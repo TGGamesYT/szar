@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "tag": "minecraft:music_discs"
+    },
+    {
+      "item": "szar:epstein_files"
+    }
+  ],
+  "result": {
+    "item": "szar:baiter",
+    "count": 1
+  }
+}
