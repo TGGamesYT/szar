@@ -151,7 +151,7 @@ If you do not agree, click "Decline" and close the game.
         private String[] lines;
 
         protected TosScreen() {
-            super(Text.literal("Szar Fantasy Mod - Terms of Service"));
+            super(Text.literal("Szar Mod - Information and Terms of Service"));
         }
 
         @Override

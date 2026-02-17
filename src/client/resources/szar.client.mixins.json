@@ -6,7 +6,8 @@
   "client": [
     "MouseMixin",
     "RadiationHeartMixin",
-    "RadiatedItemRendererMixin"
+    "RadiatedItemRendererMixin",
+    "SplashOverlayMixin"
   ],
   "injectors": {
     "defaultRequire": 1
