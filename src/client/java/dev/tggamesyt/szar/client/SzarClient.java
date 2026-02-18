@@ -7,6 +7,7 @@ import dev.tggamesyt.szar.Szar;
 import dev.tggamesyt.szar.PlaneAnimation;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
@@ -36,6 +37,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
 import static dev.tggamesyt.szar.Szar.*;
@@ -324,7 +329,34 @@ public class SzarClient implements ClientModInitializer {
                 (stack, world, entity, seed) -> {
                     return entity != null && entity.getMainHandStack() == stack ? 1.0f : 0.0f;
                 });
+        if (isDebugEnabled()) {
+            ClientCommandRegistrationCallback.EVENT.register(
+                    (dispatcher, registryAccess) -> PanoramaClientCommand.register(dispatcher)
+            );
+        }
 
+    }
+    private boolean isDebugEnabled() {
+
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        File configDir = new File(client.runDirectory, "config");
+        File debugFile = new File(configDir, "panodebugmode.txt");
+
+        if (!debugFile.exists()) {
+            return false;
+        }
+
+        try {
+            String content = Files.readString(debugFile.toPath(), StandardCharsets.UTF_8)
+                    .trim();
+
+            return content.equals("true");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     private static void scrambleMovement(MinecraftClient client, float chance) {
         var options = client.options;

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "szar:uranium_ore"
+    "szar:uranium_ore",
+    "szar:niggerite_block"
   ]
 }
