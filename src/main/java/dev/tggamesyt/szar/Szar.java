@@ -652,7 +652,7 @@ public class Szar implements ModInitializer {
     public static final EntityType<AtomEntity> AtomEntityType  =
             Registry.register(
                     Registries.ENTITY_TYPE,
-                    new Identifier(MOD_ID, "atom"),
+                    new Identifier(MOD_ID, "nuke"),
                     FabricEntityTypeBuilder.create()
                             .entityFactory(AtomEntity::new)
                             .dimensions(EntityDimensions.fixed(1.0F, 1.6F))
@@ -918,7 +918,7 @@ public class Szar implements ModInitializer {
     );
     public static final Item ATOM = Registry.register(
             Registries.ITEM,
-            new Identifier(MOD_ID, "atom"),
+            new Identifier(MOD_ID, "nuke"),
             new AtomItem(
                     new Item.Settings()
             )

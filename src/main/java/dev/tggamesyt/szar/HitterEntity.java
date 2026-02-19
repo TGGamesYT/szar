@@ -55,12 +55,12 @@ public class HitterEntity extends PathAwareEntity implements Arrestable{
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 
         NbtCompound nbt = book.getOrCreateNbt();
-        nbt.putString("title", "Hitler's will");
+        nbt.putString("title", "MeinCrampft");
         nbt.putString("author", "Hitler");
 
         // Pages need to be JSON text components
         NbtList pages = new NbtList();
-        pages.add(NbtString.of("{\"text\":\"Hitler's will\\n - Kill all jews\\n - Kill all players\"}"));
+        pages.add(NbtString.of("{\"text\":\"MeinCrampft\\n - Kill all jews\\n - Kill all players\"}"));
         pages.add(NbtString.of("{\"text\":\"die\"}"));
 
         nbt.put("pages", pages);
