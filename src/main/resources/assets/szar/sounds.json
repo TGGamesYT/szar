@@ -51,6 +51,14 @@
       }
     ]
   },
+  "efn": {
+    "sounds": [
+      {
+        "name": "szar:efn",
+        "stream": true
+      }
+    ]
+  },
   "merl": {
     "sounds": [
       {

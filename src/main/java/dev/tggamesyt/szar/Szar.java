@@ -279,6 +279,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ATOM);
                         entries.add(Szar.BAITER_DISK);
                         entries.add(Szar.MERL_SPAWNEGG);
+                        entries.add(Szar.EFN_DISK);
                     })
                     .build()
     );
@@ -865,6 +866,13 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "baiter"),
             new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 172)
+    );
+    public static final SoundEvent EFN =
+            SoundEvent.of(new Identifier(MOD_ID, "efn"));
+    public static final Item EFN_DISK = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "efn"),
+            new MusicDiscItem(11, EFN,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 133)
     );
     public static final Item ATOM_DETONATOR = Registry.register(
             Registries.ITEM,

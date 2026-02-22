@@ -25,5 +25,6 @@ public class ModItemTagProvider extends FabricTagProvider.ItemTagProvider {
     protected void configure(RegistryWrapper.WrapperLookup lookup) {
         getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.POPTART);
         getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.BAITER_DISK);
+        getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.EFN_DISK);
     }
 }

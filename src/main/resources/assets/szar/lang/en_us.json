@@ -65,6 +65,8 @@
   "effect.szar.radiation": "Radiation",
   "item.szar.baiter": "Music Disc",
   "item.szar.baiter.desc": "HaVexy - Hyperabaiter Disstrack",
+  "item.szar.efn": "Music Disc",
+  "item.szar.efn.desc": "Daciva - EFN",
   "death.attack.radiation": "%1$s radiated away",
   "death.attack.radiation.player": "%1$s was lethally irradiated by %2$s",
   "entity.szar.merl": "Merl",
