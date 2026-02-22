@@ -69,7 +69,7 @@ public class ClientCosmetics {
                 new CosmeticProfile(
                         NameType.STATIC,
                         Formatting.RED,
-                        new Identifier(Szar.MOD_ID, "textures/etc/gbr_cape.png"),
+                        new Identifier(Szar.MOD_ID, "textures/etc/gabri_cape.png"),
                         0, 0
                 )
         );
