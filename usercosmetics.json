@@ -10,13 +10,13 @@
     {
       "uuid": "52af5540-dd18-4ad9-9acb-50eb11531180",
       "nameType": "STATIC",
-      "staticColor": "RED",
+      "staticColor": "#FF0000",
       "capes": ["gabri"]
     },
     {
       "uuid": "dda61748-15a4-45ff-9eea-29efc99c1711",
       "nameType": "STATIC",
-      "staticColor": "GREEN",
+      "staticColor": "#00FF00",
       "capes": ["test"]
     }
   ]
