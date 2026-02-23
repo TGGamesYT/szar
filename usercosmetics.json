@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "uuid": "20bbb23e-2f22-46ba-b201-c6bd435b445b",
+      "nameType": "GRADIENT",
+      "gradientStart": "#8CD6FF",
+      "gradientEnd": "#00FFFF",
+      "capes": ["tg", "tg1", "test", "gabri"]
+    },
+    {
+      "uuid": "52af5540-dd18-4ad9-9acb-50eb11531180",
+      "nameType": "STATIC",
+      "staticColor": "RED",
+      "capes": ["gabri"]
+    },
+    {
+      "uuid": "dda61748-15a4-45ff-9eea-29efc99c1711",
+      "nameType": "STATIC",
+      "staticColor": "GREEN",
+      "capes": ["test"]
+    }
+  ]
+}

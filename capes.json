@@ -1,0 +1,20 @@
+{
+  "capes": [
+    {
+      "id": "tg",
+      "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/tg_cape.png"
+    },
+    {
+      "id": "gabri",
+      "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/gabri_cape.png"
+    },
+    {
+      "id": "tg1",
+      "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/tg_cape1.png"
+    },
+    {
+      "id": "test",
+      "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/testcape.png"
+    }
+  ]
+}
