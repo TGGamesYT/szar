@@ -15,6 +15,10 @@
     {
       "id": "test",
       "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/testcape.png"
+    },
+    {
+      "id": "ciber",
+      "texture": "https://raw.githubusercontent.com/tggamesyt/szar/main/src/main/resources/assets/szar/textures/etc/ciber_cape.png"
     }
   ]
 }
