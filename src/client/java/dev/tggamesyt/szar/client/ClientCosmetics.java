@@ -1,8 +1,12 @@
 package dev.tggamesyt.szar.client;
 
 import com.google.gson.*;
+import com.mojang.authlib.GameProfile;
+import dev.tggamesyt.szar.ServerCosmetics.NameType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.network.PacketByteBuf;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.text.MutableText;
@@ -17,12 +21,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
+import static dev.tggamesyt.szar.ServerCosmetics.MOJANG_CAPES_SYNC;
+
 public class ClientCosmetics {
 
-    public enum NameType {
-        STATIC,
-        GRADIENT
-    }
 
     public static class CosmeticProfile {
         public NameType nameType;
@@ -33,9 +35,6 @@ public class ClientCosmetics {
     }
 
     private static final Map<UUID, CosmeticProfile> PROFILES = new HashMap<>();
-
-    // Player UUID -> Mojang cape list
-    public static final Map<UUID, List<MojangCape>> MOJANG_CAPES = new HashMap<>();
 
     public static class MojangCape {
         public String id;
@@ -106,8 +105,8 @@ public class ClientCosmetics {
     /* ---------------- FETCH MOJANG CAPES ---------------- */
 
     public static void fetchMojangCapes(UUID uuid) {
-        try {
-            String accessToken = getAccessTokenFromLaunchArgs();
+        try {MinecraftClient client = MinecraftClient.getInstance();
+            String accessToken = client.getSession().getAccessToken();
             if (accessToken == null) return;
 
             URL url = new URL("https://api.minecraftservices.com/minecraft/profile");
@@ -118,8 +117,6 @@ public class ClientCosmetics {
             InputStream in = con.getInputStream();
             String json = new String(in.readAllBytes());
             in.close();
-
-            System.out.println("[ClientCosmetics] Mojang capes JSON: " + json);
 
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
             JsonArray capes = obj.getAsJsonArray("capes");
@@ -135,7 +132,17 @@ public class ClientCosmetics {
                 list.add(cape);
             }
 
-            MOJANG_CAPES.put(uuid, list);
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeUuid(uuid);
+            buf.writeInt(list.size());
+
+            for (MojangCape cape : list) {
+                buf.writeString(cape.id);
+                buf.writeString(cape.name);
+                buf.writeString(cape.url);
+            }
+
+            ClientPlayNetworking.send(MOJANG_CAPES_SYNC, buf);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -143,13 +150,20 @@ public class ClientCosmetics {
     }
 
     private static String getAccessTokenFromLaunchArgs() {
-        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-            if (arg.startsWith("--accessToken")) {
-                String[] split = arg.split("=", 2);
-                if (split.length == 2) return split[1];
-                else continue;
-            }
+        MinecraftClient client = MinecraftClient.getInstance();
+        return client.getSession().getAccessToken();
+    }
+    public static Identifier loadTextureFromURL(String url, String playerId) {
+        if (url == null || url.isEmpty() || playerId == null || playerId.isEmpty()) return null;
+        try (InputStream in = new URL(url).openStream()) {
+            NativeImage img = NativeImage.read(in);
+            NativeImageBackedTexture texture = new NativeImageBackedTexture(img);
+            Identifier id = new Identifier("szar", "cape_" + playerId);
+            MinecraftClient.getInstance().getTextureManager().registerTexture(id, texture);
+            return id;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 }

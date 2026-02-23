@@ -5,6 +5,7 @@ import dev.tggamesyt.szar.NyanEntity;
 import dev.tggamesyt.szar.PlaneEntity;
 import dev.tggamesyt.szar.Szar;
 import dev.tggamesyt.szar.PlaneAnimation;
+import dev.tggamesyt.szar.ServerCosmetics.NameType;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -43,7 +44,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
+import static dev.tggamesyt.szar.ServerCosmetics.SYNC_PACKET;
 import static dev.tggamesyt.szar.Szar.*;
+import static dev.tggamesyt.szar.client.ClientCosmetics.loadTextureFromURL;
 import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
@@ -73,6 +76,25 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(SYNC_PACKET, (client, handler, buf, responseSender) -> {
+            // First read the player UUID
+            UUID playerUuid = buf.readUuid();
+
+            // Read cosmetic data
+            NameType nameType = buf.readEnumConstant(NameType.class);
+            Integer staticColor = buf.readBoolean() ? buf.readInt() : null;
+            Integer gradientStart = buf.readBoolean() ? buf.readInt() : null;
+            Integer gradientEnd = gradientStart != null ? buf.readInt() : null;
+
+            String textureUrl = buf.readString();
+            Identifier capeTexture = loadTextureFromURL(textureUrl, playerUuid.toString());
+
+            // Apply the cosmetic profile on the main thread
+            client.execute(() -> {
+                ClientCosmetics.fetchMojangCapes(playerUuid);
+                ClientCosmetics.apply(playerUuid, nameType, staticColor, gradientStart, gradientEnd, capeTexture);
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_MERL_SCREEN,
                 (client, handler, buf, responseSender) -> {
                     int entityId = buf.readInt();
