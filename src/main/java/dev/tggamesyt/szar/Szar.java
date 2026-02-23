@@ -73,6 +73,7 @@ import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.jmx.Server;
 
 import java.util.HashMap;
 import java.util.List;
@@ -285,6 +286,7 @@ public class Szar implements ModInitializer {
     );
     @Override
     public void onInitialize() {
+        ServerCosmetics.init();
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             SERVER = server;
         });

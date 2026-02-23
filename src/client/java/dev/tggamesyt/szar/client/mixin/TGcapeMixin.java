@@ -13,11 +13,15 @@ public abstract class TGcapeMixin {
 
     @Inject(method = "getCapeTexture", at = @At("HEAD"), cancellable = true)
     private void injectCapeTexture(CallbackInfoReturnable<Identifier> cir) {
-        AbstractClientPlayerEntity self = (AbstractClientPlayerEntity)(Object)this;
+        AbstractClientPlayerEntity player = (AbstractClientPlayerEntity)(Object) this;
 
-        var profile = ClientCosmetics.getProfile(self.getUuid());
+        ClientCosmetics.CosmeticProfile profile =
+                ClientCosmetics.get(player.getUuid());
+
+        // Only override if we actually have a custom cape
         if (profile != null && profile.capeTexture != null) {
             cir.setReturnValue(profile.capeTexture);
         }
+        // Otherwise vanilla continues → Mojang cape works normally
     }
 }
