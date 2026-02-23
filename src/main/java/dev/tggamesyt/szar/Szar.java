@@ -1,20 +1,16 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.serialization.Codec;
-import dev.tggamesyt.szar.PlaneAnimation;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
-import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -29,6 +25,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -44,21 +41,16 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.structure.StructurePieceType;
-import net.minecraft.structure.rule.RuleTest;
-import net.minecraft.structure.rule.RuleTestType;
 import net.minecraft.structure.rule.TagMatchRuleTest;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
-import net.minecraft.util.collection.DataPool;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.YOffset;
@@ -67,13 +59,10 @@ import net.minecraft.world.gen.placementmodifier.BiomePlacementModifier;
 import net.minecraft.world.gen.placementmodifier.CountPlacementModifier;
 import net.minecraft.world.gen.placementmodifier.HeightRangePlacementModifier;
 import net.minecraft.world.gen.placementmodifier.SquarePlacementModifier;
-import net.minecraft.world.gen.stateprovider.BlockStateProvider;
-import net.minecraft.world.gen.stateprovider.WeightedBlockStateProvider;
 import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.jmx.Server;
 
 import java.util.HashMap;
 import java.util.List;
@@ -159,6 +148,15 @@ public class Szar implements ModInitializer {
                     FabricEntityTypeBuilder
                             .create(SpawnGroup.CREATURE, NiggerEntity::new)
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<KidEntity> Kid =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "kid"),
+                    FabricEntityTypeBuilder.create(SpawnGroup.CREATURE,
+                                    KidEntity::new) // ✅ matches EntityType<KidEntity>
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F))
                             .build()
             );
     public static final EntityType<EpsteinEntity> EpsteinEntityType =
@@ -284,6 +282,7 @@ public class Szar implements ModInitializer {
                     })
                     .build()
     );
+    private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
         ServerCosmetics.init();
@@ -434,6 +433,10 @@ public class Szar implements ModInitializer {
         FabricDefaultAttributeRegistry.register(
                 NiggerEntityType,
                 NiggerEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
+                Kid,
+                KidEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
                 EpsteinEntityType,
@@ -588,7 +591,20 @@ public class Szar implements ModInitializer {
                         }
                     });
                 });
-
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                if (player.isSleeping()) {
+                    BlockPos bedPos = player.getSleepingPosition().orElse(null);
+                    if (bedPos != null && !sleepingPlayers.containsKey(player.getUuid())) {
+                        sleepingPlayers.put(player.getUuid(), bedPos);
+                        checkSleepPairs(server, player, bedPos);
+                    }
+                } else {
+                    // remove on wakeup
+                    sleepingPlayers.remove(player.getUuid());
+                }
+            }
+        });
     }
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(
@@ -635,6 +651,10 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "radiation"),
             new RadiationStatusEffect()
     );
+    public static final StatusEffect PREGNANT =
+            Registry.register(Registries.STATUS_EFFECT,
+                    new Identifier(Szar.MOD_ID, "pregnant"),
+                    new PregnantEffect());
     public static final RegistryKey<DamageType> RADIATION_DAMAGE =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "radiation"));
     public static final Item AK_AMMO = Registry.register(
@@ -1104,6 +1124,37 @@ public class Szar implements ModInitializer {
                     )
             ));
         }
+    }
+    public static final Map<UUID, UUID> pregnantPartners = new HashMap<>();
+    private void checkSleepPairs(MinecraftServer server, ServerPlayerEntity sleeper, BlockPos bedPos) {
+        double maxDist = 2.0;
+
+        for (ServerPlayerEntity other : server.getPlayerManager().getPlayerList()) {
+            if (other == sleeper) continue;
+
+            if (other.isSleeping()) {
+                BlockPos otherPos = other.getSleepingPosition().orElse(null);
+                if (otherPos != null && otherPos.isWithinDistance(bedPos, maxDist)) {
+
+                    // Determine who is holding the special item
+                    if (isHoldingSpecial(sleeper)) {
+                        // The OTHER player gets the effect
+                        givePregnantEffect(other, sleeper);
+                    } else if (isHoldingSpecial(other)) {
+                        givePregnantEffect(sleeper, other);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isHoldingSpecial(ServerPlayerEntity p) {
+        return p.getMainHandStack().getItem() == FASZITEM;
+    }
+
+    private void givePregnantEffect(ServerPlayerEntity player, ServerPlayerEntity partner) {
+        player.addStatusEffect(new StatusEffectInstance(PREGNANT, 20 * 60 * 20, 0, false, false, true));
+        pregnantPartners.put(player.getUuid(), partner.getUuid());
     }
 }
 

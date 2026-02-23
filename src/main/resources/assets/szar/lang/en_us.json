@@ -70,5 +70,7 @@
   "death.attack.radiation": "%1$s radiated away",
   "death.attack.radiation.player": "%1$s was lethally irradiated by %2$s",
   "entity.szar.merl": "Merl",
-  "item.szar.merl_spawn_egg": "Merl Spawn Egg"
+  "item.szar.merl_spawn_egg": "Merl Spawn Egg",
+  "effect.szar.pregnant": "Pregnant",
+  "entity.szar.kid": "Kid"
 }

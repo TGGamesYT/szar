@@ -206,6 +206,10 @@ public class SzarClient implements ClientModInitializer {
                 NiggerEntityRenderer::new
         );
         EntityRendererRegistry.register(
+                Szar.Kid,
+                KidRenderer::new
+        );
+        EntityRendererRegistry.register(
                 Szar.AtomEntityType,
                 AtomEntityRenderer::new
         );

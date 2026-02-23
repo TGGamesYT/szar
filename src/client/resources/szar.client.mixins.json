@@ -9,7 +9,8 @@
     "RadiatedItemRendererMixin",
     "SplashOverlayMixin",
     "TGnameMixin",
-    "TGcapeMixin"
+    "TGcapeMixin",
+    "PlayerModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1
