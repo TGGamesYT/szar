@@ -1,9 +1,12 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -36,6 +39,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -64,11 +68,13 @@ import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
+import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 import static dev.tggamesyt.szar.ServerCosmetics.USERS;
 import static dev.tggamesyt.szar.ServerCosmetics.sync;
 
@@ -157,7 +163,7 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "kid"),
                     FabricEntityTypeBuilder.create(SpawnGroup.CREATURE,
                                     KidEntity::new) // ✅ matches EntityType<KidEntity>
-                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F))
+                            .dimensions(EntityDimensions.changing(0.6F, 1.8F))
                             .build()
             );
     public static final EntityType<EpsteinEntity> EpsteinEntityType =
@@ -621,6 +627,23 @@ public class Szar implements ModInitializer {
                     sleepingPlayers.remove(player.getUuid());
                 }
             }
+        });
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(
+                    LiteralArgumentBuilder.<ServerCommandSource>literal("ny")
+                            .requires(context -> context.hasPermissionLevel(2))
+                            .executes(context -> {
+                                ServerCommandSource source = context.getSource();
+                                ServerWorld world = source.getWorld();
+
+                                // Kill all KidEntity instances
+                                int count = world.getEntitiesByType(NyanEntityType, e -> true).size();
+                                world.getEntitiesByType(NyanEntityType, e -> true).forEach(e -> e.kill());
+
+                                source.sendMessage(Text.literal("Killed " + count + " nyan cats."));
+                                return count;
+                            })
+            );
         });
     }
     public static final StructurePieceType TNT_OBELISK_PIECE =
