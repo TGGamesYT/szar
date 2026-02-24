@@ -217,7 +217,16 @@ public class ServerCosmetics {
     /* ---------------- SYNC ---------------- */
 
     public static void sync(ServerPlayerEntity player, UserCosmetics user) {
-        for (ServerPlayerEntity p : player.getServer().getPlayerManager().getPlayerList()) {
+        System.out.println("Syncing player: " + player.getName().getString() + " user: " + user.toString());
+        List<ServerPlayerEntity> original =
+                player.getServer().getPlayerManager().getPlayerList();
+        List<ServerPlayerEntity> list = new ArrayList<>(original);
+        if (!list.contains(player)) {list.add(player);}
+        System.out.println(
+                player.getServer().getPlayerManager().getPlayerList().size()
+        );
+        for (ServerPlayerEntity p : list) {
+            System.out.println("sending sync : " + player.getName().getString() + " to user: " + p.getName().getString());
             PacketByteBuf buf = PacketByteBufs.create();
 
             // Write player UUID first
