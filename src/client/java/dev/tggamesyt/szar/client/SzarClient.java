@@ -92,6 +92,7 @@ public class SzarClient implements ClientModInitializer {
             // Apply the cosmetic profile on the main thread
             client.execute(() -> {
                 ClientCosmetics.fetchMojangCapes(playerUuid);
+                System.out.println("got it client");
                 ClientCosmetics.apply(playerUuid, nameType, staticColor, gradientStart, gradientEnd, capeTexture);
             });
         });

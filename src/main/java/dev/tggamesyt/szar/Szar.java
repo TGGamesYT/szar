@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -64,12 +65,12 @@ import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
+
+import static dev.tggamesyt.szar.ServerCosmetics.USERS;
+import static dev.tggamesyt.szar.ServerCosmetics.sync;
 
 public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
@@ -286,6 +287,22 @@ public class Szar implements ModInitializer {
     @Override
     public void onInitialize() {
         ServerCosmetics.init();
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+
+            ServerCosmetics.UserCosmetics user = USERS.get(player.getUuid());
+            if (user != null) {
+
+                // AUTO SELECT FIRST CAPE IF NONE SELECTED
+                if (user.selectedCape == null && !user.ownedCapes.isEmpty()) {
+                    user.selectedCape = user.ownedCapes.get(0);
+                } else {
+                    user.selectedCape = null;
+                }
+
+                sync(player, user);
+            }
+        });
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             SERVER = server;
         });
@@ -1153,8 +1170,12 @@ public class Szar implements ModInitializer {
     }
 
     private void givePregnantEffect(ServerPlayerEntity player, ServerPlayerEntity partner) {
-        player.addStatusEffect(new StatusEffectInstance(PREGNANT, 20 * 60 * 20, 0, false, false, true));
-        pregnantPartners.put(player.getUuid(), partner.getUuid());
+        Random r = new Random();
+        System.out.println(r.nextInt());
+        if (r.nextInt(10) == 6) {
+            player.addStatusEffect(new StatusEffectInstance(PREGNANT, 20 * 60 * 20, 0, false, false, true));
+            pregnantPartners.put(player.getUuid(), partner.getUuid());
+        }
     }
 }
 

@@ -12,6 +12,10 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class FaszItem extends BlockItem {
 
     public FaszItem(Block block, Settings settings) {
@@ -22,7 +26,7 @@ public class FaszItem extends BlockItem {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
 
-        if (!world.isClient && stack.isOf(this)) {
+        if (!world.isClient && stack.isOf(this) && new Random().nextInt(5) == 1) {
             ServerWorld serverWorld = (ServerWorld) world;
 
             // Get the direction the player's torso is looking
