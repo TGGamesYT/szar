@@ -86,6 +86,7 @@ public class Szar implements ModInitializer {
             SoundEvent.of(new Identifier("szar", "merl"));
     public static final Identifier PLANE_ANIM_PACKET =
             new Identifier(MOD_ID, "plane_anim");
+    public static final Identifier NAZI_HAND_GESTURE = new Identifier("szar", "hit_hand");
     public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
 
     public static final Block SZAR_BLOCK =

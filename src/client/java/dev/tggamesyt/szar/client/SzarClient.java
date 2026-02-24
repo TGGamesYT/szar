@@ -1,10 +1,7 @@
 package dev.tggamesyt.szar.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.tggamesyt.szar.NyanEntity;
-import dev.tggamesyt.szar.PlaneEntity;
-import dev.tggamesyt.szar.Szar;
-import dev.tggamesyt.szar.PlaneAnimation;
+import dev.tggamesyt.szar.*;
 import dev.tggamesyt.szar.ServerCosmetics.NameType;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;

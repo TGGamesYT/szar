@@ -2,8 +2,6 @@ package dev.tggamesyt.szar;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -19,6 +17,59 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class NaziEntity extends PathAwareEntity implements Arrestable{
+
+    private boolean hithandPlaying = false;
+    private int hithandTimer = 0; // ticks remaining
+    private float hithandProgress = 0f; // 0 → 1 over animation duration
+    private int hithandCooldown = 0; // ticks remaining before we can roll again
+    // Call this to start the hand animation
+    public void playHithandAnimation() {
+        this.hithandPlaying = true;
+        this.hithandTimer = 20; // 20 ticks = 1 second
+        this.hithandProgress = 0f;
+    }
+
+    // Whether the animation is currently playing
+    public boolean isPlayingHandAnim() {
+        return hithandPlaying;
+    }
+
+    // Current animation progress (0 → 1)
+    public float getAnimationProgress() {
+        return hithandProgress;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        // --- Handle animation playing ---
+        if (hithandPlaying) {
+            hithandTimer--;
+            hithandProgress = (float)(20 - hithandTimer) / 20f;
+
+            if (hithandTimer <= 0) {
+                hithandPlaying = false;
+                hithandProgress = 0f;
+
+                // Start 2 second cooldown (40 ticks)
+                hithandCooldown = 40;
+            }
+            return; // don't roll while animating
+        }
+
+        // --- Handle cooldown ---
+        if (hithandCooldown > 0) {
+            hithandCooldown--;
+            return; // don't roll during cooldown
+        }
+
+        // --- Random roll ---
+        // 1/200 chance per tick ≈ once every 10 seconds on average
+        if (this.random.nextFloat() < 0.005f) {
+            playHithandAnimation();
+        }
+    }
 
     public static boolean arrestable = false;
     @Nullable

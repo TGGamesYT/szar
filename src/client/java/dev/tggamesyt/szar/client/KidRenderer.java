@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.MobEntityRenderer;
+import net.minecraft.client.render.entity.animation.Animation;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -16,7 +17,8 @@ public class KidRenderer extends MobEntityRenderer<KidEntity, PlayerEntityModel<
     private static final float MAX_HEAD_SCALE = 2.0f;
     private static final float MIN_BODY_SCALE = 0.3f; // starting scale for body
     private static final float MAX_BODY_SCALE = 1.0f; // final player scale
-
+    private Animation currentAnimation;
+    private float animationTime = 0f; // track progress in seconds
     public KidRenderer(EntityRendererFactory.Context ctx) {
         super(ctx,
                 new PlayerEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER), false),
