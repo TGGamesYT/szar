@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
@@ -302,6 +303,14 @@ public class Szar implements ModInitializer {
 
                 sync(player, user);
             }
+        });
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (entity instanceof KidEntity kid) {
+                if (kid.onParentInteract(player)) {
+                    return ActionResult.SUCCESS; // prevents default interaction
+                }
+            }
+            return ActionResult.PASS;
         });
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             SERVER = server;

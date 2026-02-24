@@ -1,6 +1,5 @@
 package dev.tggamesyt.szar;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
@@ -9,15 +8,16 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class KidEntity extends PathAwareEntity {
 
@@ -27,7 +27,8 @@ public class KidEntity extends PathAwareEntity {
             DataTracker.registerData(KidEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
     private static final TrackedData<Optional<UUID>> PARENT_B =
             DataTracker.registerData(KidEntity.class, TrackedDataHandlerRegistry.OPTIONAL_UUID);
-
+    BlockPos homePosition = null;
+    int homeRadius = 20; // default max radius around parent
     public static final int MAX_AGE = 360000; // 30 days * 10h
 
     public KidEntity(EntityType<KidEntity> type, World world) {
@@ -50,13 +51,17 @@ public class KidEntity extends PathAwareEntity {
     protected void initGoals() {
         this.goalSelector.add(0, new SwimGoal(this));
         this.goalSelector.add(1, new FleeEntityGoal<>(this, PlayerEntity.class, 6F, 1.2, 1.5));
-        this.goalSelector.add(2, new WanderAroundFarGoal(this, 1.0));
+        this.goalSelector.add(2, new KidWanderGoal(this, 1.0)); // ← use our custom goal
         this.goalSelector.add(3, new LookAroundGoal(this));
-        //this.goalSelector.add(4, new KidGoToBedGoal(this, 1.0));
-
-        this.targetSelector.add(1, new RevengeGoal(this));
     }
-
+    public void setStayHere(BlockPos pos) {
+        this.homePosition = pos;
+        this.homeRadius = 5; // smaller radius for "stay here"
+    }
+    public void followParents() {
+        this.homePosition = null;
+        this.homeRadius = 20;
+    }
     @Override
     public void tick() {
         super.tick();
@@ -138,5 +143,56 @@ public class KidEntity extends PathAwareEntity {
             dataTracker.set(PARENT_B, Optional.of(nbt.getUuid("ParentB")));
 
         dataTracker.set(AGE, nbt.getInt("Age"));
+    }
+
+    BlockPos getNearestParentPos() {
+        if (!(this.getWorld() instanceof ServerWorld serverWorld)) return null;
+
+        UUID parentA = getParentA();
+        UUID parentB = getParentB();
+
+        AtomicReference<BlockPos> nearestPos = new AtomicReference<>();
+        AtomicReference<Double> nearestDistance = new AtomicReference<>(Double.MAX_VALUE);
+
+        for (UUID parentId : new UUID[]{parentA, parentB}) {
+            if (parentId == null) continue;
+
+            serverWorld.getPlayers().stream()
+                    .filter(p -> p.getUuid().equals(parentId))
+                    .findFirst()
+                    .ifPresent(p -> {
+                        double d = this.squaredDistanceTo(p);
+                        if (d < nearestDistance.get()) {
+                            nearestDistance.set(d);
+                            nearestPos.set(p.getBlockPos());
+                        }
+                    });
+        }
+
+        return nearestPos.get();
+    }
+
+    public boolean onParentInteract(PlayerEntity parent) {
+        UUID parentUuid = parent.getUuid();
+        if (!parentUuid.equals(getParentA()) && !parentUuid.equals(getParentB())) {
+            return false; // not a parent
+        }
+
+        // Set “stay here” at current kid position
+        if (this.homePosition == null) {
+            setStayHere(this.getBlockPos());
+            parent.sendMessage(
+                    Text.literal("Kid will stay here!"),
+                    false
+            );
+        } else {
+            followParents();
+            parent.sendMessage(
+                    Text.literal("Kid will follow parents!"),
+                    false
+            );
+        }
+
+        return true;
     }
 }
