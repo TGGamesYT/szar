@@ -4,9 +4,12 @@
   "package": "dev.tggamesyt.szar.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerEntityMixin",
     "CraftingScreenHandlerMixin",
     "CraftingScreenHandlerMixin2",
+    "LivingEntityFallDamageMixin",
+    "PlaneBlockInteractionMixin",
+    "PlayerEntityMixin",
+    "PlayerInteractionMixin",
     "RadiatedItemMixin"
   ],
   "injectors": {

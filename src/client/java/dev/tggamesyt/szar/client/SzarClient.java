@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -26,6 +27,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -73,6 +75,18 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.player == null) return;
+
+            boolean forward = client.options.attackKey.isPressed();
+            boolean backward = client.options.useKey.isPressed();
+
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeBoolean(forward);
+            buf.writeBoolean(backward);
+
+            ClientPlayNetworking.send(PlayerMovementManager.PACKET_ID, buf);
+        });
         ClientPlayNetworking.registerGlobalReceiver(SYNC_PACKET, (client, handler, buf, responseSender) -> {
             // First read the player UUID
             UUID playerUuid = buf.readUuid();

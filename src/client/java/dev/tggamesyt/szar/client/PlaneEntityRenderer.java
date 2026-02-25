@@ -6,7 +6,9 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.*;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.RotationAxis;
 
 public class PlaneEntityRenderer extends EntityRenderer<PlaneEntity> {
 
@@ -35,26 +37,48 @@ public class PlaneEntityRenderer extends EntityRenderer<PlaneEntity> {
             int light
     ) {
         matrices.push();
+
+        // Smooth interpolation of rotation
+        float interpolatedYaw = entity.prevYaw + (entity.getYaw() - entity.prevYaw) * tickDelta;
+        float interpolatedPitch = entity.prevPitch + (entity.getPitch() - entity.prevPitch) * tickDelta;
+
+        // Scale
         matrices.scale(4.0F, 4.0F, 4.0F);
+
+        // Move model to correct pivot point
         matrices.translate(0.0, 1.5, 0.0);
+
+        // Rotate to match hitbox exactly
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-interpolatedYaw));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(interpolatedPitch));
+
+        // Rotate 180° to fix backwards-facing
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
+
+        // Flip model upright (Minecraft model fix)
         matrices.scale(-1.0F, -1.0F, 1.0F);
 
+        // Set model angles
         model.setAngles(
                 entity,
                 0,
                 0,
                 entity.age + tickDelta,
-                0,
-                0
+                interpolatedYaw,
+                interpolatedPitch
         );
 
         VertexConsumer consumer =
                 vertices.getBuffer(RenderLayer.getEntityCutout(getTexture(entity)));
 
-        model.render(matrices, consumer, light, OverlayTexture.DEFAULT_UV,
-                1.0F, 1.0F, 1.0F, 1.0F);
+        model.render(
+                matrices,
+                consumer,
+                light,
+                OverlayTexture.DEFAULT_UV,
+                1.0F, 1.0F, 1.0F, 1.0F
+        );
 
         matrices.pop();
-        super.render(entity, yaw, tickDelta, matrices, vertices, light);
     }
 }

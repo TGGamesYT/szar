@@ -6,7 +6,7 @@
   },
   "display": {
     "icon": { "item": "minecraft:tnt" },
-    "title": "Too Close",
+    "title": "Hmm, familiar...",
     "description": "You were there when the towers fell",
     "frame": "challenge",
     "show_toast": true,

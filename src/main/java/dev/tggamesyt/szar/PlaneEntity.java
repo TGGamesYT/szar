@@ -3,11 +3,13 @@ package dev.tggamesyt.szar;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.*;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
@@ -22,6 +24,9 @@ public class PlaneEntity extends Entity {
     private PlaneAnimation currentServerAnimation = null;
     private float enginePower = 0f;
     private double  lastY;
+    double stallSpeed = 1.0;
+    double explodeSpeed = 1.0;
+    private int brakeHoldTicks = 0;
     @Environment(EnvType.CLIENT)
     private PlaneAnimation currentAnimation;
 
@@ -34,6 +39,7 @@ public class PlaneEntity extends Entity {
     public PlaneEntity(EntityType<? extends PlaneEntity> type, World world) {
         super(type, world);
         this.noClip = false;
+        this.setStepHeight(2.0f);
         this.setNoGravity(false); // FORCE gravity ON
     }
 
@@ -66,128 +72,142 @@ public class PlaneEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-
         PlayerEntity player = getControllingPassenger();
+
+        // -----------------------------
+        // No pilot: just apply basic gravity
+        // -----------------------------
         if (player == null) {
-            Vec3d velocity = getVelocity();
-
-            // Apply gravity even without pilot
-            velocity = velocity.add(0, -0.04, 0);
-
-            velocity = velocity.multiply(0.98);
-
+            Vec3d velocity = getVelocity().add(0, -0.04, 0).multiply(0.95);
             setVelocity(velocity);
             move(MovementType.SELF, velocity);
             return;
         }
 
-
-        /* --------------------------------
-           CONTROLLER (AircraftEntity logic)
-        -------------------------------- */
-
-        // YAW
+        // -----------------------------
+        // Yaw & pitch control
+        // -----------------------------
         setYaw(getYaw() - player.sidewaysSpeed * 4.0f);
+        if (!isOnGround() || getVelocity().length() > 0.9) setPitch(getPitch() - player.forwardSpeed * 1.5f);
+        setPitch(getPitch() * 0.98f); // auto leveling
+        player.setInvisible(true);
 
-        // PITCH (only in air)
-        if (!isOnGround()) {
-            setPitch(getPitch() - player.forwardSpeed * 2.5f);
+        // -----------------------------
+        // Engine target adjustments (server authoritative)
+        // -----------------------------
+        boolean forward = !getWorld().isClient && PlayerMovementManager.isForwardPressed((ServerPlayerEntity) player);
+        boolean braking = !getWorld().isClient && PlayerMovementManager.isBackwardPressed((ServerPlayerEntity) player);
+
+        if (forward) setEngineTarget(getEngineTarget() + 0.02f);
+
+        if (braking) {
+            brakeHoldTicks++;
+            float baseBrake = isOnGround() ? 0.04f : 0.015f;
+            float progressive = Math.min(brakeHoldTicks * 0.0035f, 0.15f);
+            float brakeStrength = baseBrake + progressive;
+            setEngineTarget(getEngineTarget() - brakeStrength);
+
+            // Apply actual braking locally
+            Vec3d vel = getVelocity();
+            if (vel.lengthSquared() > 0.0001) {
+                Vec3d brakeDir = vel.normalize().multiply(-brakeStrength * 0.6);
+                setVelocity(vel.add(brakeDir));
+            }
+        } else {
+            brakeHoldTicks = 0;
         }
 
-        // Stabilizer (small auto leveling)
-        setPitch(getPitch() * 0.98f);
+        // -----------------------------
+        // Engine power smoothing
+        // -----------------------------
+        float lerpSpeed = braking ? 0.25f : 0.05f;
+        enginePower += (getEngineTarget() - enginePower) * lerpSpeed;
 
-        /* --------------------------------
-           THROTTLE (AirplaneEntity logic)
-        -------------------------------- */
-
-        if (player.jumping) {
-            setEngineTarget(getEngineTarget() + 0.02f);
-        }
-
-        if (player.isSneaking()) {
-            setEngineTarget(getEngineTarget() - 0.02f);
-        }
-
-        // Smooth engine reaction
-        enginePower += (getEngineTarget() - enginePower) * 0.05f;
-
-/* --------------------------------
-   PHYSICS (STABLE VERSION)
--------------------------------- */
-
-        Vec3d forward = getRotationVector().normalize();
+        // -----------------------------
+        // PHYSICS (runs on both client & server)
+        // -----------------------------
+        Vec3d forwardVec = getRotationVector().normalize();
         Vec3d velocity = getVelocity();
+        double horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
-        /* ---------- REALIGN VELOCITY ---------- */
-        /* Prevents internal momentum stacking */
+        // Stall gravity in air
+        if (!isOnGround() && horizontalSpeed < stallSpeed) {
+            velocity = velocity.add(0, -0.2, 0);
+        }
 
+        // Forward locking (only if not braking)
         double speed = velocity.length();
-
-        if (speed > 0.001) {
-            // Stronger forward locking
-            double alignment = 0.25; // was 0.08
-            Vec3d newDir = velocity.normalize().lerp(forward, alignment).normalize();
+        if (speed > 0.001 && enginePower > 0.01f && !braking) {
+            Vec3d newDir = velocity.normalize().lerp(forwardVec, 0.25).normalize();
             velocity = newDir.multiply(speed);
         }
 
-
-        /* ---------- THRUST ---------- */
-
+        // Apply thrust
         double thrust = Math.pow(enginePower, 2.0) * 0.08;
-        velocity = velocity.add(forward.multiply(thrust));
+        velocity = velocity.add(forwardVec.multiply(thrust));
 
-        /* ---------- GLIDE ---------- */
-
+        // Glide (air only)
         double diffY = lastY - getY();
-        if (lastY != 0.0 && diffY != 0.0) {
-            velocity = velocity.add(
-                    forward.multiply(diffY * 0.04 * (1.0 - Math.abs(forward.y)))
-            );
+        if (!isOnGround() && lastY != 0.0 && diffY != 0.0) {
+            velocity = velocity.add(forwardVec.multiply(diffY * 0.04 * (1.0 - Math.abs(forwardVec.y))));
         }
         lastY = getY();
 
-        /* ---------- DYNAMIC GRAVITY ---------- */
-
-        double horizontalSpeed = velocity.length() * (1.0 - Math.abs(forward.y));
+        // Dynamic gravity
+        horizontalSpeed = velocity.length() * (1.0 - Math.abs(forwardVec.y));
         double gravityFactor = Math.max(0.0, 1.0 - horizontalSpeed * 1.5);
-
-// ALWAYS apply — do not check hasNoGravity()
         velocity = velocity.add(0, -0.04 * gravityFactor, 0);
 
-        /* ---------- DRAG ---------- */
+        // Drag / friction
+        velocity = isOnGround() ? velocity.multiply(0.94) : velocity.multiply(0.98);
 
-        velocity = velocity.multiply(0.98);
+        // Max speed clamp
+        double maxSpeed = 2;
+        if (velocity.length() > maxSpeed) velocity = velocity.normalize().multiply(maxSpeed);
 
-        /* ---------- MAX SPEED CLAMP ---------- */
+        // Save vertical velocity before move for impact check
+        Vec3d preMoveVelocity = velocity;
 
-        double maxSpeed = 1.5;
-        if (velocity.length() > maxSpeed) {
-            velocity = velocity.normalize().multiply(maxSpeed);
-        }
-
+        // Move
         setVelocity(velocity);
         move(MovementType.SELF, velocity);
 
-        /* --------------------------------
-   ANIMATION STATE SYNC
--------------------------------- */
+        // -----------------------------
+        // Crash detection (server only)
+        // Explodes if hitting block with high horizontal or vertical velocity
+        // -----------------------------
+        if (!getWorld().isClient) {
+            double horizontalImpact = Math.sqrt(preMoveVelocity.x * preMoveVelocity.x + preMoveVelocity.z * preMoveVelocity.z);
+            double verticalImpact = Math.abs(preMoveVelocity.y);
 
-            boolean hasPassenger = getControllingPassenger() != null;
+            boolean crash = (horizontalImpact > 1.5 && horizontalCollision) || (verticalImpact > explodeSpeed && verticalCollision);
+            if (crash) {
+                getWorld().createExplosion(this, getX(), getY(), getZ(), 7.0f, World.ExplosionSourceType.TNT);
+                remove(RemovalReason.KILLED);
+                return;
+            }
+        }
 
-            if (!hasPassenger) {
-                playServerAnimation(null);
-            }
-            else if (enginePower < 0.05f) {
-                playServerAnimation(PlaneAnimation.START_ENGINE);
-            }
-            else if (isOnGround()) {
-                playServerAnimation(PlaneAnimation.LAND_STARTED);
-            }
-            else {
-                playServerAnimation(PlaneAnimation.FLYING);
-            }
+        // Stop tiny movements
+        if (velocity.lengthSquared() < 0.005) velocity = Vec3d.ZERO;
+        setVelocity(velocity);
 
+        // -----------------------------
+        // Animation sync
+        // -----------------------------
+        boolean hasPassenger = getControllingPassenger() != null;
+        if (!hasPassenger) playServerAnimation(null);
+        else if (enginePower < 0.05f) playServerAnimation(PlaneAnimation.START_ENGINE);
+        else if (isOnGround()) playServerAnimation(PlaneAnimation.LAND_STARTED);
+        else playServerAnimation(PlaneAnimation.FLYING);
+    }
+
+    @Override
+    protected void removePassenger(Entity passenger) {
+        super.removePassenger(passenger);
+        if (passenger instanceof PlayerEntity player) {
+            player.setInvisible(false);
+        }
     }
 
     @Override

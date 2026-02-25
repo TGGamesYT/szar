@@ -293,6 +293,7 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        PlayerMovementManager.init();
         ServerCosmetics.init();
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
