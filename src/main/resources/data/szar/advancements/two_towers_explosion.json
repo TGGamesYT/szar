@@ -5,7 +5,7 @@
     }
   },
   "display": {
-    "icon": { "item": "minecraft:tnt" },
+    "icon": { "item": "szar:towers" },
     "title": "Hmm, familiar...",
     "description": "You were there when the towers fell",
     "frame": "challenge",

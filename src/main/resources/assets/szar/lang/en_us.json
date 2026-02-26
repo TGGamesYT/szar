@@ -72,5 +72,6 @@
   "entity.szar.merl": "Merl",
   "item.szar.merl_spawn_egg": "Merl Spawn Egg",
   "effect.szar.pregnant": "Pregnant",
-  "entity.szar.kid": "Kid"
+  "entity.szar.kid": "Kid",
+  "block.szar.obelisk_core": "Towers Core Block"
 }

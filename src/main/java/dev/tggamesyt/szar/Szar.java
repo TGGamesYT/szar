@@ -647,6 +647,11 @@ public class Szar implements ModInitializer {
                             })
             );
         });
+        Registry.register(
+                Registries.ITEM,
+                new Identifier(MOD_ID, "towers"),
+                new BlockItem(OBELISK_CORE, new Item.Settings())
+        );
     }
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(
