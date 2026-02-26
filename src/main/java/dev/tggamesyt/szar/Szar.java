@@ -287,6 +287,9 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.BAITER_DISK);
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
+                        entries.add(Szar.CNDM);
+                        entries.add(Szar.LATEX);
+                        entries.add(Szar.WHITE_LIQUID);
                     })
                     .build()
     );
@@ -653,6 +656,21 @@ public class Szar implements ModInitializer {
                 new BlockItem(OBELISK_CORE, new Item.Settings())
         );
     }
+    public static final Item CNDM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "cndm"),
+            new Item(new Item.Settings())
+    );
+    public static final Item WHITE_LIQUID = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "white_liquid"),
+            new Item(new Item.Settings().food(new FoodComponent.Builder().alwaysEdible().hunger(1).build()))
+    );
+    public static final Item LATEX = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "latex"),
+            new Item(new Item.Settings())
+    );
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(
                     Registries.STRUCTURE_PIECE,
@@ -704,6 +722,8 @@ public class Szar implements ModInitializer {
                     new PregnantEffect());
     public static final RegistryKey<DamageType> RADIATION_DAMAGE =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "radiation"));
+    public static final RegistryKey<DamageType> FCK_DAMAGE =
+            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "fck"));
     public static final Item AK_AMMO = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "bullet"),
@@ -1186,9 +1206,9 @@ public class Szar implements ModInitializer {
                     // Determine who is holding the special item
                     if (isHoldingSpecial(sleeper)) {
                         // The OTHER player gets the effect
-                        givePregnantEffect(other, sleeper);
+                        givePregnantEffect(other, sleeper, sleeper.getOffHandStack().getItem() == CNDM ? 100 : 5);
                     } else if (isHoldingSpecial(other)) {
-                        givePregnantEffect(sleeper, other);
+                        givePregnantEffect(sleeper, other, other.getOffHandStack().getItem() == CNDM ? 100 : 5);
                     }
                 }
             }
@@ -1199,10 +1219,14 @@ public class Szar implements ModInitializer {
         return p.getMainHandStack().getItem() == FASZITEM;
     }
 
-    private void givePregnantEffect(ServerPlayerEntity player, ServerPlayerEntity partner) {
+    private void givePregnantEffect(ServerPlayerEntity player, ServerPlayerEntity partner, int chance) {
+        if (partner.getOffHandStack().getItem() == Szar.CNDM) {
+            partner.getOffHandStack().decrement(1);
+            partner.dropStack(new ItemStack(WHITE_LIQUID));
+        }
         Random r = new Random();
         System.out.println(r.nextInt());
-        if (r.nextInt(10) == 6) {
+        if (r.nextInt(chance) == 0) {
             player.addStatusEffect(new StatusEffectInstance(PREGNANT, 20 * 60 * 20, 0, false, false, true));
             pregnantPartners.put(player.getUuid(), partner.getUuid());
         }

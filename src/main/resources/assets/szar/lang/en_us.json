@@ -73,5 +73,9 @@
   "item.szar.merl_spawn_egg": "Merl Spawn Egg",
   "effect.szar.pregnant": "Pregnant",
   "entity.szar.kid": "Kid",
-  "block.szar.obelisk_core": "Towers Core Block"
+  "block.szar.obelisk_core": "Towers Core Block",
+  "item.szar.cndm": "Condom",
+  "item.szar.latex": "Latex",
+  "death.attack.fck": "%1$s got fucked too hard by %2$s",
+  "item.szar.white_liquid": "..."
 }
