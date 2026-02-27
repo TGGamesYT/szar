@@ -1,9 +1,7 @@
 package dev.tggamesyt.szar;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.TntEntity;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
@@ -15,13 +13,24 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.LocalDifficulty;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class IslamTerrorist extends PathAwareEntity implements Arrestable{
-
+    private BlockPos targetCoreBlock = null; // the core block this mob is attacking
+    private Vec3d taxiDirection;
+    private Vec3d currentDirection = null; // direction plane is moving
+    private BlockPos taxiTarget;
+    private int flyStraightTicks = 0;
+    private int planeTaxiTicks = 0;
     public static boolean arrestable = false;
     private int BlowUpCooldown = 0;
     private int panicTicks = 0;
@@ -56,6 +65,108 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
         super.tick();
 
         if (BlowUpCooldown > 0) BlowUpCooldown--;
+
+        Entity vehicle = this.getVehicle();
+        if (!(vehicle instanceof PlaneEntity plane) || targetCoreBlock == null) return;
+
+        Vec3d vel = plane.getVelocity();
+
+        // -------------------------
+        // TAXI PHASE: ground, random direction
+        // -------------------------
+        if (planeTaxiTicks > 0) {
+            planeTaxiTicks--;
+
+            if (taxiTarget != null) {
+                Vec3d toTarget = Vec3d.ofCenter(taxiTarget).subtract(plane.getPos());
+                if (toTarget.length() > 0.5) {
+                    Vec3d desired = toTarget.normalize().multiply(0.4);
+                    plane.setVelocity(vel.lerp(desired, 0.1));
+                }
+            }
+
+            // small lift near end
+            if (planeTaxiTicks < 20) {
+                plane.setVelocity(plane.getVelocity().x, 0.08, plane.getVelocity().z);
+            }
+
+            // Face movement
+            Vec3d look = plane.getVelocity().normalize();
+            if (look.length() > 0) {
+                plane.setYaw((float) Math.toDegrees(Math.atan2(-look.x, look.z)));
+                plane.setPitch((float) -Math.toDegrees(Math.asin(look.y)));
+            }
+
+            return;
+        }
+
+        // -------------------------
+        // FLY STRAIGHT PHASE
+        // -------------------------
+        if (flyStraightTicks > 0) {
+            flyStraightTicks--;
+
+            plane.setVelocity(currentDirection.x * 1.4, 0.25, currentDirection.z * 1.4);
+
+            Vec3d look = plane.getVelocity().normalize();
+            if (look.length() > 0) {
+                plane.setYaw((float) Math.toDegrees(Math.atan2(-look.x, look.z)));
+                plane.setPitch((float) -Math.toDegrees(Math.asin(look.y)));
+            }
+
+            return;
+        }
+
+        // -------------------------
+        // HOMING PHASE
+        // -------------------------
+        Vec3d target = Vec3d.ofCenter(targetCoreBlock);
+        Vec3d toTarget = target.subtract(plane.getPos());
+        Vec3d desired = toTarget.normalize().multiply(1.8);
+
+        // Add small upward lift if below target
+        if (plane.getY() < target.y - 10) {
+            desired = desired.add(0, 0.2, 0);
+        }
+
+        // Smooth turning toward target
+        currentDirection = currentDirection.lerp(desired.normalize(), 0.03).normalize();
+
+        plane.setVelocity(currentDirection.multiply(1.8));
+
+        // Face movement
+        Vec3d look = plane.getVelocity().normalize();
+        if (look.length() > 0) {
+            plane.setYaw((float) Math.toDegrees(Math.atan2(-look.x, look.z)));
+            plane.setPitch((float) -Math.toDegrees(Math.asin(look.y)));
+        }
+
+        // -------------------------
+        // IMPACT
+        // -------------------------
+        if (!getWorld().isClient &&
+                (plane.horizontalCollision || plane.verticalCollision)) {
+
+            getWorld().createExplosion(
+                    plane,
+                    plane.getX(),
+                    plane.getY(),
+                    plane.getZ(),
+                    7.0f,
+                    World.ExplosionSourceType.TNT
+            );
+
+            plane.discard();
+            this.discard();
+
+            BlockEntity be = getWorld().getBlockEntity(targetCoreBlock);
+            if (be instanceof ObeliskCoreBlockEntity core) {
+                core.setHasPlaneMob(false);
+                core.markDirty();
+            }
+
+            targetCoreBlock = null;
+        }
     }
 
     // ================= VISIBILITY =================
@@ -96,6 +207,19 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
         this.velocityDirty = true;
     }
 
+    @Override
+    public void onDeath(DamageSource source) {
+        super.onDeath(source);
+
+        if (targetCoreBlock == null) return;
+
+        BlockEntity be = getWorld().getBlockEntity(targetCoreBlock);
+        if (be instanceof ObeliskCoreBlockEntity core) {
+            core.setHasPlaneMob(false);
+            core.markDirty();
+        }
+    }
+
 
     // ================= DAMAGE =================
 
@@ -117,6 +241,70 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
                 mob.getNavigation().startMovingTo(dest.x, dest.y, dest.z, 1.5);
             }
         }
+    }
+
+    @Override
+    public EntityData initialize(
+            ServerWorldAccess worldAccess,
+            LocalDifficulty difficulty,
+            SpawnReason spawnReason,
+            @Nullable EntityData entityData,
+            @Nullable NbtCompound entityNbt
+    ) {
+        EntityData data = super.initialize(worldAccess, difficulty, spawnReason, entityData, entityNbt);
+
+        if (!(worldAccess instanceof ServerWorld world)) return data;
+
+        BlockPos corePos = findNearbyCoreBlock(this.getBlockPos(), 100);
+        if (corePos == null) return data;
+
+        BlockEntity be = world.getBlockEntity(corePos);
+        if (!(be instanceof ObeliskCoreBlockEntity core)) return data;
+
+        if (!core.hasPlaneMob() && world.random.nextInt(100) == 0) {
+
+            PlaneEntity plane = new PlaneEntity(Szar.PLANE_ENTITY_TYPE, world);
+            plane.refreshPositionAndAngles(getX(), getY(), getZ(), getYaw(), getPitch());
+
+            world.spawnEntity(plane);
+            this.startRiding(plane, true);
+
+            core.setHasPlaneMob(true);
+            core.markDirty();
+
+            this.targetCoreBlock = corePos;
+
+            // Taxi + straight flight setup
+            this.planeTaxiTicks = 60;  // 3 seconds ground taxi
+            this.flyStraightTicks = 40; // 2 seconds straight flight before homing
+
+            // Random horizontal direction
+            float randomYaw = world.random.nextFloat() * 360f;
+            this.currentDirection = Vec3d.fromPolar(0, randomYaw).normalize();
+
+            // Taxi target 20 blocks ahead in random direction
+            this.taxiTarget = this.getBlockPos().add(
+                    (int)(currentDirection.x * 20),
+                    0,
+                    (int)(currentDirection.z * 20)
+            );
+        }
+
+        return data;
+    }
+
+    private BlockPos findNearbyCoreBlock(BlockPos pos, int radius) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    BlockPos check = pos.add(dx, dy, dz);
+                    if (getWorld().getBlockState(check).getBlock() == Szar.OBELISK_CORE) {
+                        return check;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     // 🔴 Flee from only specific victim, hide behind others

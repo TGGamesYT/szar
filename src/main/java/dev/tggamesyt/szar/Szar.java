@@ -17,12 +17,15 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.data.DataTracker;
@@ -649,12 +652,62 @@ public class Szar implements ModInitializer {
                                 return count;
                             })
             );
+            dispatcher.register(
+                    LiteralArgumentBuilder.<ServerCommandSource>literal("getnearestobeliskcore")
+                            .requires(context -> context.hasPermissionLevel(2))
+                            .executes(context -> {
+                                ServerCommandSource source = context.getSource();
+                                ServerWorld world = source.getWorld();
+
+                                assert source.getEntity() != null;
+                                ObeliskCoreBlockEntity nearest = findNearestObelisk(world, source.getEntity().getBlockPos(), 100);
+                                if (nearest != null) {
+                                    boolean hasPlane = nearest.hasPlaneMob();
+
+                                    source.sendMessage(Text.literal(
+                                            "HasPlane: " + hasPlane
+                                    ));
+                                    return 1;
+                                }
+                                return 0;
+                            })
+            );
         });
         Registry.register(
                 Registries.ITEM,
                 new Identifier(MOD_ID, "towers"),
                 new BlockItem(OBELISK_CORE, new Item.Settings())
         );
+    }
+    public static ObeliskCoreBlockEntity findNearestObelisk(ServerWorld world, BlockPos center, int radius) {
+        ObeliskCoreBlockEntity closest = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        BlockPos.Mutable mutable = new BlockPos.Mutable();
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+
+                    mutable.set(center.getX() + x,
+                            center.getY() + y,
+                            center.getZ() + z);
+
+                    BlockEntity be = world.getBlockEntity(mutable);
+
+                    if (be instanceof ObeliskCoreBlockEntity obelisk) {
+                        double distance = center.getSquaredDistance(mutable);
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closest = obelisk;
+                        }
+                    }
+                }
+            }
+        }
+
+        return closest;
     }
     public static final Item CNDM = Registry.register(
             Registries.ITEM,
@@ -691,8 +744,15 @@ public class Szar implements ModInitializer {
                             .copy(Blocks.DIRT) // soft block
                             .strength(0.5f, 1.0f)    // very easy to break, low blast resistance
             )
-
     );
+    public static final BlockEntityType<ObeliskCoreBlockEntity> OBELISK_CORE_ENTITY = Registry.register(
+    Registries.BLOCK_ENTITY_TYPE,
+            new Identifier(MOD_ID, "obelisk_core"),
+            FabricBlockEntityTypeBuilder.create(
+                    ObeliskCoreBlockEntity::new,
+                    OBELISK_CORE // block(s) this BE is linked to
+            ).build(null)
+        );
 
 
 
