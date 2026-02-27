@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "szar:item/fasz"
+    "layer0": "szar:item/wheel"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GBB",
+    "IFB",
+    "W W"
+  ],
+  "key": {
+    "G": { "item": "minecraft:glass" },
+    "B": { "item": "minecraft:iron_block" },
+    "I": { "item": "minecraft:iron_ingot" },
+    "F": { "item": "minecraft:furnace" },
+    "W": { "item": "szar:wheel" }
+  },
+  "result": {
+    "item": "szar:plane",
+    "count": 1
+  }
+}

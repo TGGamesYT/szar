@@ -26,7 +26,7 @@ import java.util.*;
 
 public class IslamTerrorist extends PathAwareEntity implements Arrestable{
     private BlockPos targetCoreBlock = null; // the core block this mob is attacking
-    private Vec3d taxiDirection;
+    private int airTicks = 0;
     private Vec3d currentDirection = null; // direction plane is moving
     private BlockPos taxiTarget;
     private int flyStraightTicks = 0;
@@ -68,7 +68,11 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
 
         Entity vehicle = this.getVehicle();
         if (!(vehicle instanceof PlaneEntity plane) || targetCoreBlock == null) return;
-
+        if (plane.isOnGround()) {
+            airTicks = 0;
+        } else {
+            airTicks++;
+        }
         Vec3d vel = plane.getVelocity();
 
         // -------------------------
@@ -118,21 +122,38 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
         }
 
         // -------------------------
-        // HOMING PHASE
+        // HOMING PHASE (IMPROVED)
         // -------------------------
         Vec3d target = Vec3d.ofCenter(targetCoreBlock);
         Vec3d toTarget = target.subtract(plane.getPos());
-        Vec3d desired = toTarget.normalize().multiply(1.8);
 
-        // Add small upward lift if below target
-        if (plane.getY() < target.y - 10) {
-            desired = desired.add(0, 0.2, 0);
+        double distance = toTarget.length();
+        Vec3d desiredDir = toTarget.normalize();
+
+        // Dynamic turning strength (increases over time)
+        double turnStrength = 0.03 + Math.min(airTicks * 0.002, 0.15);
+        // After ~60 ticks in air → much stronger turning
+
+        // Stronger correction when close
+        if (distance < 25) {
+            turnStrength += 0.05;
         }
 
-        // Smooth turning toward target
-        currentDirection = currentDirection.lerp(desired.normalize(), 0.03).normalize();
+        // Apply turning
+        currentDirection = currentDirection
+                .lerp(desiredDir, turnStrength)
+                .normalize();
 
-        plane.setVelocity(currentDirection.multiply(1.8));
+        // Slow slightly when near target to avoid orbiting
+        double speed = 1.8;
+        if (distance < 30) {
+            speed = 1.2;
+        }
+        if (distance < 15) {
+            speed = 0.9;
+        }
+
+        plane.setVelocity(currentDirection.multiply(speed));
 
         // Face movement
         Vec3d look = plane.getVelocity().normalize();
@@ -152,7 +173,7 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
                     plane.getX(),
                     plane.getY(),
                     plane.getZ(),
-                    7.0f,
+                    9.0f,
                     World.ExplosionSourceType.TNT
             );
 
@@ -265,7 +286,7 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
 
             PlaneEntity plane = new PlaneEntity(Szar.PLANE_ENTITY_TYPE, world);
             plane.refreshPositionAndAngles(getX(), getY(), getZ(), getYaw(), getPitch());
-
+            this.setInvisible(true);
             world.spawnEntity(plane);
             this.startRiding(plane, true);
 

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BLB",
+    "LBL",
+    "BLB"
+  ],
+  "key": {
+    "B": { "item": "minecraft:black_dye" },
+    "L": { "item": "szar:latex" }
+  },
+  "result": {
+    "item": "szar:wheel",
+    "count": 1
+  }
+}

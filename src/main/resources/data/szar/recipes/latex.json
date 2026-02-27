@@ -6,15 +6,11 @@
     "SSS"
   ],
   "key": {
-    "S": {
-      "item": "minecraft:sugar"
-    },
-    "L": {
-      "item": "minecraft:slime_ball"
-    }
+    "S": { "item": "minecraft:sugar" },
+    "L": { "item": "minecraft:slime_ball" }
   },
   "result": {
     "item": "szar:latex",
-    "count": 1
+    "count": 2
   }
 }

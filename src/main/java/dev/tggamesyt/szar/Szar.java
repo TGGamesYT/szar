@@ -249,8 +249,13 @@ public class Szar implements ModInitializer {
                     .displayName(Text.translatable("itemgroup.szar_group"))
                     .icon(() -> new ItemStack(Szar.CIGANYBLOCK)) // icon item
                     .entries((displayContext, entries) -> {
+                        // drugs
+                        entries.add(Szar.CANNABIS_ITEM);
+                        entries.add(Szar.WEED_ITEM);
+                        entries.add(Szar.WEED_JOINT_ITEM);
+                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
+                        // racism
                         entries.add(Szar.CIGANYBLOCK);
-                        entries.add(Szar.FASZITEM);
                         entries.add(Szar.NWORD_PASS);
                         entries.add(Szar.HITTER_SPAWNEGG);
                         entries.add(Szar.NAZI_SPAWNEGG);
@@ -260,9 +265,31 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.POLICE_SPAWNEGG);
                         entries.add(Szar.KEY_ITEM);
                         entries.add(Szar.HANDCUFF_ITEM);
-                        entries.add(Szar.CANNABIS_ITEM);
-                        entries.add(Szar.WEED_ITEM);
-                        entries.add(Szar.WEED_JOINT_ITEM);
+                        // crazy weponary
+                        entries.add(Szar.AK_AMMO);
+                        entries.add(Szar.AK47);
+                        entries.add(Szar.ATOM_DETONATOR);
+                        entries.add(Szar.URANIUM_ORE);
+                        entries.add(Szar.URANIUM);
+                        entries.add(Szar.URANIUM_ROD);
+                        entries.add(Szar.ATOM_CORE);
+                        entries.add(Szar.ATOM);
+                        entries.add(Szar.WHEEL);
+                        entries.add(Szar.PLANE);
+                        // random ahh silly stuff
+                        entries.add(Szar.POPTART);
+                        entries.add(Szar.NYAN_SPAWNEGG);
+                        entries.add(Szar.EPSTEIN_FILES);
+                        entries.add(Szar.EPSTEIN_SPAWNEGG);
+                        entries.add(Szar.BAITER_DISK);
+                        entries.add(Szar.MERL_SPAWNEGG);
+                        entries.add(Szar.EFN_DISK);
+                        // nsfw
+                        entries.add(Szar.FASZITEM);
+                        entries.add(Szar.CNDM);
+                        entries.add(Szar.LATEX);
+                        entries.add(Szar.WHITE_LIQUID);
+                        // niggerite shits at the end
                         entries.add(Szar.NIGGERITE_INGOT);
                         entries.add(Szar.NIGGERITE_SWORD);
                         entries.add(Szar.NIGGERITE_AXE);
@@ -274,25 +301,6 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_LEGGINGS);
                         entries.add(Szar.NIGGERITE_BOOTS);
                         entries.add(Szar.NIGGERITE_BLOCK);
-                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
-                        entries.add(Szar.AK_AMMO);
-                        entries.add(Szar.AK47);
-                        entries.add(Szar.POPTART);
-                        entries.add(Szar.NYAN_SPAWNEGG);
-                        entries.add(Szar.EPSTEIN_FILES);
-                        entries.add(Szar.EPSTEIN_SPAWNEGG);
-                        entries.add(Szar.ATOM_DETONATOR);
-                        entries.add(Szar.URANIUM_ORE);
-                        entries.add(Szar.URANIUM);
-                        entries.add(Szar.URANIUM_ROD);
-                        entries.add(Szar.ATOM_CORE);
-                        entries.add(Szar.ATOM);
-                        entries.add(Szar.BAITER_DISK);
-                        entries.add(Szar.MERL_SPAWNEGG);
-                        entries.add(Szar.EFN_DISK);
-                        entries.add(Szar.CNDM);
-                        entries.add(Szar.LATEX);
-                        entries.add(Szar.WHITE_LIQUID);
                     })
                     .build()
     );
@@ -723,6 +731,19 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "latex"),
             new Item(new Item.Settings())
+    );
+    public static final Item WHEEL = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "wheel"),
+            new Item(new Item.Settings().food(new FoodComponent.Builder().alwaysEdible().hunger(1).build()))
+    );
+    public static final Item PLANE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "plane"),
+            new SzarSpawnEgg(
+                    PLANE_ENTITY_TYPE,
+                    new Item.Settings()
+            )
     );
     public static final StructurePieceType TNT_OBELISK_PIECE =
             Registry.register(

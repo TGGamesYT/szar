@@ -8,12 +8,14 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +23,12 @@ public class PlaneEntity extends Entity {
 
     private static final TrackedData<Float> ENGINE_TARGET =
             DataTracker.registerData(PlaneEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS =
+            DataTracker.registerData(PlaneEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float> DAMAGE_WOBBLE_STRENGTH =
+            DataTracker.registerData(PlaneEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> DAMAGE_WOBBLE_SIDE =
+            DataTracker.registerData(PlaneEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private PlaneAnimation currentServerAnimation = null;
     private float enginePower = 0f;
     private double  lastY;
@@ -46,6 +54,9 @@ public class PlaneEntity extends Entity {
 
     @Override
     protected void initDataTracker() {
+        this.dataTracker.startTracking(DAMAGE_WOBBLE_TICKS, 0);
+        this.dataTracker.startTracking(DAMAGE_WOBBLE_STRENGTH, 0f);
+        this.dataTracker.startTracking(DAMAGE_WOBBLE_SIDE, 1);
         this.dataTracker.startTracking(ENGINE_TARGET, 0f);
     }
     @Override
@@ -182,7 +193,7 @@ public class PlaneEntity extends Entity {
 
             boolean crash = (horizontalImpact > 1.5 && horizontalCollision) || (verticalImpact > explodeSpeed && verticalCollision);
             if (crash) {
-                getWorld().createExplosion(this, getX(), getY(), getZ(), 7.0f, World.ExplosionSourceType.TNT);
+                getWorld().createExplosion(this, getX(), getY(), getZ(), 9.0f, World.ExplosionSourceType.TNT);
                 remove(RemovalReason.KILLED);
                 return;
             }
@@ -271,5 +282,51 @@ public class PlaneEntity extends Entity {
         }
         return ActionResult.SUCCESS;
     }
+    public void setDamageWobbleTicks(int ticks) {
+        this.dataTracker.set(DAMAGE_WOBBLE_TICKS, ticks);
+    }
 
+    public int getDamageWobbleTicks() {
+        return this.dataTracker.get(DAMAGE_WOBBLE_TICKS);
+    }
+
+    public void setDamageWobbleStrength(float strength) {
+        this.dataTracker.set(DAMAGE_WOBBLE_STRENGTH, strength);
+    }
+
+    public float getDamageWobbleStrength() {
+        return this.dataTracker.get(DAMAGE_WOBBLE_STRENGTH);
+    }
+
+    public void setDamageWobbleSide(int side) {
+        this.dataTracker.set(DAMAGE_WOBBLE_SIDE, side);
+    }
+
+    public int getDamageWobbleSide() {
+        return this.dataTracker.get(DAMAGE_WOBBLE_SIDE);
+    }
+
+    private void dropItemAsItem() {
+        this.dropItem(Szar.PLANE);
+    }
+    @Override
+    public boolean damage(DamageSource source, float amount) {
+        if (this.isInvulnerableTo(source)) return false;
+        if (this.getWorld().isClient) return true;
+
+        // wobble effect
+        this.setDamageWobbleSide(-this.getDamageWobbleSide());
+        this.setDamageWobbleTicks(10);
+        this.setDamageWobbleStrength(this.getDamageWobbleStrength() + amount * 10f);
+
+        boolean isCreative = source.getAttacker() instanceof PlayerEntity player && player.getAbilities().creativeMode;
+
+        if (isCreative || this.getDamageWobbleStrength() > 40f) {
+            if (!isCreative && this.getWorld().getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
+                this.dropItemAsItem(); // drop plane item
+            }
+            this.remove(RemovalReason.KILLED);
+        }
+        return true;
+    }
 }
