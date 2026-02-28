@@ -66,5 +66,21 @@
         "stream": true
       }
     ]
+  },
+  "slot_machine_base": {
+    "sounds": [
+      {
+        "name": "szar:slot_machine_base",
+        "stream": true
+      }
+    ]
+  },
+  "slot_machine_win": {
+    "sounds": [
+      {
+        "name": "szar:slot_machine_win",
+        "stream": true
+      }
+    ]
   }
 }

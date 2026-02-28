@@ -22,6 +22,7 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRe
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.trade.TradeOfferHelper;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper;
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
@@ -41,6 +42,7 @@ import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -284,6 +286,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.BAITER_DISK);
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
+                        entries.add(Szar.SLOT_MACHINE);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -681,11 +684,7 @@ public class Szar implements ModInitializer {
                             })
             );
         });
-        Registry.register(
-                Registries.ITEM,
-                new Identifier(MOD_ID, "towers"),
-                new BlockItem(OBELISK_CORE, new Item.Settings())
-        );
+
     }
     public static ObeliskCoreBlockEntity findNearestObelisk(ServerWorld world, BlockPos center, int radius) {
         ObeliskCoreBlockEntity closest = null;
@@ -774,10 +773,45 @@ public class Szar implements ModInitializer {
                     OBELISK_CORE // block(s) this BE is linked to
             ).build(null)
         );
+    public static final Item TOWERS_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "towers"),
+            new BlockItem(OBELISK_CORE, new Item.Settings())
+    );
 
-
-
-
+    public static final ScreenHandlerType<SlotMachineScreenHandler> SLOT_MACHINE_SCREEN_HANDLER_TYPE =
+            ScreenHandlerRegistry.registerExtended(
+                    new Identifier(Szar.MOD_ID, "slot_machine"),
+                    (syncId, inv, buf) -> {
+                        BlockPos pos = buf.readBlockPos();
+                        BlockEntity be = inv.player.getWorld().getBlockEntity(pos);
+                        if (!(be instanceof SlotMachineBlockEntity blockEntity)) {
+                            throw new IllegalStateException("BlockEntity is not a SlotMachineBlockEntity");
+                        }
+                        return new SlotMachineScreenHandler(syncId, inv, blockEntity);
+                    }
+            );
+    public static final Block SLOT_MACHINE_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "slot_machine"),
+            new SlotMachineBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK)
+            )
+    );
+    public static final BlockEntityType<SlotMachineBlockEntity> SLOT_MACHINE_BLOCKENTITY = Registry.register(
+            Registries.BLOCK_ENTITY_TYPE,
+            new Identifier(MOD_ID, "slot_machine"),
+            FabricBlockEntityTypeBuilder.create(
+                    SlotMachineBlockEntity::new,
+                    SLOT_MACHINE_BLOCK // block(s) this BE is linked to
+            ).build(null)
+    );
+    public static final Item SLOT_MACHINE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "slot_machine"),
+            new BlockItem(SLOT_MACHINE_BLOCK, new Item.Settings())
+    );
     public static final Feature<CannabisPatchFeatureConfig> CANNABIS_PATCH =
             Registry.register(
                     Registries.FEATURE,

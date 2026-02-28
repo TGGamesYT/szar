@@ -79,5 +79,6 @@
   "death.attack.fck": "%1$s got fucked too hard by %2$s",
   "item.szar.white_liquid": "...",
   "item.szar.plane": "Plane",
-  "item.szar.wheel": "Wheel"
+  "item.szar.wheel": "Wheel",
+  "block.szar.slot_machine": "Slot Machine"
 }

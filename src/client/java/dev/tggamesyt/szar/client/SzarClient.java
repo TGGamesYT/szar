@@ -9,12 +9,15 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.animation.Animation;
@@ -86,6 +89,7 @@ public class SzarClient implements ClientModInitializer {
         });
         ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "weed_joint"), new Identifier(MOD_ID, "weed_joint_in_hand"));
         ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "fasz"), new Identifier(MOD_ID, "fasz_in_hand"));
+        ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "slot_machine"), new Identifier(MOD_ID, "slot_machine_3d"));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) return;
 
@@ -224,6 +228,12 @@ public class SzarClient implements ClientModInitializer {
                     });
                 }
         );
+        /*BlockEntityRendererRegistry.register(
+                SLOT_MACHINE_BLOCKENTITY,
+                SlotMachineRenderer::new
+        );*/
+        HandledScreens.register(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, SlotMachineScreen::new);
+
         EntityRendererRegistry.register(
                 Szar.NiggerEntityType,
                 NiggerEntityRenderer::new
