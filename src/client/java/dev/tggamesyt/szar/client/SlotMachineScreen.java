@@ -4,17 +4,25 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.tggamesyt.szar.SlotMachineBlockEntity;
 import dev.tggamesyt.szar.SlotMachineScreenHandler;
 import dev.tggamesyt.szar.Szar;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import dev.tggamesyt.szar.SlotSymbol;
+
+import java.util.Objects;
 
 public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
@@ -27,9 +35,15 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
             new Identifier(Szar.MOD_ID, "textures/gui/handle2.png");
     private static final Identifier HANDLE_3 =
             new Identifier(Szar.MOD_ID, "textures/gui/handle3.png");
-
+    private PositionedSoundInstance spinSound;
+    private boolean wasSpinning = false;
     private final int handleX = 120;
     private final int handleY = 20;
+    // Track when to play win sound
+    private boolean winSoundPending = false;
+    private int winSoundDelay = 0; // ticks until sound plays
+    private boolean lastWinState = false; // tracks PropertyDelegate slot 1
+    private final PlayerInventory inventory;
 
     private boolean handleClicked = false;
     private int handleAnimTicks = 0;
@@ -41,6 +55,8 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         super(handler, inventory, title);
         this.backgroundWidth = 176;
         this.backgroundHeight = 166;
+        this.inventory = inventory;
+        inventory.player.playSound(Szar.LETS_GAMBLE, 1f, 1f);
     }
 
     // ----------------------------
@@ -85,13 +101,59 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-
         renderBackground(context);
         super.render(context, mouseX, mouseY, delta);
-        if (client != null && client.player != null) {
-            handler.tick(client.player);
-        }
         drawMouseoverTooltip(context, mouseX, mouseY);
+
+        boolean spinning = handler.getPropertyDelegate().get(0) == 1;
+        boolean won = handler.getPropertyDelegate().get(1) == 1;
+
+        // Start spin sound when spin starts
+        if (spinning && !wasSpinning) {
+            spinSound = new PositionedSoundInstance(
+                    Szar.SLOT_MACHINE_BASE.getId(),
+                    SoundCategory.MASTER,
+                    5.0f,
+                    1.0f,
+                    net.minecraft.util.math.random.Random.create(),
+                    true,
+                    0,
+                    SoundInstance.AttenuationType.NONE,
+                    0.0, 0.0, 0.0,
+                    true
+            );
+            MinecraftClient.getInstance().getSoundManager().play(spinSound);
+        }
+
+        // Stop spin sound when spin ends
+        if (!spinning && wasSpinning) {
+            stopSpinSound();
+        }
+
+        // === Delayed win sound logic ===
+        if (!lastWinState && spinning) {
+            // spin is in progress, first tick that win property is set → start delay
+            winSoundPending = true;
+            winSoundDelay = 0;
+        }
+
+        if (winSoundPending) {
+            winSoundDelay++;
+            if (winSoundDelay >= 15) { // 15-tick delay
+                if (inventory.player != null) {
+                    if (won) {
+                        inventory.player.playSound(Szar.SLOT_MACHINE_WIN, 5.0f, 1.0f);
+                        inventory.player.playSound(Szar.WON, 5.0f, 1.0f);
+                    } else {
+                        inventory.player.playSound(Szar.DANGIT, 5.0f, 1.0f);
+                    }
+                }
+                winSoundPending = false;
+            }
+        }
+
+        lastWinState = won;
+        wasSpinning = spinning;
 
         int guiLeft = (width - backgroundWidth) / 2;
         int guiTop = (height - backgroundHeight) / 2;
@@ -111,7 +173,7 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
                 // CALL SCREEN HANDLER LOGIC HERE
                 if (client != null && client.player != null && client.interactionManager != null) {
-                        client.interactionManager.clickButton(handler.syncId, 0);
+                    client.interactionManager.clickButton(handler.syncId, 0);
                 }
             }
         }
@@ -145,5 +207,17 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void stopSpinSound() {
+        if (MinecraftClient.getInstance() != null && spinSound != null) {
+            MinecraftClient.getInstance().getSoundManager().stop(spinSound);
+            spinSound = null;
+        }
+    }
+    @Override
+    public void removed() {
+        super.removed();
+        stopSpinSound();
     }
 }

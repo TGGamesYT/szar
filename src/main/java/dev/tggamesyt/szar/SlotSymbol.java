@@ -4,9 +4,11 @@ package dev.tggamesyt.szar;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
+import java.util.Random;
+
 public enum SlotSymbol {
-    SEVEN(Items.ENCHANTED_GOLDEN_APPLE),
-    BELL(Items.GOLDEN_APPLE),
+    SEVEN(Items.DEEPSLATE_EMERALD_ORE),
+    BELL(Items.BELL),
     APPLE(Items.APPLE),
     SWEET_BERRIES(Items.SWEET_BERRIES),
     GLOW_BERRIES(Items.GLOW_BERRIES),
@@ -20,12 +22,16 @@ public enum SlotSymbol {
     }
 
     // Roll a random symbol according to the specified probabilities
-    public static SlotSymbol roll(java.util.Random random) {
+    public static SlotSymbol roll(Random random) {
         float r = random.nextFloat();
         if (r < 0.0255f) return SEVEN;          // 2.55%
         else if (r < 0.0255f + 0.101f) return BELL; // 10.1%
         else {
-            // 5 fruits, equally likely
+            return rollFruit(random);
+        }
+    }
+
+    public static SlotSymbol rollFruit(Random random) {
             int fruitIndex = random.nextInt(5);
             switch (fruitIndex) {
                 case 0: return APPLE;
@@ -34,6 +40,5 @@ public enum SlotSymbol {
                 case 3: return MELON_SLICE;
                 default: return CHORUS_FRUIT;
             }
-        }
     }
 }

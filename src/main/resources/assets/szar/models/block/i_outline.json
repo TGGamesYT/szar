@@ -1,0 +1,72 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"particle": "szar:block/casino_red"
+	},
+	"elements": [
+		{
+			"from": [4, 0, 4],
+			"to": [12, 32, 12],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [8.25, 4.25, 8.75, 4.75], "texture": "#missing"},
+				"east": {"uv": [9.25, 4.25, 9.75, 4.75], "texture": "#missing"},
+				"south": {"uv": [10.25, 4.25, 10.75, 4.75], "texture": "#missing"},
+				"west": {"uv": [11.25, 4.25, 11.75, 4.75], "texture": "#missing"},
+				"up": {"uv": [12.25, 4.25, 12.75, 4.75], "texture": "#missing"},
+				"down": {"uv": [13.25, 4.25, 13.75, 4.75], "texture": "#missing"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"translation": [0, 0, -1.5],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"thirdperson_lefthand": {
+			"translation": [0, 0, -0.25],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, -180, 0],
+			"translation": [33.25, -15, -45.5]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, -180, 0],
+			"translation": [31.25, -15, -45.75]
+		},
+		"ground": {
+			"translation": [0, 0.75, 0],
+			"scale": [0.2, 0.2, 0.2]
+		},
+		"gui": {
+			"rotation": [0, 135, 0],
+			"translation": [0.25, 1.5, 0],
+			"scale": [0.3, 0.3, 0.3]
+		},
+		"head": {
+			"rotation": [0, -45, 0],
+			"translation": [0, 38.5, 0],
+			"scale": [4, 4, 4]
+		},
+		"fixed": {
+			"rotation": [0, -45, 0],
+			"translation": [-0.5, 2, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"on_shelf": {
+			"rotation": [0, 135, 0],
+			"translation": [1.25, 0, 0],
+			"scale": [0.4, 0.4, 0.4]
+		}
+	},
+	"groups": [
+		{
+			"name": "I",
+			"origin": [10, 2, 7],
+			"color": 3,
+			"children": [0]
+		}
+	]
+}

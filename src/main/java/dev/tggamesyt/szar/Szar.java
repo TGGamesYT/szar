@@ -58,6 +58,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
@@ -87,6 +89,36 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final SoundEvent SLOT_MACHINE_BASE =
+            Registry.register(
+                    Registries.SOUND_EVENT,
+                    new Identifier(Szar.MOD_ID, "slot_machine_base"),
+                    SoundEvent.of(new Identifier(Szar.MOD_ID, "slot_machine_base"))
+            );
+    public static final SoundEvent SLOT_MACHINE_WIN =
+            Registry.register(
+                    Registries.SOUND_EVENT,
+                    new Identifier(Szar.MOD_ID, "slot_machine_win"),
+                    SoundEvent.of(new Identifier(Szar.MOD_ID, "slot_machine_win"))
+            );
+    public static final SoundEvent LETS_GAMBLE =
+            Registry.register(
+                    Registries.SOUND_EVENT,
+                    new Identifier(Szar.MOD_ID, "lets_gamble"),
+                    SoundEvent.of(new Identifier(Szar.MOD_ID, "lets_gamble"))
+            );
+    public static final SoundEvent DANGIT =
+            Registry.register(
+                    Registries.SOUND_EVENT,
+                    new Identifier(Szar.MOD_ID, "aw_dangit"),
+                    SoundEvent.of(new Identifier(Szar.MOD_ID, "aw_dangit"))
+            );
+    public static final SoundEvent WON =
+            Registry.register(
+                    Registries.SOUND_EVENT,
+                    new Identifier(Szar.MOD_ID, "won"),
+                    SoundEvent.of(new Identifier(Szar.MOD_ID, "won"))
+            );
     public static final SoundEvent MERL_SOUND =
             SoundEvent.of(new Identifier("szar", "merl"));
     public static final Identifier PLANE_ANIM_PACKET =
@@ -778,7 +810,95 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "towers"),
             new BlockItem(OBELISK_CORE, new Item.Settings())
     );
+    public static final StructurePieceType CASINO_PIECE =
+            Registry.register(
+                    Registries.STRUCTURE_PIECE,
+                    new Identifier(MOD_ID, "casino_piece"),
+                    CasinoStructurePiece::new
+            );
 
+    public static final StructureType<CasinoStructure> CASINO_TYPE =
+            Registry.register(
+                    Registries.STRUCTURE_TYPE,
+                    new Identifier(MOD_ID, "casino"),
+                    () -> CasinoStructure.CODEC
+            );
+    static VoxelShape shape0 = VoxelShapes.cuboid(0.1875f, 0f, 0.625f, 0.6875f, 0.5f, 1.125f);
+    static VoxelShape shape1 = VoxelShapes.cuboid(0.1875f, 1.5f, 0.625f, 0.6875f, 2f, 1.125f);
+    static VoxelShape shape2 = VoxelShapes.cuboid(0.5625f, 0f, 0.25f, 1.0625f, 2f, 0.75f);
+    static VoxelShape C_SHAPE = VoxelShapes.union(shape0, shape1, shape2);
+    public static final Block C_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "c"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), C_SHAPE
+
+            ));
+    static VoxelShape shape3 = VoxelShapes.cuboid(0.25f, 0.5f, 0.25f, 0.75f, 1f, 0.75f);
+    static VoxelShape shape4 = VoxelShapes.cuboid(0.25f, 1.5f, 0.25f, 0.75f, 2f, 0.75f);
+    static VoxelShape shape5 = VoxelShapes.cuboid(0.625f, 0f, -0.0625f, 1.125f, 1.5f, 0.4375f);
+    static VoxelShape shape6 = VoxelShapes.cuboid(-0.125f, 0f, 0.5625f, 0.375f, 1.5f, 1.0625f);
+    static VoxelShape A_SHAPE = VoxelShapes.union(shape3, shape4, shape5, shape6);
+    public static final Block A_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "a"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), A_SHAPE
+
+            ));
+    static VoxelShape shape8 = VoxelShapes.cuboid(0.3125f, 0f, 0f, 1.3125f, 0.5f, 0.5f);
+    static VoxelShape shape9 = VoxelShapes.cuboid(-0.0625f, 0f, 0.5625f, 0.4375f, 1.25f, 1.0625f);
+    static VoxelShape shape10 = VoxelShapes.cuboid(0.3125f, 0.75f, 0.25f, 0.8125f, 1.25f, 0.75f);
+    static VoxelShape shape11 = VoxelShapes.cuboid(-0.1875f, 1.5f, 0.3125f, 0.8125f, 2f, 0.8125f);
+    static VoxelShape shape12 = VoxelShapes.cuboid(0.625f, 0.75f, -0.1875f, 1.125f, 2f, 0.3125f);
+    static VoxelShape S_SHAPE = VoxelShapes.union(shape8, shape9, shape10, shape11, shape12);
+    public static final Block S_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "s"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), S_SHAPE
+
+            ));
+    static VoxelShape shape13 = VoxelShapes.cuboid(0.25f, 0f, 0.25f, 0.75f, 2f, 0.75f);
+    static VoxelShape I_SHAPE = VoxelShapes.union(shape13);
+    public static final Block I_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "i"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), I_SHAPE
+
+            ));
+    static VoxelShape shape14 = VoxelShapes.cuboid(0.25f, 0.25f, 0.375f, 0.5f, 0.75f, 0.875f);
+    static VoxelShape shape15 = VoxelShapes.cuboid(-0.125f, 0f, 0.5625f, 0.375f, 2f, 1.0625f);
+    static VoxelShape shape16 = VoxelShapes.cuboid(0.25f, 0.75f, 0.25f, 0.75f, 1.25f, 0.75f);
+    static VoxelShape shape17 = VoxelShapes.cuboid(0.5f, 1.25f, 0.125f, 0.75f, 1.75f, 0.625f);
+    static VoxelShape shape18 = VoxelShapes.cuboid(0.625f, 0f, -0.0625f, 1.125f, 2f, 0.4375f);
+    static VoxelShape N_SHAPE = VoxelShapes.union(shape14, shape15, shape16, shape17, shape18);
+    public static final Block N_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "n"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), N_SHAPE
+
+            ));
+    static VoxelShape shape19 = VoxelShapes.cuboid(0.1875f, 0f, 0.125f, 1.1875f, 0.5f, 0.625f);
+    static VoxelShape shape20 = VoxelShapes.cuboid(-0.0625f, 0f, 0.625f, 0.4375f, 1.5f, 1.125f);
+    static VoxelShape shape21 = VoxelShapes.cuboid(-0.0625f, 1.5f, 0.5f, 0.9375f, 2f, 1f);
+    static VoxelShape shape22 = VoxelShapes.cuboid(0.6875f, 0.5f, 0f, 1.1875f, 2f, 0.5f);
+    static VoxelShape O_SHAPE = VoxelShapes.union(shape19, shape20, shape21, shape22);
+    public static final Block O_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "o"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.IRON_BLOCK), O_SHAPE
+
+            ));
     public static final ScreenHandlerType<SlotMachineScreenHandler> SLOT_MACHINE_SCREEN_HANDLER_TYPE =
             ScreenHandlerRegistry.registerExtended(
                     new Identifier(Szar.MOD_ID, "slot_machine"),

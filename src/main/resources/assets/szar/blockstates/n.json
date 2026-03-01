@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "szar:block/n", "y": 0 },
+    "facing=south": { "model": "szar:block/n", "y": 180 },
+    "facing=west":  { "model": "szar:block/n", "y": 270 },
+    "facing=east":  { "model": "szar:block/n", "y": 90 }
+  }
+}

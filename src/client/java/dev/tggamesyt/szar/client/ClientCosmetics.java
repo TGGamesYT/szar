@@ -105,7 +105,8 @@ public class ClientCosmetics {
     /* ---------------- FETCH MOJANG CAPES ---------------- */
 
     public static void fetchMojangCapes(UUID uuid) {
-        try {MinecraftClient client = MinecraftClient.getInstance();
+        try {
+            MinecraftClient client = MinecraftClient.getInstance();
             String accessToken = client.getSession().getAccessToken();
             if (accessToken == null) return;
 
@@ -113,39 +114,49 @@ public class ClientCosmetics {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestProperty("Authorization", "Bearer " + accessToken);
             con.setRequestMethod("GET");
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
 
-            InputStream in = con.getInputStream();
-            String json = new String(in.readAllBytes());
-            in.close();
-
-            JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
-            JsonArray capes = obj.getAsJsonArray("capes");
-            if (capes == null) return;
-
-            List<MojangCape> list = new ArrayList<>();
-            for (JsonElement e : capes) {
-                JsonObject c = e.getAsJsonObject();
-                MojangCape cape = new MojangCape();
-                cape.id = c.get("id").getAsString();
-                cape.name = c.has("alias") ? c.get("alias").getAsString() : cape.id;
-                cape.url = c.get("url").getAsString();
-                list.add(cape);
+            int responseCode = con.getResponseCode();
+            if (responseCode != 200) {
+                // 401 or any other response → silently ignore
+                con.disconnect();
+                return;
             }
 
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeUuid(uuid);
-            buf.writeInt(list.size());
+            try (InputStream in = con.getInputStream()) {
+                String json = new String(in.readAllBytes());
 
-            for (MojangCape cape : list) {
-                buf.writeString(cape.id);
-                buf.writeString(cape.name);
-                buf.writeString(cape.url);
+                JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+                JsonArray capes = obj.getAsJsonArray("capes");
+                if (capes == null) return;
+
+                List<MojangCape> list = new ArrayList<>();
+                for (JsonElement e : capes) {
+                    JsonObject c = e.getAsJsonObject();
+                    MojangCape cape = new MojangCape();
+                    cape.id = c.get("id").getAsString();
+                    cape.name = c.has("alias") ? c.get("alias").getAsString() : cape.id;
+                    cape.url = c.get("url").getAsString();
+                    list.add(cape);
+                }
+
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeUuid(uuid);
+                buf.writeInt(list.size());
+
+                for (MojangCape cape : list) {
+                    buf.writeString(cape.id);
+                    buf.writeString(cape.name);
+                    buf.writeString(cape.url);
+                }
+
+                ClientPlayNetworking.send(MOJANG_CAPES_SYNC, buf);
             }
-
-            ClientPlayNetworking.send(MOJANG_CAPES_SYNC, buf);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            // Only log unexpected exceptions
+            ex.printStackTrace(System.err);
         }
     }
 

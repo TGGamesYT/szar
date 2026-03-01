@@ -82,5 +82,29 @@
         "stream": true
       }
     ]
+  },
+  "lets_gamble": {
+    "sounds": [
+      {
+        "name": "szar:lets_gamble",
+        "stream": true
+      }
+    ]
+  },
+  "aw_dangit": {
+    "sounds": [
+      {
+        "name": "szar:aw_dangit",
+        "stream": true
+      }
+    ]
+  },
+  "won": {
+    "sounds": [
+      {
+        "name": "szar:won",
+        "stream": true
+      }
+    ]
   }
 }
