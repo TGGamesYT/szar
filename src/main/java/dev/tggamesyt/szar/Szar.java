@@ -319,6 +319,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
                         entries.add(Szar.SLOT_MACHINE);
+                        entries.add(Szar.ROULETTE);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -809,6 +810,37 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "towers"),
             new BlockItem(OBELISK_CORE, new Item.Settings())
+    );
+    static VoxelShape shape23 = VoxelShapes.cuboid(0.25f, 0f, 0f, 0.75f, 0.25f, 0.125f);
+    static VoxelShape shape24 = VoxelShapes.cuboid(0.125f, 0f, 0.125f, 0.875f, 0.125f, 0.25f);
+    static VoxelShape shape25 = VoxelShapes.cuboid(0f, 0f, 0.25f, 1f, 0.125f, 0.75f);
+    static VoxelShape shape26 = VoxelShapes.cuboid(0.125f, 0f, 0.75f, 0.875f, 0.125f, 0.875f);
+    static VoxelShape shape27 = VoxelShapes.cuboid(0.25f, 0f, 0.875f, 0.75f, 0.25f, 1f);
+    static VoxelShape shape28 = VoxelShapes.cuboid(0f, 0.125f, 0.25f, 0.125f, 0.25f, 0.75f);
+    static VoxelShape shape29 = VoxelShapes.cuboid(0.875f, 0.125f, 0.25f, 1f, 0.25f, 0.75f);
+    static VoxelShape shape30 = VoxelShapes.cuboid(0.75f, 0.125f, 0.125f, 0.875f, 0.25f, 0.25f);
+    static VoxelShape shape31 = VoxelShapes.cuboid(0.75f, 0.125f, 0.75f, 0.875f, 0.25f, 0.875f);
+    static VoxelShape shape32 = VoxelShapes.cuboid(0.125f, 0.125f, 0.125f, 0.25f, 0.25f, 0.25f);
+    static VoxelShape shape33 = VoxelShapes.cuboid(0.125f, 0.125f, 0.75f, 0.25f, 0.25f, 0.875f);
+    static VoxelShape shape34 = VoxelShapes.cuboid(0.3125f, 0.313125f, 0.3125f, 0.6875f, 0.313125f, 0.6875f);
+    static VoxelShape shape35 = VoxelShapes.cuboid(0.4375f, 0.125f, 0.4375f, 0.5625f, 0.3125f, 0.5625f);
+    static VoxelShape ROULETTE_SHAPE = VoxelShapes.union(shape23, shape24, shape25, shape26, shape27, shape28, shape29, shape30, shape31, shape32, shape33, shape34, shape35);
+    public static final Block ROULETTE_BLOCK = Registry.register(
+            Registries.BLOCK,
+            new Identifier(MOD_ID, "roulette"),
+            new BasicRotatableModelBlock(
+                    AbstractBlock.Settings
+                            .copy(Blocks.OAK_WOOD),
+                    ROULETTE_SHAPE
+            )
+    );
+    public static final Item ROULETTE = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "roulette"),
+            new BlockItem(
+                    ROULETTE_BLOCK,
+                    new Item.Settings()
+            )
     );
     public static final StructurePieceType CASINO_PIECE =
             Registry.register(
