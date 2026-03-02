@@ -162,4 +162,20 @@ public class SlotMachineBlock extends Block implements BlockEntityProvider {
             }
         };
     }
+
+    @Override
+    public BlockState rotate(BlockState state, BlockRotation rotation) {
+        if (state.contains(FACING)) {
+            return state.with(FACING, rotation.rotate(state.get(FACING)));
+        }
+        return state;
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, BlockMirror mirror) {
+        if (state.contains(FACING)) {
+            return state.rotate(mirror.getRotation(state.get(FACING)));
+        }
+        return state;
+    }
 }

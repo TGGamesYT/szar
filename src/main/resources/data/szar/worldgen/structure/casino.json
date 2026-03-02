@@ -1,6 +1,6 @@
 {
   "type": "szar:casino",
-  "biomes": "#minecraft:is_overworld",
+  "biomes": "#szar:normal_land",
   "step": "surface_structures",
   "terrain_adaptation": "beard_thin",
   "spawn_overrides": {},

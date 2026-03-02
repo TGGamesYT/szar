@@ -74,4 +74,20 @@ public class BasicRotatableModelBlock extends Block {
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
+
+    @Override
+    public BlockState rotate(BlockState state, BlockRotation rotation) {
+        if (state.contains(FACING)) {
+            return state.with(FACING, rotation.rotate(state.get(FACING)));
+        }
+        return state;
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, BlockMirror mirror) {
+        if (state.contains(FACING)) {
+            return state.rotate(mirror.getRotation(state.get(FACING)));
+        }
+        return state;
+    }
 }

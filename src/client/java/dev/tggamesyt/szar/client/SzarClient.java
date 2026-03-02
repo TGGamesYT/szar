@@ -305,6 +305,38 @@ public class SzarClient implements ClientModInitializer {
                 Szar.CANNABIS_BLOCK,
                 RenderLayer.getCutout()
         );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                ROULETTE_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                SLOT_MACHINE_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                C_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                A_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                S_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                I_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                N_BLOCK,
+                RenderLayer.getCutout()
+        );
+        BlockRenderLayerMap.INSTANCE.putBlock(
+                O_BLOCK,
+                RenderLayer.getCutout()
+        );
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient client = MinecraftClient.getInstance();
 
