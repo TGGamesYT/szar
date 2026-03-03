@@ -32,13 +32,20 @@ public enum SlotSymbol {
     }
 
     public static SlotSymbol rollFruit(Random random) {
-            int fruitIndex = random.nextInt(5);
-            switch (fruitIndex) {
-                case 0: return APPLE;
-                case 1: return SWEET_BERRIES;
-                case 2: return GLOW_BERRIES;
-                case 3: return MELON_SLICE;
-                default: return CHORUS_FRUIT;
-            }
+        return switch (random.nextInt(5)) {
+            case 0 -> APPLE;
+            case 1 -> SWEET_BERRIES;
+            case 2 -> GLOW_BERRIES;
+            case 3 -> MELON_SLICE;
+            default -> CHORUS_FRUIT;
+        };
     }
+
+    public static SlotSymbol intToSymbol(int num) {
+        return SlotSymbol.values()[num];
+    };
+
+    public static int symbolToInt(SlotSymbol num) {
+        return num.ordinal();
+    };
 }

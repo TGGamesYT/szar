@@ -58,7 +58,6 @@ public class Joint extends SpyglassItem {
         int value = Szar.PLAYER_JOINT_LEVEL.getOrDefault(user.getUuid(), 0) + 1;
         boolean addicted = Szar.PLAYER_ADDICTION_LEVEL.getOrDefault(user.getUuid(), false);
         Szar.PLAYER_JOINT_LEVEL.put(user.getUuid(), value);
-        Szar.LOGGER.info(user.getEntityName() + "'s joint level is now " + value);
         if (value > 80) {
             RegistryEntry<DamageType> drogAttackType =
                     user.getWorld()
@@ -70,11 +69,9 @@ public class Joint extends SpyglassItem {
             user.damage(source, Float.MAX_VALUE);
             Szar.PLAYER_JOINT_LEVEL.put(user.getUuid(), 0);
             Szar.PLAYER_ADDICTION_LEVEL.put(user.getUuid(), false);
-            Szar.LOGGER.info(user.getEntityName() + "'s joint level is now " + 0);
         }
         if (value > 40 && !addicted) {
             Szar.PLAYER_ADDICTION_LEVEL.put(user.getUuid(), true);
-            Szar.LOGGER.info(user.getEntityName() + "'s addiction is now true");
         }
         // Consume 1 durability
         stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));

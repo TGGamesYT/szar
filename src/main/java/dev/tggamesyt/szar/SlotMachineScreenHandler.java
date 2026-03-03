@@ -32,18 +32,6 @@ public class SlotMachineScreenHandler extends ScreenHandler {
     private final PropertyDelegate propertyDelegate;
     private final Random random = new Random();
 
-    private int spinTimer = 0;
-    private boolean spinning = false;
-    private boolean lastSpinWon = false;
-
-    private int currentBetAmount = 0;
-    private ItemStack currentBetStack = ItemStack.EMPTY;
-
-    private SlotSymbol final0, final1, final2;
-
-    private boolean forceWin = false;
-    private int winTier = 0; // 0 = fruit, 1 = golden apple small, 2 = golden apple jackpot
-
     public SlotMachineScreenHandler(int syncId, PlayerInventory playerInv, SlotMachineBlockEntity blockEntity) {
         super(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, syncId);
         this.playerInventory = playerInv;
@@ -53,17 +41,7 @@ public class SlotMachineScreenHandler extends ScreenHandler {
         this.addProperties(propertyDelegate);
 
         // Bet slot
-        this.addSlot(new Slot(betInventory, 0, 44, 35) {
-            @Override
-            public boolean canInsert(ItemStack stack) {
-                return !spinning;
-            }
-
-            @Override
-            public boolean canTakeItems(PlayerEntity playerEntity) {
-                return !spinning;
-            }
-        });
+        this.addSlot(new Slot(betInventory, 0, 44, 35));
 
         // Player inventory slots
         for (int y = 0; y < 3; y++)
@@ -75,57 +53,53 @@ public class SlotMachineScreenHandler extends ScreenHandler {
 
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
-        if (id != 0 || spinning) return false;
+        if (id != 0 || blockEntity.getSpinning()) return false;
 
         ItemStack bet = betInventory.getStack(0);
         if (bet.isEmpty()) return false;
 
-        currentBetAmount = bet.getCount();
-        currentBetStack = bet.copy();
+        blockEntity.setcurrentBetAmount(bet.getCount());
+        blockEntity.setcurrentBetStack(bet.copy());
         betInventory.setStack(0, ItemStack.EMPTY);
 
         // === Determine if this spin will definitely win (40%) ===
-        forceWin = random.nextFloat() < 0.4f;
-        if (forceWin) {
+        blockEntity.setForceWin(random.nextFloat() < 0.4f);
+        if (blockEntity.getForceWin()) {
             float tierRoll = random.nextFloat();
-            if (tierRoll < 0.80f) winTier = 0;        // Fruit win (2x items)
-            else if (tierRoll < 0.96f) winTier = 1;   // Golden Apple small (25x)
-            else winTier = 2;                          // Jackpot (100x)
+            if (tierRoll < 0.88f) blockEntity.setwinTier(0);        // 88%
+            else if (tierRoll < 0.98f) blockEntity.setwinTier(1);   // 10%
+            else blockEntity.setwinTier(2);                          // 2%
         } else {
-            winTier = -1; // no win
+            blockEntity.setwinTier(-1);
         }
 
         // === Preselect final symbols based on forced win type ===
-        if (forceWin) {
-            switch (winTier) {
+        if (blockEntity.getForceWin()) {
+            switch (blockEntity.getwinTier()) {
                 case 0 -> { // fruit
-                    final0 = SlotSymbol.rollFruit(random);
-                    final1 = final0;
-                    final2 = final0;
+                    int symbol = SlotSymbol.symbolToInt(SlotSymbol.rollFruit(random));
+                    blockEntity.setFinalSymbols(symbol, symbol, symbol);
                 }
                 case 1 -> { // golden apple small
-                    final0 = SlotSymbol.BELL;
-                    final1 = final0;
-                    final2 = final0;
+                    int symbol = SlotSymbol.symbolToInt(SlotSymbol.BELL);
+                    blockEntity.setFinalSymbols(symbol, symbol, symbol);
                 }
                 case 2 -> { // jackpot
-                    final0 = SlotSymbol.SEVEN;
-                    final1 = final0;
-                    final2 = final0;
+                    int symbol = SlotSymbol.symbolToInt(SlotSymbol.SEVEN);
+                    blockEntity.setFinalSymbols(symbol, symbol, symbol);
                 }
             }
         } else {
-            final0 = SlotSymbol.roll(random);
-            final1 = SlotSymbol.roll(random);
-            final2 = SlotSymbol.roll(random);
-            if (final0 == final1 && final1 == final2) {
-                forceWin = true;
-                winTier = final0 == SlotSymbol.BELL ? 1 : final0 == SlotSymbol.SEVEN ? 2 : 0;
+            blockEntity.setFinalSymbols(SlotSymbol.symbolToInt(SlotSymbol.roll(random)), SlotSymbol.symbolToInt(SlotSymbol.roll(random)), SlotSymbol.symbolToInt(SlotSymbol.roll(random)));
+
+            if (blockEntity.getFinalSymbol(0) == blockEntity.getFinalSymbol(1) && blockEntity.getFinalSymbol(1) == blockEntity.getFinalSymbol(2)) {
+                blockEntity.setForceWin(true);
+                blockEntity.setwinTier(SlotSymbol.intToSymbol(blockEntity.getFinalSymbol(0)) == SlotSymbol.BELL ? 1 : SlotSymbol.intToSymbol(blockEntity.getFinalSymbol(0)) == SlotSymbol.SEVEN ? 2 : 0);
             }
         }
 
-        spinTimer = 0;
-        spinning = true;
+        blockEntity.setspinTimer(0);
+        blockEntity.setSpinning(true);
         propertyDelegate.set(0, 1);
 
         return true;
@@ -135,7 +109,7 @@ public class SlotMachineScreenHandler extends ScreenHandler {
     public void sendContentUpdates() {
         super.sendContentUpdates();
 
-        if (!spinning) {
+        if (!blockEntity.getSpinning()) {
             if (blockEntity.getWorld().getTime() % IDLE_SPEED == 0) {
                 blockEntity.setSymbols(
                         random.nextInt(7),
@@ -146,7 +120,7 @@ public class SlotMachineScreenHandler extends ScreenHandler {
             return;
         }
 
-        spinTimer++;
+        blockEntity.setspinTimer(blockEntity.getspinTimer() + 1);
 
         int totalSpinDuration =
                 PREPARE_TIME +
@@ -154,57 +128,31 @@ public class SlotMachineScreenHandler extends ScreenHandler {
                         LOCK_INTERVAL * 3 +
                         RESULT_VIEW_TIME;
 
-        int speed = switch (spinTimer < PREPARE_TIME ? 0 : spinTimer < PREPARE_TIME + FAST_SPIN_TIME ? 1 : 2) {
+        int speed = switch (blockEntity.getspinTimer() < PREPARE_TIME ? 0 : blockEntity.getspinTimer() < PREPARE_TIME + FAST_SPIN_TIME ? 1 : 2) {
             case 0 -> PREPARE_SPEED;
             case 1 -> FAST_SPEED;
             default -> FAST_SPEED;
         };
 
-        boolean lock0 = spinTimer >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL;
-        boolean lock1 = spinTimer >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL * 2;
-        boolean lock2 = spinTimer >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL * 3;
+        boolean lock0 = blockEntity.getspinTimer() >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL;
+        boolean lock1 = blockEntity.getspinTimer() >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL * 2;
+        boolean lock2 = blockEntity.getspinTimer() >= PREPARE_TIME + FAST_SPIN_TIME + LOCK_INTERVAL * 3;
 
-        int reel0 = lock0 ? final0.ordinal() : random.nextInt(7);
-        int reel1 = lock1 ? final1.ordinal() : random.nextInt(7);
-        int reel2 = lock2 ? final2.ordinal() : random.nextInt(7);
+        int reel0 = lock0 ? blockEntity.getFinalSymbol(0) : random.nextInt(7);
+        int reel1 = lock1 ? blockEntity.getFinalSymbol(1) : random.nextInt(7);
+        int reel2 = lock2 ? blockEntity.getFinalSymbol(2) : random.nextInt(7);
 
-        if (spinTimer % speed == 0) {
+        if (blockEntity.getspinTimer() % speed == 0) {
             blockEntity.setSymbols(reel0, reel1, reel2);
         }
-        if (spinTimer >= (totalSpinDuration - RESULT_VIEW_TIME + 15)) {
-            propertyDelegate.set(1, forceWin ? 1 : 0);
+        if (blockEntity.getspinTimer() >= (totalSpinDuration - RESULT_VIEW_TIME + 15)) {
+            propertyDelegate.set(1, blockEntity.getForceWin() ? 1 : 0);
         }
-        if (spinTimer >= totalSpinDuration) {
-            finishSpin(playerInventory.player);
-            spinning = false;
+        if (blockEntity.getspinTimer() >= totalSpinDuration) {
+            blockEntity.finishSpin();
+            blockEntity.setSpinning(false);
             propertyDelegate.set(0, 0);
         }
-    }
-
-    private void finishSpin(PlayerEntity player) {
-        lastSpinWon = forceWin;
-
-        if (lastSpinWon) {
-            int payout = switch (winTier) {
-                case 0 -> currentBetAmount * 2;    // fruit 2x
-                case 1 -> currentBetAmount * 16;   // golden apple small
-                case 2 -> currentBetAmount * 32;  // jackpot
-                default -> 0;
-            };
-
-            Direction facing = blockEntity.getCachedState().get(SlotMachineBlock.FACING);
-            BlockPos drop = blockEntity.getPos().offset(facing);
-
-            ItemScatterer.spawn(
-                    player.getWorld(),
-                    drop.getX(),
-                    drop.getY(),
-                    drop.getZ(),
-                    new ItemStack(currentBetStack.getItem(), payout)
-            );
-        }
-        currentBetAmount = 0;
-        currentBetStack = ItemStack.EMPTY;
     }
 
     @Override
@@ -214,18 +162,38 @@ public class SlotMachineScreenHandler extends ScreenHandler {
 
     @Override
     public ItemStack quickMove(PlayerEntity player, int index) {
-        if (spinning) return ItemStack.EMPTY;
-        return ItemStack.EMPTY;
+
+        ItemStack newStack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+
+        if (slot.hasStack()) {
+            ItemStack originalStack = slot.getStack();
+            newStack = originalStack.copy();
+
+            // If clicking the bet slot → move to player inventory
+            if (index == 0) {
+                if (!this.insertItem(originalStack, 1, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+            // If clicking player inventory → move to bet slot
+            else {
+                if (!this.insertItem(originalStack, 0, 1, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+
+            if (originalStack.isEmpty()) {
+                slot.setStack(ItemStack.EMPTY);
+            } else {
+                slot.markDirty();
+            }
+        }
+
+        return newStack;
     }
 
     public PropertyDelegate getPropertyDelegate() {
         return propertyDelegate;
-    }
-    public int getSpinTimer() {
-        return spinTimer;
-    }
-
-    public boolean didLastSpinWin() {
-        return forceWin;
     }
 }

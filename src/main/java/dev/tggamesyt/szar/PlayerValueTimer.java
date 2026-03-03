@@ -45,7 +45,6 @@ public class PlayerValueTimer {
             
             int current = Szar.PLAYER_JOINT_LEVEL.getOrDefault(uuid, 0);
             int newValue = Math.max(0, current - 2);
-            Szar.LOGGER.info(player.getEntityName() + "'s joint level is now " + newValue);
             Szar.PLAYER_JOINT_LEVEL.put(uuid, newValue);
         }
     }
