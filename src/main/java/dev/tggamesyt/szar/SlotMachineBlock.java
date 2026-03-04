@@ -178,4 +178,16 @@ public class SlotMachineBlock extends Block implements BlockEntityProvider {
         }
         return state;
     }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            World world,
+            BlockState state,
+            BlockEntityType<T> type) {
+
+        return type == Szar.SLOT_MACHINE_BLOCKENTITY
+                ? (world1, pos, state1, blockEntity) ->
+                SlotMachineBlockEntity.tick(world1, pos, state1, (SlotMachineBlockEntity) blockEntity)
+                : null;
+    }
 }

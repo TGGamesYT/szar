@@ -157,7 +157,10 @@ public class SlotMachineScreen extends HandledScreen<SlotMachineScreenHandler> {
 
         int guiLeft = (width - backgroundWidth) / 2;
         int guiTop = (height - backgroundHeight) / 2;
-
+        if (handler.blockEntity.isHandleClicked(inventory.player)) {
+            handleClicked = true;
+            handleAnimTicks = 0;
+        }
         // Handle animation
         if (handleClicked) {
             handleAnimTicks++;
