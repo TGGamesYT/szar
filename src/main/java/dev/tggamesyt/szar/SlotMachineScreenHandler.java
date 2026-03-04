@@ -19,9 +19,6 @@ public class SlotMachineScreenHandler extends ScreenHandler {
 
 
     public final SlotMachineBlockEntity blockEntity;
-    private final SimpleInventory betInventory = new SimpleInventory(1);
-
-    private final Random random = new Random();
 
     public SlotMachineScreenHandler(int syncId, PlayerInventory playerInv, SlotMachineBlockEntity blockEntity) {
         super(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, syncId);
@@ -31,7 +28,7 @@ public class SlotMachineScreenHandler extends ScreenHandler {
         this.addProperties(blockEntity.propertyDelegate);
 
         // Bet slot
-        this.addSlot(new Slot(betInventory, 0, 44, 35));
+        this.addSlot(new Slot(blockEntity.betInventory, 0, 44, 35));
 
         // Player inventory slots
         for (int y = 0; y < 3; y++)
@@ -44,7 +41,7 @@ public class SlotMachineScreenHandler extends ScreenHandler {
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
         if (id != 0 || blockEntity.getSpinning()) return false;
-        return blockEntity.onButtonClicked(player, blockEntity, betInventory);
+        return blockEntity.onButtonClicked(player, blockEntity);
     }
     /*
     @Override

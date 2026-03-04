@@ -32,6 +32,7 @@ public class SlotMachineBlockEntity extends BlockEntity {
 
     private final Random random = new Random();
 
+    final SimpleInventory betInventory = new SimpleInventory(1);
     public final int[] currentSymbol = new int[3];
     public final int[] finalSymbol = new int[3];
     public static final int TOTAL_SYMBOLS = 7;
@@ -209,7 +210,7 @@ public class SlotMachineBlockEntity extends BlockEntity {
         }
     }
 
-    public boolean onButtonClicked(PlayerEntity player, SlotMachineBlockEntity blockEntity, SimpleInventory betInventory) {
+    public boolean onButtonClicked(PlayerEntity player, SlotMachineBlockEntity blockEntity) {
         blockEntity.setHandleClicked(true, player);
         ItemStack bet = betInventory.getStack(0);
         if (bet.isEmpty()) return false;
