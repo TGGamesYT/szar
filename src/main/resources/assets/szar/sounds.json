@@ -106,5 +106,13 @@
         "stream": true
       }
     ]
+  },
+  "firtana": {
+    "sounds": [
+      {
+        "name": "szar:firtana",
+        "stream": true
+      }
+    ]
   }
 }

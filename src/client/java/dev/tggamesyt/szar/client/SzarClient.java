@@ -18,8 +18,12 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.animation.Animation;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.render.item.BuiltinModelItemRenderer;
@@ -33,6 +37,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
@@ -56,6 +61,7 @@ import static dev.tggamesyt.szar.client.ClientCosmetics.loadTextureFromURL;
 import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
+    private static boolean addedFeature = false;
     private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();
     public static final EntityModelLayer PLANE =
             new EntityModelLayer(
@@ -82,6 +88,17 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(Szar.PLAY_VIDEO,
+                (client, handler, buf, responseSender) -> {
+                    String player = buf.readString();
+                    client.execute(() -> {
+                        VideoManager.startVideo(player);
+                    });
+
+                });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            VideoManager.tick();
+        });
         ModelLoadingRegistry.INSTANCE.registerModelProvider((manager, out) -> {
             ThirdpersonModelRegisterer.getAll().forEach((itemId, modelId) -> {
                 out.accept(new ModelIdentifier(modelId, "inventory"));
@@ -424,7 +441,19 @@ public class SzarClient implements ClientModInitializer {
                     (dispatcher, registryAccess) -> PanoramaClientCommand.register(dispatcher)
             );
         }
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (addedFeature) return; // only run once
+            MinecraftClient mc = MinecraftClient.getInstance();
+            if (mc.getEntityRenderDispatcher() == null) return;
 
+            for (EntityRenderer<?> renderer : mc.getEntityRenderDispatcher().renderers.values()) {
+                if (renderer instanceof PlayerEntityRenderer playerRenderer) {
+                    playerRenderer.addFeature(new VideoHeadFeature(playerRenderer));
+                }
+            }
+
+            addedFeature = true; // prevent running again
+        });
     }
     private boolean isDebugEnabled() {
 

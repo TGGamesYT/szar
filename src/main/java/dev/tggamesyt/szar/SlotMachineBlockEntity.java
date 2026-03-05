@@ -165,7 +165,6 @@ public class SlotMachineBlockEntity extends BlockEntity {
         // old sendcontentupdates
         if (!blockEntity.getSpinning()) {
             if (blockEntity.getWorld().getTime() % IDLE_SPEED == 0) {
-                System.out.println("setting random symbols");
                 blockEntity.setSymbols(
                         blockEntity.random.nextInt(7),
                         blockEntity.random.nextInt(7),

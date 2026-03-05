@@ -125,6 +125,8 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "plane_anim");
     public static final Identifier NAZI_HAND_GESTURE = new Identifier("szar", "hit_hand");
     public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
+    public static final Identifier PLAY_VIDEO =
+            new Identifier(MOD_ID, "play_video");
 
     public static final Block SZAR_BLOCK =
             new SzarBlock();
@@ -320,6 +322,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.EFN_DISK);
                         entries.add(Szar.SLOT_MACHINE);
                         entries.add(Szar.ROULETTE);
+                        entries.add(Szar.FIRTANA);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -810,6 +813,11 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "towers"),
             new BlockItem(OBELISK_CORE, new Item.Settings())
+    );
+    public static final Item FIRTANA = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "firtana"),
+            new FirtanaItem(new Item.Settings())
     );
     static VoxelShape shape23 = VoxelShapes.cuboid(0.25f, 0f, 0f, 0.75f, 0.25f, 0.125f);
     static VoxelShape shape24 = VoxelShapes.cuboid(0.125f, 0f, 0.125f, 0.875f, 0.125f, 0.25f);
