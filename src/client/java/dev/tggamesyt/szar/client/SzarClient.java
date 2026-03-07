@@ -96,6 +96,7 @@ public class SzarClient implements ClientModInitializer {
                     });
 
                 });
+        VideoManager.init();
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             VideoManager.tick();
         });
@@ -441,7 +442,7 @@ public class SzarClient implements ClientModInitializer {
                     (dispatcher, registryAccess) -> PanoramaClientCommand.register(dispatcher)
             );
         }
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+        /*ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (addedFeature) return; // only run once
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.getEntityRenderDispatcher() == null) return;
@@ -453,7 +454,7 @@ public class SzarClient implements ClientModInitializer {
             }
 
             addedFeature = true; // prevent running again
-        });
+        });*/
     }
     private boolean isDebugEnabled() {
 

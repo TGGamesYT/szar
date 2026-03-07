@@ -6,6 +6,7 @@
   "client": [
     "ItemRendererMixin",
     "MouseMixin",
+    "PlayerEntityRendererMixin",
     "PlayerModelMixin",
     "RadiatedItemRendererMixin",
     "RadiationHeartMixin",

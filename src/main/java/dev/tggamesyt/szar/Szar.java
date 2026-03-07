@@ -1,7 +1,6 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -75,13 +74,11 @@ import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.UnknownNullability;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
-import static com.mojang.brigadier.builder.LiteralArgumentBuilder.literal;
 import static dev.tggamesyt.szar.ServerCosmetics.USERS;
 import static dev.tggamesyt.szar.ServerCosmetics.sync;
 
@@ -317,12 +314,13 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NYAN_SPAWNEGG);
                         entries.add(Szar.EPSTEIN_FILES);
                         entries.add(Szar.EPSTEIN_SPAWNEGG);
-                        entries.add(Szar.BAITER_DISK);
+                        entries.add(Szar.BAITER_DISC);
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
                         entries.add(Szar.SLOT_MACHINE);
                         entries.add(Szar.ROULETTE);
                         entries.add(Szar.FIRTANA);
+                        entries.add(Szar.HELLO_DISC);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -1226,10 +1224,18 @@ public class Szar implements ModInitializer {
     );
     public static final SoundEvent BAITER =
             SoundEvent.of(new Identifier(MOD_ID, "baiter"));
-    public static final Item BAITER_DISK = Registry.register(
+    public static final Item BAITER_DISC = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "baiter"),
             new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 172)
+    );
+
+    public static final SoundEvent HELLO =
+            SoundEvent.of(new Identifier(MOD_ID, "firtana"));
+    public static final Item HELLO_DISC = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "hello"),
+            new MusicDiscItem(10, HELLO,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 239)
     );
     public static final SoundEvent EFN =
             SoundEvent.of(new Identifier(MOD_ID, "efn"));

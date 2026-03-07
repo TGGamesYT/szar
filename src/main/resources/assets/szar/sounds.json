@@ -107,6 +107,14 @@
       }
     ]
   },
+  "firtana_og": {
+    "sounds": [
+      {
+        "name": "szar:firtana_og",
+        "stream": true
+      }
+    ]
+  },
   "firtana": {
     "sounds": [
       {

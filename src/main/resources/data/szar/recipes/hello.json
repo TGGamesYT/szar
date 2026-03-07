@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "tag": "minecraft:music_discs"
+    },
+    {
+      "item": "szar:firtana"
+    }
+  ],
+  "result": {
+    "item": "szar:hello"
+  }
+}

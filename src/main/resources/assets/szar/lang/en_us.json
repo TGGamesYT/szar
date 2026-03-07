@@ -83,5 +83,7 @@
   "block.szar.slot_machine": "Slot Machine",
   "block.szar.casino": "Casino Title",
   "block.szar.roulette": "Roulette",
-  "item.szar.firtana": "Firtana"
+  "item.szar.firtana": "Firtana",
+  "item.szar.hello": "Music Disc",
+  "item.szar.hello.desc": "Alex Savage - OMFG - Hello (Dark Remix)"
 }
