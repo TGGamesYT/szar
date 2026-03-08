@@ -31,6 +31,7 @@ import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.decoration.painting.PaintingVariant;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.VillagerEntity;
@@ -718,8 +719,50 @@ public class Szar implements ModInitializer {
                             })
             );
         });
-
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "axolotl"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "bloc"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "block_wave"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "bounce"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "chicken_jokey"),
+                new PaintingVariant(16, 16)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "frogs"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "matrix"),
+                new PaintingVariant(32, 32)
+        );
+        Registry.register(
+                Registries.PAINTING_VARIANT,
+                new Identifier(MOD_ID, "nyansniffer"),
+                new PaintingVariant(32, 32)
+        );
     }
+
+
+
     public static ObeliskCoreBlockEntity findNearestObelisk(ServerWorld world, BlockPos center, int radius) {
         ObeliskCoreBlockEntity closest = null;
         double closestDistance = Double.MAX_VALUE;
@@ -817,28 +860,33 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "firtana"),
             new FirtanaItem(new Item.Settings())
     );
-    static VoxelShape shape23 = VoxelShapes.cuboid(0.25f, 0f, 0f, 0.75f, 0.25f, 0.125f);
-    static VoxelShape shape24 = VoxelShapes.cuboid(0.125f, 0f, 0.125f, 0.875f, 0.125f, 0.25f);
-    static VoxelShape shape25 = VoxelShapes.cuboid(0f, 0f, 0.25f, 1f, 0.125f, 0.75f);
-    static VoxelShape shape26 = VoxelShapes.cuboid(0.125f, 0f, 0.75f, 0.875f, 0.125f, 0.875f);
-    static VoxelShape shape27 = VoxelShapes.cuboid(0.25f, 0f, 0.875f, 0.75f, 0.25f, 1f);
-    static VoxelShape shape28 = VoxelShapes.cuboid(0f, 0.125f, 0.25f, 0.125f, 0.25f, 0.75f);
-    static VoxelShape shape29 = VoxelShapes.cuboid(0.875f, 0.125f, 0.25f, 1f, 0.25f, 0.75f);
-    static VoxelShape shape30 = VoxelShapes.cuboid(0.75f, 0.125f, 0.125f, 0.875f, 0.25f, 0.25f);
-    static VoxelShape shape31 = VoxelShapes.cuboid(0.75f, 0.125f, 0.75f, 0.875f, 0.25f, 0.875f);
-    static VoxelShape shape32 = VoxelShapes.cuboid(0.125f, 0.125f, 0.125f, 0.25f, 0.25f, 0.25f);
-    static VoxelShape shape33 = VoxelShapes.cuboid(0.125f, 0.125f, 0.75f, 0.25f, 0.25f, 0.875f);
-    static VoxelShape shape34 = VoxelShapes.cuboid(0.3125f, 0.313125f, 0.3125f, 0.6875f, 0.313125f, 0.6875f);
-    static VoxelShape shape35 = VoxelShapes.cuboid(0.4375f, 0.125f, 0.4375f, 0.5625f, 0.3125f, 0.5625f);
-    static VoxelShape ROULETTE_SHAPE = VoxelShapes.union(shape23, shape24, shape25, shape26, shape27, shape28, shape29, shape30, shape31, shape32, shape33, shape34, shape35);
+    public static final ScreenHandlerType<RouletteScreenHandler> ROULETTE_SCREEN_HANDLER_TYPE =
+            ScreenHandlerRegistry.registerExtended(
+                    new Identifier(Szar.MOD_ID, "roulette"),
+                    (syncId, inv, buf) -> {
+                        BlockPos pos = buf.readBlockPos();
+                        BlockEntity be = inv.player.getWorld().getBlockEntity(pos);
+                        if (!(be instanceof RouletteBlockEntity blockEntity)) {
+                            throw new IllegalStateException("BlockEntity is not a RouletteBlockEntity");
+                        }
+                        return new RouletteScreenHandler(syncId, inv, blockEntity);
+                    }
+            );
     public static final Block ROULETTE_BLOCK = Registry.register(
             Registries.BLOCK,
             new Identifier(MOD_ID, "roulette"),
-            new BasicRotatableModelBlock(
+            new RouletteBlock(
                     AbstractBlock.Settings
-                            .copy(Blocks.OAK_WOOD),
-                    ROULETTE_SHAPE
+                            .copy(Blocks.IRON_BLOCK)
             )
+    );
+    public static final BlockEntityType<RouletteBlockEntity> ROULETTE_BLOCKENTITY = Registry.register(
+            Registries.BLOCK_ENTITY_TYPE,
+            new Identifier(MOD_ID, "roulette"),
+            FabricBlockEntityTypeBuilder.create(
+                    RouletteBlockEntity::new,
+                    ROULETTE_BLOCK
+            ).build(null)
     );
     public static final Item ROULETTE = Registry.register(
             Registries.ITEM,

@@ -250,6 +250,7 @@ public class SzarClient implements ClientModInitializer {
                 SlotMachineRenderer::new
         );*/
         HandledScreens.register(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, SlotMachineScreen::new);
+        HandledScreens.register(Szar.ROULETTE_SCREEN_HANDLER_TYPE, RouletteScreen::new);
 
         EntityRendererRegistry.register(
                 Szar.NiggerEntityType,
