@@ -64,7 +64,7 @@ public class RouletteScreen extends HandledScreen<RouletteScreenHandler> {
         this.handler     = handler;
         this.blockEntity = handler.blockEntity;
         this.backgroundWidth  = 326;
-        this.backgroundHeight = 194;
+        this.backgroundHeight = 240;
         this.inventory   = inventory;
     }
 
@@ -217,17 +217,17 @@ public class RouletteScreen extends HandledScreen<RouletteScreenHandler> {
         int guiLeft = (width - backgroundWidth) / 2;
         int guiTop  = (height - backgroundHeight) / 2;
         context.drawText(textRenderer, Text.literal(spinString),
-                guiLeft + 190, guiTop + 115, 0x373737, false);
+                guiLeft + 190, guiTop + 115, 0x404040, false);
     }
 
     protected void drawWheel(DrawContext context) {
         int cx = ((width  - backgroundWidth)  / 2) + 255;
-        int cy = ((height - backgroundHeight) / 2) + 155;
+        int cy = ((height - backgroundHeight) / 2) + 180;
 
         Identifier wheelTex = new Identifier(Szar.MOD_ID, "textures/gui/roulette_wheel.png");
         Identifier ballTex  = new Identifier(Szar.MOD_ID, "textures/gui/roulette_ball.png");
-        int imgWidth  = 64;
-        int imgHeight = 64;
+        int imgWidth  = 128;
+        int imgHeight = 128;
 
         context.getMatrices().push();
         context.getMatrices().translate(cx, cy, 0);
@@ -261,6 +261,14 @@ public class RouletteScreen extends HandledScreen<RouletteScreenHandler> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    protected void drawForeground(DrawContext context, int mouseX, int mouseY) {
+        // Draw title (top left)
+        context.drawText(textRenderer, title, titleX, titleY, 0x404040, false);
+        // Draw "Inventory" label — move it down by changing the Y
+        context.drawText(textRenderer, playerInventoryTitle, playerInventoryTitleX, playerInventoryTitleY + 73, 0x404040, false);
     }
 
     @Override

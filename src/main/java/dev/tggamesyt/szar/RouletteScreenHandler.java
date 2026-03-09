@@ -13,8 +13,8 @@ public class RouletteScreenHandler extends ScreenHandler {
     public final RouletteBlockEntity blockEntity;
 
     public static final int SLOT_SIZE = 18;
-    public static final int GRID_START_X = 60;
-    public static final int GRID_START_Y = 8;
+    public static final int GRID_START_X = 50;
+    public static final int GRID_START_Y = 7;
 
     private static int gx(int col) { return GRID_START_X + (col - 1) * SLOT_SIZE; }
     private static int gy(int row) { return GRID_START_Y + (row - 1) * SLOT_SIZE; }
@@ -87,7 +87,7 @@ public class RouletteScreenHandler extends ScreenHandler {
         this.addSlot(new BetSlot(inv.thirds, 2, gx(14), gy(3)));
 
         // === Player inventory ===
-        int playerInvY = GRID_START_Y + 5 * SLOT_SIZE + 14;
+        int playerInvY = GRID_START_Y + 5 * SLOT_SIZE + 60;
         for (int y = 0; y < 3; y++)
             for (int x = 0; x < 9; x++)
                 this.addSlot(new Slot(playerInv, x + y * 9 + 9, 8 + x * 18, playerInvY + y * 18));

@@ -876,8 +876,8 @@ public class Szar implements ModInitializer {
             Registries.BLOCK,
             new Identifier(MOD_ID, "roulette"),
             new RouletteBlock(
-                    AbstractBlock.Settings
-                            .copy(Blocks.IRON_BLOCK)
+                    FabricBlockSettings.create()
+                            .strength(2.0f, 3.0f)
             )
     );
     public static final BlockEntityType<RouletteBlockEntity> ROULETTE_BLOCKENTITY = Registry.register(
@@ -1001,8 +1001,8 @@ public class Szar implements ModInitializer {
             Registries.BLOCK,
             new Identifier(MOD_ID, "slot_machine"),
             new SlotMachineBlock(
-                    AbstractBlock.Settings
-                            .copy(Blocks.IRON_BLOCK)
+                    FabricBlockSettings.create()
+                            .strength(2.0f, 3.0f)
             )
     );
     public static final BlockEntityType<SlotMachineBlockEntity> SLOT_MACHINE_BLOCKENTITY = Registry.register(

@@ -40,9 +40,9 @@ public class RouletteBlockEntity extends BlockEntity {
             "red",   "black", "red",   "black", "red",  // 1-5
             "black", "red",   "black", "red",   "black",// 6-10
             "black", "red",   "black", "red",   "black",// 11-15
-            "red",   "black", "red",   "black",   "black",// 16-20
+            "red",   "black", "red",   "red",   "black",// 16-20
             "red",   "black", "red",   "black", "red",  // 21-25
-            "black", "red",   "red", "black", "red",  // 26-30
+            "black", "red",   "black", "black", "red",  // 26-30
             "black", "red",   "black", "red",   "black",// 31-35
             "red"                                       // 36
     };
