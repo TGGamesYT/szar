@@ -21,6 +21,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
@@ -61,7 +62,9 @@ import static dev.tggamesyt.szar.client.ClientCosmetics.loadTextureFromURL;
 import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
-    private static boolean addedFeature = false;
+    // add this field to your client init class
+    private float drogOverlayProgress = 0.0F;
+    private long lastTime = 0;
     private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();
     public static final EntityModelLayer PLANE =
             new EntityModelLayer(
@@ -88,6 +91,7 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        EntityRendererRegistry.register(Szar.RADIATION_AREA, EmptyEntityRenderer::new);
         ClientPlayNetworking.registerGlobalReceiver(Szar.PLAY_VIDEO,
                 (client, handler, buf, responseSender) -> {
                     String player = buf.readString();
@@ -358,53 +362,59 @@ public class SzarClient implements ClientModInitializer {
         );
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient client = MinecraftClient.getInstance();
-
             if (client.player == null) return;
-            if (!client.player.hasStatusEffect(Szar.DROG_EFFECT)) return;
 
-            var effect = client.player.getStatusEffect(Szar.DROG_EFFECT);
-            int amplifier = effect.getAmplifier(); // 0 = level I
-            if (amplifier > 2) {amplifier = 2;}
+            boolean hasEffect = client.player.hasStatusEffect(Szar.DROG_EFFECT);
+
+            // ease in/out — 0.02F controls speed, lower = slower transition
+            if (hasEffect) {
+                drogOverlayProgress = Math.min(1.0F, drogOverlayProgress + tickDelta * 0.02F);
+            } else {
+                drogOverlayProgress = Math.max(0.0F, drogOverlayProgress - tickDelta * 0.02F);
+            }
+
+            if (drogOverlayProgress <= 0.0F) return;
+
+            // S-curve easing so it accelerates then decelerates
+            float eased = drogOverlayProgress * drogOverlayProgress * (3.0F - 2.0F * drogOverlayProgress);
+
+            var effect = hasEffect ? client.player.getStatusEffect(Szar.DROG_EFFECT) : null;
+            int amplifier = effect != null ? Math.min(effect.getAmplifier(), 2) : 0;
 
             float level = amplifier + 1f;
             float time = client.player.age + tickDelta;
 
-            /* ───── Color speed (gentle ramp) ───── */
             float speed = 0.015f + amplifier * 0.012f;
             float hue = (time * speed) % 1.0f;
 
             int rgb = MathHelper.hsvToRgb(hue, 0.95f, 1f);
 
-            /* ───── Alpha (mostly stable) ───── */
             float pulse =
                     (MathHelper.sin(time * (0.04f + amplifier * 0.015f)) + 1f) * 0.5f;
 
+            // multiply alpha by eased so it fades in/out smoothly
             float alpha = MathHelper.clamp(
-                    0.20f + amplifier * 0.10f + pulse * 0.10f,
-                    0.20f,
+                    (0.20f + amplifier * 0.10f + pulse * 0.10f) * eased,
+                    0.0f,
                     0.70f
             );
 
-            /* ───── Very subtle jitter ───── */
-            float jitter = 0.15f * amplifier;
+            // jitter also scales with eased so it doesn't pop in suddenly
+            float jitter = 0.15f * amplifier * eased;
             float jitterX = (client.world.random.nextFloat() - 0.5f) * jitter;
             float jitterY = (client.world.random.nextFloat() - 0.5f) * jitter;
 
             int width = client.getWindow().getScaledWidth();
             int height = client.getWindow().getScaledHeight();
 
-            int color =
-                    ((int)(alpha * 255) << 24)
-                            | (rgb & 0x00FFFFFF);
+            int color = ((int)(alpha * 255) << 24) | (rgb & 0x00FFFFFF);
 
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
             drawContext.getMatrices().push();
             drawContext.getMatrices().translate(jitterX, jitterY, 0);
-
             drawContext.fill(0, 0, width, height, color);
-
             drawContext.getMatrices().pop();
 
             RenderSystem.disableBlend();

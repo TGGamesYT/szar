@@ -4,23 +4,33 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class PlaneEntity extends Entity {
+import java.util.List;
 
+import static dev.tggamesyt.szar.Szar.MOD_ID;
+
+public class PlaneEntity extends Entity {
+    public static final RegistryKey<DamageType> PLANE_CRASH =
+            RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "plane_crash"));
     private static final TrackedData<Float> ENGINE_TARGET =
             DataTracker.registerData(PlaneEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS =
@@ -193,7 +203,36 @@ public class PlaneEntity extends Entity {
 
             boolean crash = (horizontalImpact > 1.5 && horizontalCollision) || (verticalImpact > explodeSpeed && verticalCollision);
             if (crash) {
-                getWorld().createExplosion(this, getX(), getY(), getZ(), 9.0f, World.ExplosionSourceType.TNT);
+                PlayerEntity pilot = getControllingPassenger();
+
+                RegistryEntry<DamageType> planeCrashType =
+                        getWorld().getRegistryManager()
+                                .get(RegistryKeys.DAMAGE_TYPE)
+                                .entryOf(PLANE_CRASH);
+
+                float explosionRadius = 9.0f;
+
+                List<Entity> targets = getWorld().getOtherEntities(this, getBoundingBox().expand(explosionRadius));
+                if (pilot != null) targets.add(pilot); // make sure pilot is included
+
+                for (Entity entity : targets) {
+                    if (!(entity instanceof LivingEntity living)) continue;
+
+                    double dist = entity.getPos().distanceTo(getPos());
+                    if (dist > explosionRadius) continue;
+
+                    double exposure = 1.0;
+                    double intensity = (1.0 - (dist / explosionRadius)) * exposure;
+                    float damage = (float)((intensity * intensity + intensity) / 2.0 * 7.0 * explosionRadius + 1.0);
+
+                    DamageSource crashSource = pilot != null && entity != pilot
+                            ? new DamageSource(planeCrashType, pilot)  // "X was killed when Pilot crashed"
+                            : new DamageSource(planeCrashType);         // pilot just gets "X crashed their plane"
+
+                    living.damage(crashSource, damage);
+                }
+
+                getWorld().createExplosion(null, getX(), getY(), getZ(), explosionRadius, World.ExplosionSourceType.TNT);
                 remove(RemovalReason.KILLED);
                 return;
             }

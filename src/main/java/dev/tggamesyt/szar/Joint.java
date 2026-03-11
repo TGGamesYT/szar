@@ -165,6 +165,37 @@ public class Joint extends SpyglassItem {
 
         // Optional: play inhale / stop sound
         user.playSound(SoundEvents.ITEM_HONEY_BOTTLE_DRINK, 1.0F, 1.0F);
+        if (world.isClient) {
+            // get the direction the player is facing
+            double yawRad = Math.toRadians(user.getYaw());
+
+            // position in front of the player's face
+            double baseX = user.getX() - Math.sin(yawRad) * 0.5;
+            double baseY = user.getEyeY() - 0.1; // slightly below eye level (mouth)
+            double baseZ = user.getZ() + Math.cos(yawRad) * 0.5;
+
+            for (int p = 0; p < 8; p++) {
+                // randomize spread slightly
+                double offsetX = (RANDOM.nextDouble() - 0.5) * 0.15;
+                double offsetY = (RANDOM.nextDouble() - 0.5) * 0.1;
+                double offsetZ = (RANDOM.nextDouble() - 0.5) * 0.15;
+
+                // velocity: mostly upward, slight outward drift
+                double velX = (RANDOM.nextDouble() - 0.5) * 0.02;
+                double velY = 0.04 + RANDOM.nextDouble() * 0.03; // upward
+                double velZ = (RANDOM.nextDouble() - 0.5) * 0.02;
+
+                world.addParticle(
+                        net.minecraft.particle.ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                        baseX + offsetX,
+                        baseY + offsetY,
+                        baseZ + offsetZ,
+                        velX,
+                        velY,
+                        velZ
+                );
+            }
+        }
     }
 
 }

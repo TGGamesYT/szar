@@ -4,9 +4,13 @@
   "package": "dev.tggamesyt.szar.client.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "BipedEntityModelMixin",
+    "GameRendererMixin",
+    "HeldItemRendererMixin",
     "ItemRendererMixin",
     "MouseMixin",
     "PlayerEntityRendererMixin",
+    "PlayerHeldItemFeatureRendererMixin",
     "PlayerModelMixin",
     "RadiatedItemRendererMixin",
     "RadiationHeartMixin",

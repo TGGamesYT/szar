@@ -1032,6 +1032,13 @@ public class Szar implements ModInitializer {
             new DrogEffect()
     );
     public static final  StatusEffect ARRESTED = Registry.register(Registries.STATUS_EFFECT, new Identifier(MOD_ID, "arrested"), new ArrestedEffect());
+    public static final EntityType<RadiationAreaEntity> RADIATION_AREA = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier(MOD_ID, "radiation_area"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MISC, RadiationAreaEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.5F, 0.5F))
+                    .build()
+    );
     public static final StatusEffect RADIATION = Registry.register(
             Registries.STATUS_EFFECT,
             new Identifier(MOD_ID, "radiation"),

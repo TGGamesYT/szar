@@ -85,5 +85,8 @@
   "block.szar.roulette": "Roulette",
   "item.szar.firtana": "Firtana",
   "item.szar.hello": "Music Disc",
-  "item.szar.hello.desc": "Alex Savage - OMFG - Hello (Dark Remix)"
+  "item.szar.hello.desc": "Alex Savage - OMFG - Hello (Dark Remix)",
+
+  "death.attack.plane_crash": "%1$s crashed their plane",
+  "death.attack.plane_crash.player": "%1$s was killed when %2$s crashed their plane"
 }
