@@ -87,6 +87,21 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final SoundEvent BESZIV = Registry.register(
+            Registries.SOUND_EVENT,
+            new Identifier(MOD_ID, "besziv"),
+            SoundEvent.of(new Identifier(MOD_ID, "besziv"))
+    );
+    public static final SoundEvent KIFUJ = Registry.register(
+            Registries.SOUND_EVENT,
+            new Identifier(MOD_ID, "kifuj"),
+            SoundEvent.of(new Identifier(MOD_ID, "kifuj"))
+    );
+    public static final SoundEvent ROULETTE_SOUND = Registry.register(
+            Registries.SOUND_EVENT,
+            new Identifier(MOD_ID, "roulette"),
+            SoundEvent.of(new Identifier(MOD_ID, "roulette"))
+    );
     public static final SoundEvent SLOT_MACHINE_BASE =
             Registry.register(
                     Registries.SOUND_EVENT,

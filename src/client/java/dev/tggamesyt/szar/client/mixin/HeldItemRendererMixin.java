@@ -48,7 +48,7 @@ public abstract class HeldItemRendererMixin {
                 -0.5F
         );
 
-        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(80.0F));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(95.0F));
         matrices.translate(0.0F, equipProgress * -0.6F, 0.0F);
 
         HeldItemRenderer self = (HeldItemRenderer)(Object)this;

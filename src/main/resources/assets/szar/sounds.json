@@ -122,5 +122,29 @@
         "stream": true
       }
     ]
+  },
+  "besziv": {
+    "sounds": [
+      {
+        "name": "szar:besziv",
+        "stream": true
+      }
+    ]
+  },
+  "kifuj": {
+    "sounds": [
+      {
+        "name": "szar:kifuj",
+        "stream": true
+      }
+    ]
+  },
+  "roulette": {
+    "sounds": [
+      {
+        "name": "szar:roulette",
+        "stream": true
+      }
+    ]
   }
 }

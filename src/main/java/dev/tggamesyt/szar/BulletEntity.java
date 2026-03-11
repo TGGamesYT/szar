@@ -14,9 +14,12 @@ import net.minecraft.world.World;
 
 public class BulletEntity extends ThrownItemEntity {
 
+    private int stillTicks = 0;
+    private double lastX, lastY, lastZ;
+
     public BulletEntity(EntityType<? extends BulletEntity> type, World world) {
         super(type, world);
-        this.setNoGravity(true); // bullets fly straight
+        this.setNoGravity(true);
     }
 
     public BulletEntity(World world, LivingEntity owner) {
@@ -26,8 +29,34 @@ public class BulletEntity extends ThrownItemEntity {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+
+        if (!getWorld().isClient) {
+            double dx = getX() - lastX;
+            double dy = getY() - lastY;
+            double dz = getZ() - lastZ;
+            double movedSq = dx * dx + dy * dy + dz * dz;
+
+            if (movedSq < 0.0001) {
+                stillTicks++;
+                if (stillTicks >= 3) { // discard after 3 ticks of no movement
+                    discard();
+                    return;
+                }
+            } else {
+                stillTicks = 0;
+            }
+
+            lastX = getX();
+            lastY = getY();
+            lastZ = getZ();
+        }
+    }
+
+    @Override
     protected Item getDefaultItem() {
-        return Szar.AK_AMMO; // used by FlyingItemEntityRenderer
+        return Szar.AK_AMMO;
     }
 
     @Override
@@ -43,11 +72,9 @@ public class BulletEntity extends ThrownItemEntity {
                     this,
                     livingOwner
             );
-
             target.damage(source, 13.0F);
         }
 
         discard();
     }
-
 }

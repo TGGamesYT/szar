@@ -10,9 +10,14 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -21,9 +26,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
+import static dev.tggamesyt.szar.Szar.MOD_ID;
+
 public class RouletteBlockEntity extends BlockEntity {
     public int wheelWaitSeconds    = 10;
-    public int wheelRollingSeconds = 5;
+    public int wheelRollingSeconds = 10;
     public int intermissionSeconds = 20;
 
     private static final int[] WHEEL_ORDER = {
@@ -232,7 +239,6 @@ public class RouletteBlockEntity extends BlockEntity {
     }
 
     // ─── Tick ─────────────────────────────────────────────────────────────────
-
     public static void tick(World world, BlockPos pos, BlockState state, RouletteBlockEntity be) {
         if (world.isClient) return;
 
@@ -242,6 +248,7 @@ public class RouletteBlockEntity extends BlockEntity {
             if (be.nextspinTime > 0) {
                 // still counting down to spin
             } else if (be.nextspinTime == 0) {
+                world.playSound(null, pos, Szar.ROULETTE_SOUND, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 // Spin is starting — pick winner and clear all bets
                 be.winnernum = new Random().nextInt(37);
                 be.isIntermission = false;

@@ -381,7 +381,6 @@ public class SzarClient implements ClientModInitializer {
             var effect = hasEffect ? client.player.getStatusEffect(Szar.DROG_EFFECT) : null;
             int amplifier = effect != null ? Math.min(effect.getAmplifier(), 2) : 0;
 
-            float level = amplifier + 1f;
             float time = client.player.age + tickDelta;
 
             float speed = 0.015f + amplifier * 0.012f;
@@ -431,41 +430,14 @@ public class SzarClient implements ClientModInitializer {
             scrambleMovement(client, chance);
         });
 
-
-        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player == null) return;
-
-            float scale = SmokeZoomHandler.getSmokeScale();
-            if (scale > 0.51f) { // only when smoking
-                client.inGameHud.spyglassScale = scale;
-            }
-        });
-
-        SmokeZoomHandler.register();
         // In your mod initialization code
         FabricModelPredicateProviderRegistry.register(Szar.WEED_JOINT_ITEM, new Identifier("held"),
-                (stack, world, entity, seed) -> {
-                    return entity != null && entity.getMainHandStack() == stack ? 1.0f : 0.0f;
-                });
+                (stack, world, entity, seed) -> entity != null && entity.getMainHandStack() == stack ? 1.0f : 0.0f);
         if (isDebugEnabled()) {
             ClientCommandRegistrationCallback.EVENT.register(
                     (dispatcher, registryAccess) -> PanoramaClientCommand.register(dispatcher)
             );
         }
-        /*ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (addedFeature) return; // only run once
-            MinecraftClient mc = MinecraftClient.getInstance();
-            if (mc.getEntityRenderDispatcher() == null) return;
-
-            for (EntityRenderer<?> renderer : mc.getEntityRenderDispatcher().renderers.values()) {
-                if (renderer instanceof PlayerEntityRenderer playerRenderer) {
-                    playerRenderer.addFeature(new VideoHeadFeature(playerRenderer));
-                }
-            }
-
-            addedFeature = true; // prevent running again
-        });*/
     }
     private boolean isDebugEnabled() {
 

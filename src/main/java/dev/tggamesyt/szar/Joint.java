@@ -8,9 +8,12 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SpyglassItem;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
 import net.minecraft.util.Hand;
@@ -24,25 +27,19 @@ import java.util.Random;
 import static dev.tggamesyt.szar.Szar.MOD_ID;
 
 public class Joint extends SpyglassItem {
-
     public Joint(Settings settings) {
         super(settings.maxDamage(20)); // max durability
     }
     private static final int COOLDOWN_TICKS = 20 * 5;
     @Override
     public UseAction getUseAction(ItemStack stack) {
-        return UseAction.SPYGLASS; // keeps spyglass hold animation
-    }
-
-    @Override
-    public int getMaxUseTime(ItemStack stack) {
-        return 40; // shorter “smoking” duration
+        return UseAction.SPYGLASS;
     }
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         // play custom smoke sound
-        user.playSound(SoundEvents.ITEM_HONEY_BOTTLE_DRINK, 1.0F, 1.0F);
+        user.playSound(Szar.BESZIV, 1.0F, 1.0F);
         user.incrementStat(Stats.USED.getOrCreateStat(this));
         user.setCurrentHand(hand); // start using
         return TypedActionResult.consume(user.getStackInHand(hand));
@@ -164,7 +161,7 @@ public class Joint extends SpyglassItem {
         ));
 
         // Optional: play inhale / stop sound
-        user.playSound(SoundEvents.ITEM_HONEY_BOTTLE_DRINK, 1.0F, 1.0F);
+        user.playSound(Szar.KIFUJ, 1.0F, 1.0F);
         if (world.isClient) {
             // get the direction the player is facing
             double yawRad = Math.toRadians(user.getYaw());
