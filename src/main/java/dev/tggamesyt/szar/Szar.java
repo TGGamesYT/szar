@@ -133,13 +133,15 @@ public class Szar implements ModInitializer {
                     SoundEvent.of(new Identifier(Szar.MOD_ID, "won"))
             );
     public static final SoundEvent MERL_SOUND =
-            SoundEvent.of(new Identifier("szar", "merl"));
+            SoundEvent.of(new Identifier(MOD_ID, "merl"));
     public static final Identifier PLANE_ANIM_PACKET =
             new Identifier(MOD_ID, "plane_anim");
-    public static final Identifier NAZI_HAND_GESTURE = new Identifier("szar", "hit_hand");
+    public static final Identifier NAZI_HAND_GESTURE = new Identifier(MOD_ID, "hit_hand");
     public static final Identifier OPEN_URL = new Identifier(MOD_ID, "epsteinfiles");
     public static final Identifier PLAY_VIDEO =
             new Identifier(MOD_ID, "play_video");
+    public static final Identifier CONFIG_SYNC = new Identifier(MOD_ID, "config_sync");
+
 
     public static final Block SZAR_BLOCK =
             new SzarBlock();
@@ -296,7 +298,7 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "szar_group"),
             FabricItemGroup.builder()
                     .displayName(Text.translatable("itemgroup.szar_group"))
-                    .icon(() -> new ItemStack(Szar.CIGANYBLOCK)) // icon item
+                    .icon(() -> new ItemStack(Szar.CANNABIS_ITEM)) // icon item
                     .entries((displayContext, entries) -> {
                         // drugs
                         entries.add(Szar.CANNABIS_ITEM);
@@ -360,6 +362,27 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        ServerPlayNetworking.registerGlobalReceiver(CONFIG_SYNC,
+                (server, player, handler, buf, responseSender) -> {
+                    // Read on netty thread, process on server thread
+                    int count = buf.readInt();
+                    Map<String, Boolean> config = new HashMap<>();
+                    for (int i = 0; i < count; i++) {
+                        String id = buf.readString();
+                        boolean value = buf.readBoolean();
+                        config.put(id, value);
+                    }
+
+                    // Always handle game state on the server thread
+                    server.execute(() -> {
+                        PlayerConfigStore.set(player, config);
+                    });
+                });
+
+        // Clean up when player leaves
+        ServerPlayConnectionEvents.DISCONNECT.register(
+                (handler, server) -> PlayerConfigStore.remove(handler.player)
+        );
         PlayerMovementManager.init();
         ServerCosmetics.init();
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -1571,6 +1594,7 @@ public class Szar implements ModInitializer {
     }
 
     private void givePregnantEffect(ServerPlayerEntity player, ServerPlayerEntity partner, int chance) {
+        if (PlayerConfigStore.get(player, "nsfw") || PlayerConfigStore.get(partner, "nsfw")) { return; }
         if (partner.getOffHandStack().getItem() == Szar.CNDM) {
             partner.getOffHandStack().decrement(1);
             partner.dropStack(new ItemStack(WHITE_LIQUID));

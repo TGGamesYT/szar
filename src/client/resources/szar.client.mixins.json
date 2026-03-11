@@ -9,6 +9,8 @@
     "HeldItemRendererMixin",
     "ItemRendererMixin",
     "MouseMixin",
+    "PackMixin",
+    "PackScreenCloseMixin",
     "PlayerEntityRendererMixin",
     "PlayerHeldItemFeatureRendererMixin",
     "PlayerModelMixin",

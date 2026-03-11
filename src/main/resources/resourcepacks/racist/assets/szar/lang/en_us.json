@@ -1,0 +1,25 @@
+{
+  "block.szar.cigany": "? Block",
+  "item.szar.nwordpass": "?",
+  "entity.szar.nigger": "Monkey",
+  "item.szar.nigger_spawn_egg":"Monkey Spawn Egg",
+  "item.szar.gypsy_spawn_egg":"Burglar Spawn Egg",
+
+  "item.szar.niggerite_ingot":  "Monkey Ingot",
+  "block.szar.niggerite_block":  "Monkey Block",
+  "item.szar.niggerite_sword":  "Monkey Sword",
+  "item.szar.niggerite_axe":  "Monkey Axe",
+  "item.szar.niggerite_pickaxe":  "Monkey Pickaxe",
+  "item.szar.niggerite_shovel":  "Monkey Shovel",
+  "item.szar.niggerite_hoe":  "Monkey Hoe",
+  "item.szar.niggerite_chestplate":  "Monkey Chestplate",
+  "item.szar.niggerite_leggings":  "Monkey Leggings",
+  "item.szar.niggerite_boots":  "Monkey Boots",
+  "item.szar.niggerite_helmet":  "Monkey Helmet",
+  "entity.szar.islam_terrorist": "Creeper Player",
+  "item.szar.terrorist_spawn_egg": "Creeper Player Spawn Egg",
+  "entity.szar.gypsy": "Burglar",
+  "item.szar.epstein_files": "?",
+  "entity.szar.epstein": "Old Man",
+  "item.szar.epstein_spawn_egg": "Old Man Spawn Egg"
+}

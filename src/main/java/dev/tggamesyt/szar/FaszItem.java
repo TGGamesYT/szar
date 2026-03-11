@@ -15,6 +15,7 @@ import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -130,6 +131,7 @@ public class FaszItem extends BlockItem {
 
                     // If the entity is a player → apply special effect logic
                     if (living instanceof PlayerEntity target) {
+                        if (PlayerConfigStore.get(target, "nsfw")) { return;}
                         int chance = 5; // 1/5 default
                         ItemStack offhand = user.getOffHandStack();
                         if (!offhand.isEmpty() && offhand.isOf(CNDM.getItem())) {

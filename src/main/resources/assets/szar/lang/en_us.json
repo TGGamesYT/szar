@@ -88,5 +88,29 @@
   "item.szar.hello.desc": "Alex Savage - OMFG - Hello (Dark Remix)",
 
   "death.attack.plane_crash": "%1$s crashed their plane",
-  "death.attack.plane_crash.player": "%1$s was killed when %2$s crashed their plane"
+  "death.attack.plane_crash.player": "%1$s was killed when %2$s crashed their plane",
+
+  "painting.szar.nyansniffer.title": "Nyan Sniffer",
+  "painting.szar.nyansniffer.author": "Unknown (Szar Mod)",
+
+  "painting.szar.matrix.title": "Matrix",
+  "painting.szar.matrix.author": "Unknown (Szar Mod)",
+
+  "painting.szar.frogs.title": "Frogs",
+  "painting.szar.frogs.author": "Minecraft Live (Szar Mod)",
+
+  "painting.szar.bounce.title": "Bounce",
+  "painting.szar.bounce.author": "Unknown (Szar Mod)",
+
+  "painting.szar.block_wave.title": "Block Wave",
+  "painting.szar.block_wave.author": "Unknown (Szar Mod)",
+
+  "painting.szar.bloc.title": "Bloc",
+  "painting.szar.bloc.author": "Unknown (Szar Mod)",
+
+  "painting.szar.axolotl.title": "Axolotl",
+  "painting.szar.axolotl.author": "Unknown (Szar Mod)",
+
+  "painting.szar.chicken_jokey.title": "Chicken Jokey",
+  "painting.szar.chicken_jokey.author": "Unknown (Szar Mod)"
 }

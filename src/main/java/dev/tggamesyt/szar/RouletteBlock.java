@@ -103,7 +103,7 @@ public class RouletteBlock extends Block implements BlockEntityProvider {
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
-
+        if (PlayerConfigStore.get(player, "gambling")) {return ActionResult.FAIL;}
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
 
         BlockEntity blockEntity = world.getBlockEntity(pos);

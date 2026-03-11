@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
@@ -16,6 +17,9 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -43,6 +47,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Box;
@@ -91,6 +96,34 @@ public class SzarClient implements ClientModInitializer {
     int loopStart = startOffset + startLength;
     @Override
     public void onInitializeClient() {
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            PacketByteBuf buf = PacketByteBufs.create();
+
+            // Write each setting as: id (string), value (boolean)
+            var settings = ModConfig.allSettings();
+            buf.writeInt(settings.size());
+            for (ConfigEntry entry : settings) {
+                buf.writeString(entry.id);
+                buf.writeBoolean(entry.get());
+            }
+
+            ClientPlayNetworking.send(Szar.CONFIG_SYNC, buf);
+        });
+        ModSettings.init(); // register all settings & presets FIRST
+        ModConfig.load();       // then load saved values
+
+        ResourceManagerHelper.registerBuiltinResourcePack(
+                new Identifier(MOD_ID, "nsfw"),
+                FabricLoader.getInstance().getModContainer(MOD_ID).get(),
+                Text.literal("NSFW Censorship"),
+                ResourcePackActivationType.NORMAL
+        );
+        ResourceManagerHelper.registerBuiltinResourcePack(
+                new Identifier(MOD_ID, "racist"),
+                FabricLoader.getInstance().getModContainer(MOD_ID).get(),
+                Text.literal("Racism Censorship"),
+                ResourcePackActivationType.NORMAL
+        );
         EntityRendererRegistry.register(Szar.RADIATION_AREA, EmptyEntityRenderer::new);
         ClientPlayNetworking.registerGlobalReceiver(Szar.PLAY_VIDEO,
                 (client, handler, buf, responseSender) -> {
