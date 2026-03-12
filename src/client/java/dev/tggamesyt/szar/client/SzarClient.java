@@ -54,6 +54,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +69,8 @@ import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
     // add this field to your client init class
+    public static final int april = 4;
+    public static final int fools = 1;
     private float drogOverlayProgress = 0.0F;
     private long lastTime = 0;
     private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();

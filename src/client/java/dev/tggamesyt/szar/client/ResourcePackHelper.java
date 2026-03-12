@@ -12,42 +12,49 @@ public class ResourcePackHelper {
         ResourcePackManager manager = client.getResourcePackManager();
         manager.scanPacks();
 
-        Set<String> original = new HashSet<>(
-                manager.getEnabledProfiles().stream()
-                        .map(p -> p.getName())
-                        .toList()
-        );
+        List<String> orderedEnabled = manager.getEnabledProfiles().stream()
+                .map(ResourcePackProfile::getName)
+                .toList();
 
-        Set<String> enabledNames = new HashSet<>(
-                manager.getEnabledProfiles().stream()
-                        .map(p -> p.getName())
-                        .toList()
-        );
+        Set<String> original = new LinkedHashSet<>(orderedEnabled);
+
+        Set<String> toAdd = new LinkedHashSet<>();
+        Set<String> toRemove = new HashSet<>();
 
         for (ConfigEntry entry : ModConfig.allSettings()) {
             if (!entry.hasResourcePack()) continue;
             if (entry.get()) {
-                enabledNames.add(entry.linkedResourcePack);
+                toAdd.add(entry.linkedResourcePack);
             } else {
-                enabledNames.remove(entry.linkedResourcePack);
+                toRemove.add(entry.linkedResourcePack);
             }
         }
 
-        if (enabledNames.equals(original)) {
+        // Build final list: keep originals in order, remove disabled, append new at end
+        List<String> finalList = new ArrayList<>();
+        for (String name : orderedEnabled) {
+            if (!toRemove.contains(name)) {
+                finalList.add(name);
+            }
+        }
+        for (String name : toAdd) {
+            if (!finalList.contains(name)) {
+                finalList.add(name);
+            }
+        }
+
+        if (new LinkedHashSet<>(finalList).equals(original)) {
             return;
         }
 
+        System.out.println("original: " + original);
+        System.out.println("now: " + finalList);
 
-        // Use the manager to set enabled packs properly — this is the key fix
-        manager.setEnabledProfiles(enabledNames);
+        manager.setEnabledProfiles(finalList);
 
-        // Sync back to options and save
+        // Don't trust getEnabledProfiles() order after setEnabledProfiles — use our list
         client.options.resourcePacks.clear();
-        client.options.resourcePacks.addAll(
-                manager.getEnabledProfiles().stream()
-                        .map(p -> p.getName())
-                        .toList()
-        );
+        client.options.resourcePacks.addAll(finalList);
         client.options.write();
         client.reloadResources();
     }

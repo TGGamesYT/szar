@@ -18,7 +18,7 @@ public class ConfigScreen extends Screen {
     private final List<ButtonWidget> toggleButtons  = new ArrayList<>();
 
     public ConfigScreen(Screen parent) {
-        super(Text.literal("Your Mod Config"));
+        super(Text.literal("Szar Mod Config"));
         this.parent = parent;
     }
 
@@ -75,17 +75,19 @@ public class ConfigScreen extends Screen {
         addDrawableChild(ButtonWidget.builder(Text.literal("Done"), b -> {
             ModConfig.save();
             ResourcePackHelper.applyAll(client);
-            PacketByteBuf buf = PacketByteBufs.create();
+            if (client.world != null) {
+                PacketByteBuf buf = PacketByteBufs.create();
 
-            // Write each setting as: id (string), value (boolean)
-            var settings = ModConfig.allSettings();
-            buf.writeInt(settings.size());
-            for (ConfigEntry entry : settings) {
-                buf.writeString(entry.id);
-                buf.writeBoolean(entry.get());
+                // Write each setting as: id (string), value (boolean)
+                var settings = ModConfig.allSettings();
+                buf.writeInt(settings.size());
+                for (ConfigEntry entry : settings) {
+                    buf.writeString(entry.id);
+                    buf.writeBoolean(entry.get());
+                }
+
+                ClientPlayNetworking.send(Szar.CONFIG_SYNC, buf);
             }
-
-            ClientPlayNetworking.send(Szar.CONFIG_SYNC, buf);
             client.setScreen(parent);
         }).dimensions(cx - 75, height - 30, 150, 20).build());
     }

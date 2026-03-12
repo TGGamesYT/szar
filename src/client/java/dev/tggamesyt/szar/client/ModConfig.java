@@ -10,7 +10,7 @@ import java.util.*;
 public class ModConfig {
 
     private static final Path CONFIG_PATH =
-            FabricLoader.getInstance().getConfigDir().resolve("yourmod.json");
+            FabricLoader.getInstance().getConfigDir().resolve("szar/config.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     // ── Registry ──────────────────────────────────────────────────────────────

@@ -5,9 +5,12 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "BipedEntityModelMixin",
+    "EntityRenderMixin",
     "GameRendererMixin",
     "HeldItemRendererMixin",
     "ItemRendererMixin",
+    "LogoDrawerMixin",
+    "MouseFlipMixin",
     "MouseMixin",
     "PackMixin",
     "PackScreenCloseMixin",
@@ -16,9 +19,11 @@
     "PlayerModelMixin",
     "RadiatedItemRendererMixin",
     "RadiationHeartMixin",
+    "ScreenFlipMixin",
     "SplashOverlayMixin",
     "TGcapeMixin",
-    "TGnameMixin"
+    "TGnameMixin",
+    "TitleScreenBackgroundMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -20,17 +20,17 @@ public class ModSettings {
         // newPreset(id, displayName, Map<settingId, value>)
         // Pass null map for the "custom" preset (user-editable, no fixed values)
 
-        ModConfig.newPreset("none", "18+", Map.of(
+        ModConfig.newPreset("18+", "18+", Map.of(
                 "racist",   false,
                 "gambling",      false,
                 "nsfw", false
         ));
-        ModConfig.newPreset("some", "17+", Map.of(
+        ModConfig.newPreset("17+", "17+", Map.of(
                 "racist",   false,
                 "gambling",      false,
                 "nsfw", true
         ));
-        ModConfig.newPreset("all", "Minor", Map.of(
+        ModConfig.newPreset("minor", "Minor", Map.of(
                 "racist",   true,
                 "gambling",      true,
                 "nsfw", true
