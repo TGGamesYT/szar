@@ -29,18 +29,11 @@ public class SzarTosHandler {
 
     private static final Text MOD_TOS_TEXT = Text.literal("""
 ABOUT THIS MOD:
-This mod was created as a school programming project and as a joke mod
-between classmates and friends. Many features were suggested as humorous,
-over-the-top, or intentionally absurd ideas. The content is NOT meant to be
-taken seriously. It is a fictional, parody-style Minecraft modification.
+This mod was created as a school programming project and as a joke mod between classmates and friends. Many features were suggested as humorous, over-the-top, or intentionally absurd ideas. The content is NOT meant to be taken seriously. It is a fictional, parody-style Minecraft modification.
 
-okay, AI slop aside, this mod includes various "unacceptable"
-or age restricted topics, so please tell your age below.
-please note this is only saved locally, and can be edited any time from Mod Menu's settings,
-but for your own safety please only disable filters approppriate for your age.
+okay, AI slop aside, this mod includes various "unacceptable" or age restricted topics, so please tell your age below. please note this is only saved locally, and can be edited any time from Mod Menu's settings, but for your own safety please only disable filters approppriate for your age.
 
-also do NOT attempt to do any illegal activities that you see in this mod,
-this is purely a fictional representation of thoose things.
+also do NOT attempt to do any illegal activities that you see in this mod, this is purely a fictional representation of thoose things.
 
 thank you and enjoy my silly mod <3
 """);
@@ -149,10 +142,32 @@ thank you and enjoy my silly mod <3
         protected TosScreen() {
             super(Text.literal("Szar Mod - Information"));
         }
-
+        private List<String> buildWrappedLines(String raw, int maxWidth) {
+            List<String> result = new ArrayList<>();
+            for (String paragraph : raw.split("\n", -1)) {
+                if (paragraph.isEmpty()) {
+                    result.add("");
+                    continue;
+                }
+                // Word-wrap this paragraph
+                String[] words = paragraph.split(" ");
+                StringBuilder current = new StringBuilder();
+                for (String word : words) {
+                    String test = current.isEmpty() ? word : current + " " + word;
+                    if (this.textRenderer.getWidth(test) <= maxWidth) {
+                        current = new StringBuilder(test);
+                    } else {
+                        if (!current.isEmpty()) result.add(current.toString());
+                        current = new StringBuilder(word);
+                    }
+                }
+                if (!current.isEmpty()) result.add(current.toString());
+            }
+            return result;
+        }
         @Override
         protected void init() {
-            lines = MOD_TOS_TEXT.getString().split("\n");
+            lines = buildWrappedLines(MOD_TOS_TEXT.getString(), this.width - PADDING * 2 - 20).toArray(new String[0]);
 
             int textHeight = lines.length * 12;
             int visibleHeight = this.height - TITLE_HEIGHT - FOOTER_HEIGHT - PADDING;

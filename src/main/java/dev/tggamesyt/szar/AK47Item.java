@@ -37,7 +37,7 @@ public class AK47Item extends Item {
 
         for (int i = 0; i < player.getInventory().size(); i++) {
             ItemStack stack = player.getInventory().getStack(i);
-            if (stack.isOf(Szar.AK_AMMO)) {
+            if (stack.isOf(Szar.BULLET_ITEM)) {
                 stack.decrement(1);
                 return true;
             }

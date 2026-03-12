@@ -7,6 +7,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -54,6 +55,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Unique;
 
 import java.io.File;
@@ -97,8 +99,25 @@ public class SzarClient implements ClientModInitializer {
     int startLength = 596;
     int loopLength = 541;
     int loopStart = startOffset + startLength;
+
+    public static final KeyBinding SPIN_KEY = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding("key.szar.spin", InputUtil.Type.KEYSYM,
+                    GLFW.GLFW_KEY_R, "key.categories.szar")
+    );
     @Override
     public void onInitializeClient() {
+
+// Then in a ClientTickEvents.END_CLIENT_TICK:
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (SPIN_KEY.wasPressed() && client.player != null) {
+                ItemStack stack = client.player.getMainHandStack();
+                if (stack.isOf(Szar.REVOLVER)) {
+                    // Send spin packet to server
+                    ClientPlayNetworking.send(Szar.REVOLVER_SPIN,
+                            PacketByteBufs.create());
+                }
+            }
+        });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             PacketByteBuf buf = PacketByteBufs.create();
 
@@ -190,6 +209,8 @@ public class SzarClient implements ClientModInitializer {
         SzarTosHandler.checkAndShow();
         ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_URL,
                 (client, handler, buf, responseSender) -> {
+                    assert client.player != null;
+                    if (PlayerConfigStore.get(client.player.getUuid(), "nsfw")) {return;}
                     String url = "https://files.tggamesyt.dev/f/1770574109164-655298600-2022.03.17-1%20Exhibit%201.pdf";
                     // maybe https://www.justice.gov/epstein/doj-disclosures
 

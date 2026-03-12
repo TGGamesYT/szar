@@ -146,5 +146,13 @@
         "stream": true
       }
     ]
+  },
+  "erika": {
+    "sounds": [
+      {
+        "name": "szar:erika",
+        "stream": true
+      }
+    ]
   }
 }

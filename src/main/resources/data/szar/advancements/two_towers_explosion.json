@@ -6,8 +6,8 @@
   },
   "display": {
     "icon": { "item": "szar:towers" },
-    "title": "Hmm, familiar...",
-    "description": "You were there when the towers fell",
+    "title": {"translate": "advancement.szar.two_towers.title"},
+    "description": {"translate": "advancement.szar.two_towers.description"},
     "frame": "challenge",
     "show_toast": true,
     "announce_to_chat": true

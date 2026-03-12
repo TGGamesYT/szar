@@ -6,10 +6,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 
 public class BulletEntity extends ThrownItemEntity {
@@ -56,7 +54,7 @@ public class BulletEntity extends ThrownItemEntity {
 
     @Override
     protected Item getDefaultItem() {
-        return Szar.AK_AMMO;
+        return Szar.BULLET_ITEM;
     }
 
     @Override

@@ -19,10 +19,7 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.Hand;
+import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -103,11 +100,14 @@ public class RouletteBlock extends Block implements BlockEntityProvider {
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (PlayerConfigStore.get(player, "gambling")) {return ActionResult.FAIL;}
+        if (PlayerConfigStore.get(player, "gambling")) {
+            player.sendMessage(Text.literal("You cannot use this because you are underage.").formatted(Formatting.RED), true);
+            return ActionResult.PASS;
+        }
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
 
         BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (!(blockEntity instanceof RouletteBlockEntity be)) {
+        if (!(blockEntity instanceof RouletteBlockEntity)) {
             return ActionResult.PASS;
         }
 

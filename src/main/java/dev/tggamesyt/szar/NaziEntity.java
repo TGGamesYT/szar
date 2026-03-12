@@ -101,6 +101,9 @@ public class NaziEntity extends PathAwareEntity implements Arrestable{
             this.dropItem(Szar.AK47);
         }
         if (rand.nextFloat() < 0.01F) {
+            this.dropItem(Szar.ERIKA_DISC);
+        }
+        if (rand.nextFloat() < 0.01F) {
             ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 
             NbtCompound nbt = book.getOrCreateNbt();
@@ -118,7 +121,7 @@ public class NaziEntity extends PathAwareEntity implements Arrestable{
 
         int count = rand.nextInt(17);
         if (count > 0) {
-            this.dropStack(new ItemStack(Szar.AK_AMMO, count));
+            this.dropStack(new ItemStack(Szar.BULLET_ITEM, count));
         }
     }
 

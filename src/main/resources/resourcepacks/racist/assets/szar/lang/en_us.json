@@ -21,5 +21,7 @@
   "entity.szar.gypsy": "Burglar",
   "item.szar.epstein_files": "?",
   "entity.szar.epstein": "Old Man",
-  "item.szar.epstein_spawn_egg": "Old Man Spawn Egg"
+  "item.szar.epstein_spawn_egg": "Old Man Spawn Egg",
+  "advancement.szar.nwordpass.title": "Monke",
+  "advancement.szar.nwordpass.description": "Get a ? (idk which one since they all look the same)"
 }

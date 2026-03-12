@@ -92,11 +92,14 @@ public class SlotMachineBlock extends Block implements BlockEntityProvider {
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos,
                               PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (PlayerConfigStore.get(player, "gambling")) {return ActionResult.FAIL;}
+        if (PlayerConfigStore.get(player, "gambling")) {
+            player.sendMessage(Text.literal("You cannot use this because you are underage.").formatted(Formatting.RED), true);
+            return ActionResult.PASS;
+        }
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
 
         BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (!(blockEntity instanceof SlotMachineBlockEntity be)) {
+        if (!(blockEntity instanceof SlotMachineBlockEntity)) {
             return ActionResult.PASS;
         }
 

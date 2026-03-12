@@ -112,5 +112,18 @@
   "painting.szar.axolotl.author": "Unknown (Szar Mod)",
 
   "painting.szar.chicken_jokey.title": "Chicken Jokey",
-  "painting.szar.chicken_jokey.author": "Unknown (Szar Mod)"
+  "painting.szar.chicken_jokey.author": "Unknown (Szar Mod)",
+
+  "item.szar.erika": "Music Disc",
+  "item.szar.erika.desc": "Herms Niel - Erika",
+
+  "advancement.szar.nwordpass.title": "Nig-",
+  "advancement.szar.nwordpass.description": "Get an N-word pass",
+
+  "advancement.szar.two_towers.title": "Hmm, familiar...",
+  "advancement.szar.two_towers.description": "You were there when the towers fell",
+
+  "item.szar.revolver": "Revolver",
+  "item.szar.revolver_bullet": "Revolver Bullet",
+  "item.szar.bullet_shell": "Revolver Bullet Shell"
 }

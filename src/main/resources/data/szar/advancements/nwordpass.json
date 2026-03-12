@@ -3,8 +3,8 @@
     "icon": {
       "item": "szar:nwordpass"
     },
-    "title": "Nig-",
-    "description": "Get an N-word pass",
+    "title": {"translate": "advancement.szar.nwordpass.title"},
+    "description": {"translate": "advancement.szar.nwordpass.description"},
     "show_toast": true
   },
   "criteria": {

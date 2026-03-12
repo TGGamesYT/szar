@@ -58,11 +58,14 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.YOffset;
@@ -87,6 +90,10 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final Identifier REVOLVER_SHOOT = new Identifier(MOD_ID, "revolver_shoot");
+    public static final Identifier REVOLVER_SPIN = new Identifier(MOD_ID, "revolver_spin");
+    public static final Identifier REVOLVER_SYNC = new Identifier(MOD_ID, "revolver_sync");
+    public static final Identifier REVOLVER_CHAMBER_CHANGE = new Identifier(MOD_ID, "revolver_chamber_change");
     public static final SoundEvent BESZIV = Registry.register(
             Registries.SOUND_EVENT,
             new Identifier(MOD_ID, "besziv"),
@@ -169,7 +176,7 @@ public class Szar implements ModInitializer {
     public static final Identifier OPEN_MERL_SCREEN =
             new Identifier(MOD_ID, "open_merl_screen");
     public static final Identifier MERL_QUESTION =
-            new Identifier("szar", "merl_question");
+            new Identifier(MOD_ID, "merl_question");
     public static final Block CHEMICAL_WORKBENCH =
             new Block(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS));
     public static final RegistryKey<PointOfInterestType> CHEMICAL_WORKBENCH_POI_KEY =
@@ -317,8 +324,9 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.KEY_ITEM);
                         entries.add(Szar.HANDCUFF_ITEM);
                         // crazy weponary
-                        entries.add(Szar.AK_AMMO);
+                        entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
+                        entries.add(Szar.REVOLVER);
                         entries.add(Szar.ATOM_DETONATOR);
                         entries.add(Szar.URANIUM_ORE);
                         entries.add(Szar.URANIUM);
@@ -339,6 +347,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ROULETTE);
                         entries.add(Szar.FIRTANA);
                         entries.add(Szar.HELLO_DISC);
+                        entries.add(Szar.ERIKA_DISC);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -362,6 +371,95 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_CHAMBER_CHANGE, (server, player, handler, buf, responseSender) -> {
+            int index = buf.readInt();
+            boolean wasLoaded = buf.readBoolean(); // true = unloading, false = loading
+
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+
+                boolean[] chambers = RevolverItem.getChambers(stack);
+
+                if (wasLoaded) {
+                    // Unload — give shell
+                    chambers[index] = false;
+                    RevolverItem.setChambers(stack, chambers);
+                    player.getInventory().insertStack(new ItemStack(Szar.BULLET_ITEM));
+                } else {
+                    // Load — take bullet from inventory
+                    for (int i = 0; i < player.getInventory().size(); i++) {
+                        ItemStack s = player.getInventory().getStack(i);
+                        if (!s.isEmpty() && s.isOf(Szar.BULLET_ITEM)) {
+                            s.decrement(1);
+                            chambers[index] = true;
+                            RevolverItem.setChambers(stack, chambers);
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SYNC, (server, player, handler, buf, responseSender) -> {
+            // Read 6 booleans from packet
+            boolean[] chambers = new boolean[RevolverItem.CHAMBERS];
+            for (int i = 0; i < RevolverItem.CHAMBERS; i++) {
+                chambers[i] = buf.readBoolean();
+            }
+            int currentChamber = buf.readInt();
+
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+                RevolverItem.setChambers(stack, chambers);
+                RevolverItem.setCurrentChamber(stack, currentChamber);
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SPIN, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+                int steps = 1 + player.getWorld().getRandom().nextInt(RevolverItem.CHAMBERS);
+                int current = RevolverItem.getCurrentChamber(stack);
+                RevolverItem.setCurrentChamber(stack, (current + steps) % RevolverItem.CHAMBERS);
+                // Notify player
+                player.sendMessage(Text.literal("*click* chamber " +
+                        (RevolverItem.getCurrentChamber(stack) + 1)).formatted(Formatting.GRAY), true);
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SHOOT, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+
+                boolean[] chambers = RevolverItem.getChambers(stack);
+                int current = RevolverItem.getCurrentChamber(stack);
+                boolean isHeadshot = player.isSneaking();
+
+                if (!chambers[current]) {
+                    // Empty — dry fire click
+                    player.getWorld().playSound(null, player.getBlockPos(),
+                            SoundEvents.BLOCK_DISPENSER_FAIL, SoundCategory.PLAYERS, 1f, 1.5f);
+                } else {
+                    chambers[current] = false;
+                    RevolverItem.setChambers(stack, chambers);;
+
+                    player.getWorld().playSound(null, player.getBlockPos(),
+                            SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.5f, 1.8f);
+
+                    if (isHeadshot) {
+                        player.damage(player.getWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
+                    } else {
+                        BulletEntity bullet = new BulletEntity(player.getWorld(), player);
+                        bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 0.0f);
+                        player.getWorld().spawnEntity(bullet);
+                    }
+                }
+
+                // Always advance chamber after trigger pull
+                RevolverItem.setCurrentChamber(stack, (current + 1) % RevolverItem.CHAMBERS);
+            });
+        });
         ServerPlayNetworking.registerGlobalReceiver(CONFIG_SYNC,
                 (server, player, handler, buf, responseSender) -> {
                     // Read on netty thread, process on server thread
@@ -591,6 +689,14 @@ public class Szar implements ModInitializer {
                 Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, // avoids leaves
                 PoliceEntity::canSpawnHere                  // your custom condition
         );
+        BiomeModifications.addSpawn(
+                BiomeSelectors.all(), // or a more specific selector
+                SpawnGroup.AMBIENT,
+                Szar.PoliceEntityType,
+                15,  // weight (vanilla zombie is 100, so 15 is fairly rare)
+                1,   // min group size
+                3    // max group size
+        );
         ServerTickEvents.END_SERVER_TICK.register(PlayerValueTimer::onServerTick);
         BiomeModifications.addSpawn(
                 BiomeSelectors.includeByKey(
@@ -799,7 +905,11 @@ public class Szar implements ModInitializer {
         );
     }
 
-
+    // In your ModItems or wherever you register items
+    public static final Item REVOLVER = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "revolver"),
+            new RevolverItem(new Item.Settings().maxCount(1))
+    );
 
     public static ObeliskCoreBlockEntity findNearestObelisk(ServerWorld world, BlockPos center, int radius) {
         ObeliskCoreBlockEntity closest = null;
@@ -1090,7 +1200,7 @@ public class Szar implements ModInitializer {
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "radiation"));
     public static final RegistryKey<DamageType> FCK_DAMAGE =
             RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(MOD_ID, "fck"));
-    public static final Item AK_AMMO = Registry.register(
+    public static final Item BULLET_ITEM = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "bullet"),
             new Item(new Item.Settings())
@@ -1309,7 +1419,7 @@ public class Szar implements ModInitializer {
     public static final Item POPTART = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "pop_tart"),
-            new MusicDiscItem(13, NYAN_MUSIC,  new Item.Settings()
+            new MusicDiscItem(13, NYAN_MUSIC,  new Item.Settings().maxCount(1)
                     .food(new FoodComponent.Builder()
                             .saturationModifier(0.6f).
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
@@ -1322,7 +1432,13 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "baiter"),
             new MusicDiscItem(12, BAITER,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 172)
     );
-
+    public static final SoundEvent ERIKA =
+            SoundEvent.of(new Identifier(MOD_ID, "erika"));
+    public static final Item ERIKA_DISC = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "erika"),
+            new MusicDiscItem(9, ERIKA,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 180)
+    );
     public static final SoundEvent HELLO =
             SoundEvent.of(new Identifier(MOD_ID, "firtana"));
     public static final Item HELLO_DISC = Registry.register(
@@ -1604,6 +1720,34 @@ public class Szar implements ModInitializer {
         if (r.nextInt(chance) == 0) {
             player.addStatusEffect(new StatusEffectInstance(PREGNANT, 20 * 60 * 20, 0, false, false, true));
             pregnantPartners.put(player.getUuid(), partner.getUuid());
+        }
+    }
+
+    private static void shootBullet(ServerPlayerEntity player) {
+        World world = player.getWorld();
+        Vec3d start = player.getEyePos();
+        Vec3d dir = player.getRotationVec(1.0f);
+        Vec3d end = start.add(dir.multiply(100)); // 100 block range
+
+        net.minecraft.util.hit.HitResult hit = world.raycast(new net.minecraft.world.RaycastContext(
+                start, end,
+                net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
+                net.minecraft.world.RaycastContext.FluidHandling.NONE,
+                player
+        ));
+
+        // Entity hit check
+        Box box = new Box(start, end).expand(1);
+        net.minecraft.util.hit.EntityHitResult entityHit =
+                net.minecraft.entity.projectile.ProjectileUtil.raycast(
+                        player, start, end, box,
+                        e -> !e.isSpectator() && e != player && e.canHit(), 100 * 100
+                );
+
+        if (entityHit != null) {
+            entityHit.getEntity().damage(
+                    world.getDamageSources().playerAttack(player), 8.0f
+            );
         }
     }
 }
