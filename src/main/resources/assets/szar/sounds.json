@@ -154,5 +154,13 @@
         "stream": true
       }
     ]
+  },
+  "reload": {
+    "sounds": [
+      {
+        "name": "szar:reload",
+        "stream": true
+      }
+    ]
   }
 }

@@ -21,7 +21,6 @@ public abstract class PlayerEntityRendererMixin {
     private void addVideoFeature(EntityRendererFactory.Context ctx, boolean slim, CallbackInfo ci) {
 
         PlayerEntityRenderer renderer = (PlayerEntityRenderer)(Object)this;
-
         renderer.addFeature(new VideoHeadFeature(renderer));
     }
 

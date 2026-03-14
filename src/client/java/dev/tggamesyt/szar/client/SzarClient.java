@@ -11,11 +11,9 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.model.ModelLoadingRegistry;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.object.builder.v1.client.model.FabricModelPredicateProviderRegistry;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -23,27 +21,16 @@ import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.OtherClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.animation.Animation;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
-import net.minecraft.client.render.item.BuiltinModelItemRenderer;
-import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.sound.EntityTrackingSoundInstance;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.ModelIdentifier;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.sound.SoundCategory;
@@ -52,11 +39,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import org.lwjgl.glfw.GLFW;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +54,6 @@ import java.util.*;
 import static dev.tggamesyt.szar.ServerCosmetics.SYNC_PACKET;
 import static dev.tggamesyt.szar.Szar.*;
 import static dev.tggamesyt.szar.client.ClientCosmetics.loadTextureFromURL;
-import static dev.tggamesyt.szar.client.UraniumUtils.updateUranium;
 
 public class SzarClient implements ClientModInitializer {
     // add this field to your client init class
@@ -99,14 +85,24 @@ public class SzarClient implements ClientModInitializer {
     int startLength = 596;
     int loopLength = 541;
     int loopStart = startOffset + startLength;
-
     public static final KeyBinding SPIN_KEY = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.szar.spin", InputUtil.Type.KEYSYM,
                     GLFW.GLFW_KEY_R, "key.categories.szar")
     );
     @Override
     public void onInitializeClient() {
+        BulletDecalRenderer.register();
+        // In ClientModInitializer:
+        ClientPlayNetworking.registerGlobalReceiver(Szar.BULLET_IMPACT, (client, handler, buf, sender) -> {
+            double x = buf.readDouble();
+            double y = buf.readDouble();
+            double z = buf.readDouble();
+            Direction face = buf.readEnumConstant(Direction.class);
 
+            client.execute(() -> {
+                BulletDecalStore.add(new Vec3d(x, y, z), face);
+            });
+        });
 // Then in a ClientTickEvents.END_CLIENT_TICK:
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (SPIN_KEY.wasPressed() && client.player != null) {
@@ -312,7 +308,7 @@ public class SzarClient implements ClientModInitializer {
         );*/
         HandledScreens.register(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, SlotMachineScreen::new);
         HandledScreens.register(Szar.ROULETTE_SCREEN_HANDLER_TYPE, RouletteScreen::new);
-
+        EntityRendererRegistry.register(Szar.BULLET, BulletRenderer::new);
         EntityRendererRegistry.register(
                 Szar.NiggerEntityType,
                 NiggerEntityRenderer::new
@@ -341,10 +337,10 @@ public class SzarClient implements ClientModInitializer {
                 Szar.NaziEntityType,
                 NaziEntityRenderer::new
         );
-        EntityRendererRegistry.register(
+        /*EntityRendererRegistry.register(
                 Szar.BULLET,
                 ctx -> new FlyingItemEntityRenderer<>(ctx)
-        );
+        );*/
         EntityRendererRegistry.register(
                 Szar.EpsteinEntityType,
                 EpsteinEntityRenderer::new

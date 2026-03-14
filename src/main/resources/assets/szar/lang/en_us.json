@@ -125,5 +125,8 @@
 
   "item.szar.revolver": "Revolver",
   "item.szar.revolver_bullet": "Revolver Bullet",
-  "item.szar.bullet_shell": "Revolver Bullet Shell"
+  "item.szar.bullet_shell": "Revolver Bullet Shell",
+
+  "key.categories.szar": "Szar",
+  "key.szar.spin": "Interact with Revolver"
 }

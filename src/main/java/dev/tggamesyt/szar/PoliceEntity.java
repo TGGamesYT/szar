@@ -13,6 +13,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -51,11 +52,11 @@ public class PoliceEntity extends PathAwareEntity {
 
         Box searchBox = new Box(pos).expand(60);
 
-        int playerCount = world.getEntitiesByType(
+        List<PlayerEntity> nearbyPlayers = world.getEntitiesByType(
                 TypeFilter.instanceOf(PlayerEntity.class),
                 searchBox,
                 e -> true
-        ).size();
+        );
 
         int policeCount = world.getEntitiesByType(
                 TypeFilter.instanceOf(PoliceEntity.class),
@@ -63,8 +64,22 @@ public class PoliceEntity extends PathAwareEntity {
                 e -> true
         ).size();
 
-        int limit = Math.min(playerCount, 10);
-        return policeCount < limit;
+        int limit = Math.min(nearbyPlayers.size(), 10);
+        if (policeCount >= limit) return false;
+
+        // Check if at least one nearby player is off cooldown
+        ServerPlayerEntity eligiblePlayer = nearbyPlayers.stream()
+                .filter(p -> p instanceof ServerPlayerEntity)
+                .map(p -> (ServerPlayerEntity) p)
+                .filter(PoliceSpawnTimerStore::canSpawnForPlayer)
+                .findFirst()
+                .orElse(null);
+
+        if (eligiblePlayer == null) return false;
+
+        // Record the spawn against that player
+        PoliceSpawnTimerStore.recordSpawn(eligiblePlayer);
+        return true;
     }
 
 

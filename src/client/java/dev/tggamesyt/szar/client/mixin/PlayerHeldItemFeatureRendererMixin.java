@@ -1,8 +1,10 @@
 package dev.tggamesyt.szar.client.mixin;
 
 import dev.tggamesyt.szar.Joint;
+import dev.tggamesyt.szar.RevolverItem;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.feature.HeadFeatureRenderer;
 import net.minecraft.client.render.entity.feature.PlayerHeldItemFeatureRenderer;
 import net.minecraft.client.render.entity.model.ModelWithHead;
 import net.minecraft.client.render.item.HeldItemRenderer;
@@ -12,6 +14,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -53,7 +56,7 @@ public abstract class PlayerHeldItemFeatureRendererMixin<T extends net.minecraft
             head.rotate(matrices);
             head.pitch = savedPitch;
 
-            net.minecraft.client.render.entity.feature.HeadFeatureRenderer.translate(matrices, false);
+            HeadFeatureRenderer.translate(matrices, false);
 
             boolean isLeft = arm == Arm.LEFT;
 
@@ -63,6 +66,31 @@ public abstract class PlayerHeldItemFeatureRendererMixin<T extends net.minecraft
                     0.1F
             );
 
+            this.playerHeldItemRenderer.renderItem(entity, stack, ModelTransformationMode.HEAD, false, matrices, vertexConsumers, light);
+
+            matrices.pop();
+            ci.cancel();
+        }
+        if (stack.getItem() instanceof RevolverItem
+                && entity.getActiveItem() == stack
+                && entity.handSwingTicks == 0 && entity.isSneaking()) {
+
+            matrices.push();
+
+            ModelPart head = (this.getContextModel()).getHead();
+            head.rotate(matrices);
+
+            HeadFeatureRenderer.translate(matrices, false);
+
+            boolean isLeft = arm == Arm.LEFT;
+
+            matrices.translate(
+                    isLeft ? -1F : 1F,
+                    -0.4F,
+                    0F
+            );
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(isLeft ? -90 : 90));
+            matrices.scale(0.6F, 0.6F, 0.6F);
             this.playerHeldItemRenderer.renderItem(entity, stack, ModelTransformationMode.HEAD, false, matrices, vertexConsumers, light);
 
             matrices.pop();

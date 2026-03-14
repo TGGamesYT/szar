@@ -133,22 +133,28 @@ public class SlotMachineBlockEntity extends BlockEntity {
     void finishSpin() {
         if (getForceWin()) {
             int payout = switch (getwinTier()) {
-                case 0 -> getcurrentBetAmount() * 2;    // fruit 2x
-                case 1 -> getcurrentBetAmount() * 10;   // golden apple small
-                case 2 -> getcurrentBetAmount() * 30;  // jackpot
+                case 0 -> getcurrentBetAmount() * 2;
+                case 1 -> getcurrentBetAmount() * 10;
+                case 2 -> getcurrentBetAmount() * 30;
                 default -> 0;
             };
 
             Direction facing = getCachedState().get(SlotMachineBlock.FACING);
             BlockPos drop = getPos().offset(facing);
             assert getWorld() != null;
-            ItemScatterer.spawn(
-                    getWorld(),
-                    drop.getX(),
-                    drop.getY(),
-                    drop.getZ(),
-                    new ItemStack(getcurrentBetStack().getItem(), payout)
-            );
+
+            // Spawn payout stacks, respecting max stack size
+            ItemStack template = getcurrentBetStack().copy();
+            int remaining = payout;
+            int maxStack = template.getMaxCount();
+
+            while (remaining > 0) {
+                int count = Math.min(remaining, maxStack);
+                ItemStack stack = template.copy();
+                stack.setCount(count);
+                ItemScatterer.spawn(getWorld(), drop.getX(), drop.getY(), drop.getZ(), stack);
+                remaining -= count;
+            }
         }
         setcurrentBetAmount(0);
         setcurrentBetStack(ItemStack.EMPTY);

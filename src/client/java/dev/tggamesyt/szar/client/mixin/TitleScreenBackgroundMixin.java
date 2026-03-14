@@ -9,7 +9,10 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,6 +26,7 @@ import java.util.List;
 
 @Mixin(TitleScreen.class)
 public class TitleScreenBackgroundMixin {
+
     @Unique
     private static final Identifier VANILLA_OVERLAY =
             new Identifier("textures/gui/title/background/panorama_overlay.png");
@@ -37,10 +41,24 @@ public class TitleScreenBackgroundMixin {
     private static int currentFrame = 0;
     @Unique
     private static boolean framesLoaded = false;
-
-    // frametime 1 = 1 game tick = 50ms
     @Unique
     private static final long FRAME_DURATION_MS = 50;
+
+    // Shadow the vanilla fade tracker
+    @Shadow
+    private long backgroundFadeStart;
+
+    @Unique
+    private float getFadeAlpha() {
+        if (backgroundFadeStart == 0L) return 0f;
+        float elapsed = (float)(Util.getMeasuringTimeMs() - backgroundFadeStart) / 1000.0F;
+        return MathHelper.clamp(elapsed - 1.0F, 0.0F, 1.0F); // vanilla fades in over 1s after 1s delay
+    }
+
+    @Unique
+    private boolean isFadeComplete() {
+        return getFadeAlpha() >= 1.0F;
+    }
 
     @Unique
     private static boolean isAprilFools() {
@@ -88,6 +106,7 @@ public class TitleScreenBackgroundMixin {
     private void onRenderHead(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!isAprilFools()) return;
         loadFrames();
+        if (FRAMES.isEmpty()) return; // don't advance if nothing loaded
 
         long now = System.currentTimeMillis();
         if (now - lastFrameTime >= FRAME_DURATION_MS) {
@@ -108,11 +127,20 @@ public class TitleScreenBackgroundMixin {
                                          float u, float v,
                                          int regionWidth, int regionHeight,
                                          int textureWidth, int textureHeight) {
-        if (isAprilFools() && VANILLA_OVERLAY.equals(texture) && !FRAMES.isEmpty()) {
-            // Each frame is a square texture so region = full texture size
-            context.drawTexture(FRAMES.get(currentFrame), x, y, width, height, 0.0F, 0.0F, 720, 720, 720, 720);
-        } else {
+        if (!isAprilFools() || !VANILLA_OVERLAY.equals(texture) || FRAMES.isEmpty()) {
             context.drawTexture(texture, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
+            return;
         }
+
+        float alpha = getFadeAlpha();
+        if (alpha <= 0f) return; // fully transparent, skip entirely
+
+        // Apply alpha via RenderSystem before drawing
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+        int safeFrame = FRAMES.isEmpty() ? 0 : currentFrame % FRAMES.size(); // guard divide-by-zero
+        context.drawTexture(FRAMES.get(safeFrame), x, y, width, height, 0.0F, 0.0F, 720, 720, 720, 720);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F); // reset alpha
+        RenderSystem.disableBlend();
     }
 }

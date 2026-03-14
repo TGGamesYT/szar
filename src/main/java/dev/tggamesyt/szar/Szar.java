@@ -27,6 +27,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.*;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -93,6 +94,7 @@ public class Szar implements ModInitializer {
     public static final Identifier REVOLVER_SHOOT = new Identifier(MOD_ID, "revolver_shoot");
     public static final Identifier REVOLVER_SPIN = new Identifier(MOD_ID, "revolver_spin");
     public static final Identifier REVOLVER_SYNC = new Identifier(MOD_ID, "revolver_sync");
+    public static final Identifier BULLET_IMPACT = new Identifier(MOD_ID, "bullet_impact");
     public static final Identifier REVOLVER_CHAMBER_CHANGE = new Identifier(MOD_ID, "revolver_chamber_change");
     public static final SoundEvent BESZIV = Registry.register(
             Registries.SOUND_EVENT,
@@ -371,6 +373,9 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            PoliceSpawnTimerStore.remove(handler.player);
+        });
         ServerPlayNetworking.registerGlobalReceiver(REVOLVER_CHAMBER_CHANGE, (server, player, handler, buf, responseSender) -> {
             int index = buf.readInt();
             boolean wasLoaded = buf.readBoolean(); // true = unloading, false = loading
@@ -448,7 +453,11 @@ public class Szar implements ModInitializer {
                             SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.5f, 1.8f);
 
                     if (isHeadshot) {
-                        player.damage(player.getWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
+                        RegistryEntry<DamageType> bullet_damage = SERVER.getRegistryManager()
+                                .get(RegistryKeys.DAMAGE_TYPE)
+                                .getEntry(BULLET_DAMAGE)
+                                .orElseThrow(() -> new IllegalStateException("Bullet DamageType not registered!"));
+                        player.damage(new DamageSource(bullet_damage, player), Float.MAX_VALUE);
                     } else {
                         BulletEntity bullet = new BulletEntity(player.getWorld(), player);
                         bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 0.0f);

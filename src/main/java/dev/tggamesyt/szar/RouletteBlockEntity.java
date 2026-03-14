@@ -145,7 +145,8 @@ public class RouletteBlockEntity extends BlockEntity {
         int total = stack.getCount() * multiplier;
         while (total > 0) {
             int batchSize = Math.min(total, stack.getMaxCount());
-            ItemStack give = new ItemStack(stack.getItem(), batchSize);
+            ItemStack give = stack.copy();
+            give.setCount(batchSize);
             player.getInventory().offerOrDrop(give);
             total -= batchSize;
         }

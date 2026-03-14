@@ -1,13 +1,22 @@
 package dev.tggamesyt.szar;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class BulletEntity extends ThrownItemEntity {
@@ -74,5 +83,32 @@ public class BulletEntity extends ThrownItemEntity {
         }
 
         discard();
+    }
+
+    @Override
+    protected void onBlockHit(net.minecraft.util.hit.BlockHitResult hit) {
+        super.onBlockHit(hit);
+        // Use exact hit position + nudge along face normal to sit on surface
+        Vec3d pos = hit.getPos();
+        Direction face = hit.getSide();
+        spawnImpact(pos, face);
+        discard();
+    }
+
+    private void spawnImpact(Vec3d pos, Direction face) {
+        if (!(getWorld() instanceof ServerWorld serverWorld)) return;
+
+        serverWorld.spawnParticles(ParticleTypes.SMOKE,
+                pos.x, pos.y, pos.z, 5, 0.05, 0.05, 0.05, 0.02);
+
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeDouble(pos.x);
+        buf.writeDouble(pos.y);
+        buf.writeDouble(pos.z);
+        buf.writeEnumConstant(face);
+
+        PlayerLookup.tracking(this).forEach(player ->
+                ServerPlayNetworking.send(player, Szar.BULLET_IMPACT, buf)
+        );
     }
 }
