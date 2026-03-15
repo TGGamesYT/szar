@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "ingredients": [
+    {
+      "item": "minecraft:gunpowder"
+    },
+    {
+      "item": "minecraft:iron_nugget"
+    }
+  ],
+  "pattern": [
+    "III",
+    " NR",
+    "  L"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "N": {
+      "item": "minecraft:iron_nugget"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "szar:revolver"
+  }
+}
