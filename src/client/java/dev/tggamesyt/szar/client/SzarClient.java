@@ -3,6 +3,7 @@ package dev.tggamesyt.szar.client;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.tggamesyt.szar.*;
 import dev.tggamesyt.szar.ServerCosmetics.NameType;
+import dev.tggamesyt.szar.client.mixin.RevolverAttackMixin;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -91,6 +92,20 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            if (!AK47InputState.mouseHeld) return;
+            if (client.player == null || client.currentScreen != null) {
+                AK47InputState.mouseHeld = false;
+                return;
+            }
+            ItemStack stack = client.player.getMainHandStack();
+            if (!stack.isOf(Szar.AK47)) {
+                AK47InputState.mouseHeld = false;
+                return;
+            }
+            if (!client.player.isUsingItem()) return;
+            ClientPlayNetworking.send(Szar.AK47_SHOOT, PacketByteBufs.create());
+        });
         BulletDecalRenderer.register();
         // In ClientModInitializer:
         ClientPlayNetworking.registerGlobalReceiver(Szar.BULLET_IMPACT, (client, handler, buf, sender) -> {
@@ -103,16 +118,57 @@ public class SzarClient implements ClientModInitializer {
                 BulletDecalStore.add(new Vec3d(x, y, z), face);
             });
         });
-// Then in a ClientTickEvents.END_CLIENT_TICK:
+
+        RevolverHudRenderer.register();
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (SPIN_KEY.wasPressed() && client.player != null) {
-                ItemStack stack = client.player.getMainHandStack();
-                if (stack.isOf(Szar.REVOLVER)) {
-                    // Send spin packet to server
-                    ClientPlayNetworking.send(Szar.REVOLVER_SPIN,
-                            PacketByteBufs.create());
+            RevolverHudTicker.tick();
+
+            if (client.player == null) return;
+            ItemStack stack = client.player.getMainHandStack();
+
+            if (!stack.isOf(Szar.REVOLVER)) {
+                RevolverHudState.isOpen = false;
+                return;
+            }
+
+            if (SPIN_KEY.wasPressed()) {
+                if (client.player.isSneaking()) {
+                    // Shift+R: toggle open/close
+                    RevolverHudState.isOpen = !RevolverHudState.isOpen;
+                } else if (RevolverHudState.isOpen) {
+                    // R while open: load/unload current chamber then advance
+                    boolean[] chambers = RevolverItem.getChambers(stack);
+                    int current = RevolverItem.getCurrentChamber(stack);
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeInt(current);
+                    buf.writeBoolean(chambers[current]); // wasLoaded
+                    ClientPlayNetworking.send(Szar.REVOLVER_CHAMBER_CHANGE, buf);
+                } else {
+                    // R while closed and not sneaking: spin
+                    ClientPlayNetworking.send(Szar.REVOLVER_SPIN, PacketByteBufs.create());
+                    // Animation starts when server responds with REVOLVER_SPIN_RESULT
                 }
             }
+        });
+        ClientPlayNetworking.registerGlobalReceiver(Szar.REVOLVER_STATE_SYNC, (client, handler, buf, sender) -> {
+            boolean[] chambers = new boolean[RevolverItem.CHAMBERS];
+            for (int i = 0; i < RevolverItem.CHAMBERS; i++) {
+                chambers[i] = buf.readBoolean();
+            }
+            int current = buf.readInt();
+
+            client.execute(() -> {
+                if (client.player == null) return;
+                ItemStack stack = client.player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+                RevolverItem.setChambers(stack, chambers);
+                RevolverItem.setCurrentChamber(stack, current);
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(Szar.REVOLVER_SPIN_RESULT, (client2, handler, buf, sender) -> {
+            int steps = buf.readInt();
+            client2.execute(() -> RevolverHudTicker.startSpin(steps));
         });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             PacketByteBuf buf = PacketByteBufs.create();

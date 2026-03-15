@@ -3,6 +3,7 @@ package dev.tggamesyt.szar;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
@@ -13,10 +14,21 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.structure.StructureStart;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.Structure;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 public class EpsteinEntity extends PathAwareEntity implements Arrestable {
 
@@ -24,6 +36,7 @@ public class EpsteinEntity extends PathAwareEntity implements Arrestable {
 
     public EpsteinEntity(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
+        this.setPersistent();
     }
 
     @Override

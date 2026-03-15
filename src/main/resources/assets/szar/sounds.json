@@ -162,5 +162,37 @@
         "stream": true
       }
     ]
+  },
+  "revolver_click1": {
+    "sounds": [
+      {
+        "name": "szar:revolver_click1",
+        "stream": true
+      }
+    ]
+  },
+  "revolver_click2": {
+    "sounds": [
+      {
+        "name": "szar:revolver_click2",
+        "stream": true
+      }
+    ]
+  },
+  "revolver_click3": {
+    "sounds": [
+      {
+        "name": "szar:revolver_click3",
+        "stream": true
+      }
+    ]
+  },
+  "revolver_roll": {
+    "sounds": [
+      {
+        "name": "szar:revolver_roll",
+        "stream": true
+      }
+    ]
   }
 }

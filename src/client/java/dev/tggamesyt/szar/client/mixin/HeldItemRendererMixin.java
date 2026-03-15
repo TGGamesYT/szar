@@ -1,5 +1,6 @@
 package dev.tggamesyt.szar.client.mixin;
 
+import dev.tggamesyt.szar.AK47Item;
 import dev.tggamesyt.szar.Joint;
 import dev.tggamesyt.szar.RevolverItem;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -78,10 +79,45 @@ public abstract class HeldItemRendererMixin {
             matrices.push();
 
             // Center in middle of screen regardless of hand
+            if (!player.isSneaking()) {
+                matrices.translate(
+                        isMainHand ? -0.18F : 0.18F,
+                        -0.5F,
+                        -0.5F
+                );
+            } else {
+                matrices.translate(
+                        isMainHand ? 1F : -1F,
+                        -0.2F,
+                        -0.5F
+                );
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(isMainHand ? 100.0F : -100F));
+            }
+            matrices.translate(0.0F, equipProgress * -0.6F, 0.0F);
+
+            HeldItemRenderer self = (HeldItemRenderer) (Object) this;
+            self.renderItem(player, item,
+                    isRight ? ModelTransformationMode.FIRST_PERSON_RIGHT_HAND : ModelTransformationMode.FIRST_PERSON_LEFT_HAND,
+                    !isRight, matrices, vertexConsumers, light);
+
+            matrices.pop();
+            ci.cancel();
+        }
+        if (item.getItem() instanceof AK47Item
+                && player.isUsingItem()
+                && player.getActiveHand() == hand) {
+
+            boolean isMainHand = hand == Hand.MAIN_HAND;
+            Arm arm = isMainHand ? player.getMainArm() : player.getMainArm().getOpposite();
+            boolean isRight = arm == Arm.RIGHT;
+
+            matrices.push();
+
+            // Center in middle of screen regardless of hand
             matrices.translate(
-                    isMainHand ? -0.18F : 0.18F,
+                    0.00F,
                     -0.5F,
-                    -0.5F
+                    -1.0F
             );
 
             matrices.translate(0.0F, equipProgress * -0.6F, 0.0F);

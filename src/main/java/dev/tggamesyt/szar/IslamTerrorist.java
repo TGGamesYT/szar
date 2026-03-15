@@ -13,7 +13,10 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -239,6 +242,15 @@ public class IslamTerrorist extends PathAwareEntity implements Arrestable{
             core.setHasPlaneMob(false);
             core.markDirty();
         }
+    }
+
+    @Override
+    protected void dropLoot(DamageSource source, boolean causedByPlayer) {
+        Random r = new Random();
+        int number = r.nextInt(3) + 1;
+        ItemStack powder = new ItemStack(Items.GUNPOWDER, number);
+
+        this.dropStack(powder);
     }
 
 

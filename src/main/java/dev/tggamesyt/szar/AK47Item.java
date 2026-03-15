@@ -1,11 +1,8 @@
 package dev.tggamesyt.szar;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
@@ -17,25 +14,7 @@ public class AK47Item extends Item {
         super(settings);
     }
 
-    @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (!(entity instanceof PlayerEntity player)) return;
-        if (!selected) return;
-        if (!player.isUsingItem()) return;
-        if (world.isClient) return;
-
-        if (player.getItemCooldownManager().isCoolingDown(this)) return;
-        if (!consumeAmmo(player)) return;
-        player.getWorld().playSound(null, player.getBlockPos(),
-                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.5f, 1.8f);
-        BulletEntity bullet = new BulletEntity(world, player);
-        bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 1.0f);
-        world.spawnEntity(bullet);
-
-        player.getItemCooldownManager().set(this, 2); // fire rate
-    }
-
-    private boolean consumeAmmo(PlayerEntity player) {
+    public boolean consumeAmmo(PlayerEntity player) {
         if (player.getAbilities().creativeMode) return true;
 
         for (int i = 0; i < player.getInventory().size(); i++) {
@@ -50,7 +29,7 @@ public class AK47Item extends Item {
 
     @Override
     public UseAction getUseAction(ItemStack stack) {
-        return UseAction.NONE;
+        return UseAction.BOW; // raises arm
     }
 
     @Override

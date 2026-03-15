@@ -1,11 +1,13 @@
 package dev.tggamesyt.szar;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -14,6 +16,8 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import static dev.tggamesyt.szar.Szar.REVOLVER_STATE_SYNC;
 
 public class RevolverItem extends Item {
 
@@ -73,6 +77,18 @@ public class RevolverItem extends Item {
     @Override
     public int getMaxUseTime(ItemStack stack) {
         return 72000; // held indefinitely
+    }
+
+    public static void syncRevolverToClient(ServerPlayerEntity player, ItemStack stack) {
+        boolean[] chambers = RevolverItem.getChambers(stack);
+        int current = RevolverItem.getCurrentChamber(stack);
+
+        PacketByteBuf buf = PacketByteBufs.create();
+        for (int i = 0; i < RevolverItem.CHAMBERS; i++) {
+            buf.writeBoolean(chambers[i]);
+        }
+        buf.writeInt(current);
+        ServerPlayNetworking.send(player, REVOLVER_STATE_SYNC, buf);
     }
 
 }

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DDD",
+    "DDD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:debug_stick"
+    }
+  },
+  "result": {
+    "item": "szar:cigany",
+    "count": 1
+  }
+}

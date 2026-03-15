@@ -9,8 +9,10 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -26,6 +28,7 @@ import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageType;
@@ -38,6 +41,11 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.loot.LootPool;
+import net.minecraft.loot.entry.ItemEntry;
+import net.minecraft.loot.function.SetCountLootFunction;
+import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -79,6 +87,7 @@ import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.jmx.Server;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -93,9 +102,16 @@ public class Szar implements ModInitializer {
     public static MinecraftServer SERVER;
     public static final Identifier REVOLVER_SHOOT = new Identifier(MOD_ID, "revolver_shoot");
     public static final Identifier REVOLVER_SPIN = new Identifier(MOD_ID, "revolver_spin");
-    public static final Identifier REVOLVER_SYNC = new Identifier(MOD_ID, "revolver_sync");
+    public static final Identifier REVOLVER_STATE_SYNC = new Identifier(MOD_ID, "revolver_state_sync");
     public static final Identifier BULLET_IMPACT = new Identifier(MOD_ID, "bullet_impact");
+    public static final Identifier REVOLVER_SCROLL = new Identifier(MOD_ID, "revolver_scroll");
+    public static final Identifier REVOLVER_SPIN_RESULT = new Identifier(MOD_ID, "revolver_spin_result"); // S2C
+    public static final Identifier AK47_SHOOT = new Identifier(MOD_ID, "ak47_shoot");
     public static final Identifier REVOLVER_CHAMBER_CHANGE = new Identifier(MOD_ID, "revolver_chamber_change");
+    public static final SoundEvent REVOLVER_CLICK1_SOUND = SoundEvent.of(new Identifier(MOD_ID, "revolver_click1"));
+    public static final SoundEvent REVOLVER_CLICK2_SOUND = SoundEvent.of(new Identifier(MOD_ID, "revolver_click2"));
+    public static final SoundEvent REVOLVER_CLICK3_SOUND = SoundEvent.of(new Identifier(MOD_ID, "revolver_click3"));
+    public static final SoundEvent REVOLVER_ROLL_SOUND   = SoundEvent.of(new Identifier(MOD_ID, "revolver_roll"));
     public static final SoundEvent BESZIV = Registry.register(
             Registries.SOUND_EVENT,
             new Identifier(MOD_ID, "besziv"),
@@ -239,6 +255,7 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+
     public static final EntityType<HitterEntity> HitterEntityType =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -373,12 +390,62 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        ServerPlayNetworking.registerGlobalReceiver(AK47_SHOOT, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.AK47)) return;
+                if (player.getItemCooldownManager().isCoolingDown(Szar.AK47)) return;
+
+                AK47Item ak = (AK47Item) Szar.AK47;
+                if (!ak.consumeAmmo(player)) return;
+
+                player.getWorld().playSound(null, player.getBlockPos(),
+                        SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.5f, 1.8f);
+
+                BulletEntity bullet = new BulletEntity(player.getWorld(), player);
+                bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 1.0f);
+                player.getWorld().spawnEntity(bullet);
+                // Recoil when shooting downward while falling
+                recoil(player, 0.1);
+                player.getItemCooldownManager().set(Szar.AK47, 2);
+            });
+        });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             PoliceSpawnTimerStore.remove(handler.player);
         });
+
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SCROLL, (server, player, handler, buf, responseSender) -> {
+            int direction = buf.readInt();
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+                int current = RevolverItem.getCurrentChamber(stack);
+                int next = (current + direction + RevolverItem.CHAMBERS) % RevolverItem.CHAMBERS;
+                RevolverItem.setCurrentChamber(stack, next);
+                playRevolverClick(player);
+                RevolverItem.syncRevolverToClient(player, stack); // <- here
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SPIN, (server, player, handler, buf, responseSender) -> {
+            server.execute(() -> {
+                ItemStack stack = player.getMainHandStack();
+                if (!stack.isOf(Szar.REVOLVER)) return;
+                int steps = 1 + player.getWorld().getRandom().nextInt(RevolverItem.CHAMBERS);
+                int current = RevolverItem.getCurrentChamber(stack);
+                RevolverItem.setCurrentChamber(stack, (current + steps) % RevolverItem.CHAMBERS);
+                player.getWorld().playSound(null, player.getBlockPos(),
+                        Szar.REVOLVER_ROLL_SOUND, SoundCategory.PLAYERS, 1f, 1f);
+
+                // Tell client how many steps for animation
+                PacketByteBuf replyBuf = PacketByteBufs.create();
+                replyBuf.writeInt(steps);
+                ServerPlayNetworking.send(player, REVOLVER_SPIN_RESULT, replyBuf);
+                RevolverItem.syncRevolverToClient(player, stack);
+            });
+        });
         ServerPlayNetworking.registerGlobalReceiver(REVOLVER_CHAMBER_CHANGE, (server, player, handler, buf, responseSender) -> {
             int index = buf.readInt();
-            boolean wasLoaded = buf.readBoolean(); // true = unloading, false = loading
+            boolean wasLoaded = buf.readBoolean();
 
             server.execute(() -> {
                 ItemStack stack = player.getMainHandStack();
@@ -387,12 +454,10 @@ public class Szar implements ModInitializer {
                 boolean[] chambers = RevolverItem.getChambers(stack);
 
                 if (wasLoaded) {
-                    // Unload — give shell
                     chambers[index] = false;
                     RevolverItem.setChambers(stack, chambers);
                     player.getInventory().insertStack(new ItemStack(Szar.BULLET_ITEM));
                 } else {
-                    // Load — take bullet from inventory
                     for (int i = 0; i < player.getInventory().size(); i++) {
                         ItemStack s = player.getInventory().getStack(i);
                         if (!s.isEmpty() && s.isOf(Szar.BULLET_ITEM)) {
@@ -403,33 +468,11 @@ public class Szar implements ModInitializer {
                         }
                     }
                 }
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SYNC, (server, player, handler, buf, responseSender) -> {
-            // Read 6 booleans from packet
-            boolean[] chambers = new boolean[RevolverItem.CHAMBERS];
-            for (int i = 0; i < RevolverItem.CHAMBERS; i++) {
-                chambers[i] = buf.readBoolean();
-            }
-            int currentChamber = buf.readInt();
 
-            server.execute(() -> {
-                ItemStack stack = player.getMainHandStack();
-                if (!stack.isOf(Szar.REVOLVER)) return;
-                RevolverItem.setChambers(stack, chambers);
-                RevolverItem.setCurrentChamber(stack, currentChamber);
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SPIN, (server, player, handler, buf, responseSender) -> {
-            server.execute(() -> {
-                ItemStack stack = player.getMainHandStack();
-                if (!stack.isOf(Szar.REVOLVER)) return;
-                int steps = 1 + player.getWorld().getRandom().nextInt(RevolverItem.CHAMBERS);
-                int current = RevolverItem.getCurrentChamber(stack);
-                RevolverItem.setCurrentChamber(stack, (current + steps) % RevolverItem.CHAMBERS);
-                // Notify player
-                player.sendMessage(Text.literal("*click* chamber " +
-                        (RevolverItem.getCurrentChamber(stack) + 1)).formatted(Formatting.GRAY), true);
+                // Advance to next chamber after loading/unloading
+                RevolverItem.setCurrentChamber(stack, (index + 1) % RevolverItem.CHAMBERS);
+                playRevolverClick(player);
+                RevolverItem.syncRevolverToClient(player, stack);
             });
         });
         ServerPlayNetworking.registerGlobalReceiver(REVOLVER_SHOOT, (server, player, handler, buf, responseSender) -> {
@@ -462,11 +505,15 @@ public class Szar implements ModInitializer {
                         BulletEntity bullet = new BulletEntity(player.getWorld(), player);
                         bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 0.0f);
                         player.getWorld().spawnEntity(bullet);
+                        // Recoil when shooting downward while falling
+                        recoil(player, 0.2);
                     }
                 }
 
                 // Always advance chamber after trigger pull
                 RevolverItem.setCurrentChamber(stack, (current + 1) % RevolverItem.CHAMBERS);
+                playRevolverClick(player);
+                RevolverItem.syncRevolverToClient(player, stack);
             });
         });
         ServerPlayNetworking.registerGlobalReceiver(CONFIG_SYNC,
@@ -759,12 +806,6 @@ public class Szar implements ModInitializer {
                 NyanEntityType,
                 1, 1, 1
         );
-        BiomeModifications.addSpawn(
-                BiomeSelectors.includeByKey(BiomeKeys.FOREST, BiomeKeys.FLOWER_FOREST),
-                SpawnGroup.MONSTER,
-                EpsteinEntityType,
-                1, 1, 1
-        );
         BiomeModifications.addFeature(
                 BiomeSelectors.tag(BiomeTags.IS_JUNGLE),
                 GenerationStep.Feature.VEGETAL_DECORATION,
@@ -912,6 +953,26 @@ public class Szar implements ModInitializer {
                 new Identifier(MOD_ID, "nyansniffer"),
                 new PaintingVariant(32, 32)
         );
+        // In Szar.java onInitialize:
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (world.isClient) return ActionResult.PASS;
+            BlockPos pos = hitResult.getBlockPos();
+            if (!(world.getBlockEntity(pos) instanceof ChestBlockEntity chest)) return ActionResult.PASS;
+
+            // Check if this is an island chest by checking if it has our loot table pending
+            // Once loot generates we can't check anymore, so tag it via NBT during structure gen
+            NbtCompound nbt = chest.createNbt();
+            if (!nbt.getString("szar_chest_type").equals("island")) return ActionResult.PASS;
+
+            // Set center item if not already set
+            ItemStack center = chest.getStack(13);
+            if (center.isEmpty()) {
+                chest.setStack(13, new ItemStack(Szar.EPSTEIN_FILES));
+            }
+            nbt.remove("szar_chest_type");
+
+            return ActionResult.PASS;
+        });
     }
 
     // In your ModItems or wherever you register items
@@ -1065,6 +1126,19 @@ public class Szar implements ModInitializer {
                     Registries.STRUCTURE_TYPE,
                     new Identifier(MOD_ID, "casino"),
                     () -> CasinoStructure.CODEC
+            );
+    public static final StructurePieceType ISLAND_PIECE =
+            Registry.register(
+                    Registries.STRUCTURE_PIECE,
+                    new Identifier(MOD_ID, "island_piece"),
+                    IslandStructurePiece::new
+            );
+
+    public static final StructureType<IslandStructure> ISLAND_TYPE =
+            Registry.register(
+                    Registries.STRUCTURE_TYPE,
+                    new Identifier(MOD_ID, "island"),
+                    () -> IslandStructure.CODEC
             );
     static VoxelShape shape0 = VoxelShapes.cuboid(0.1875f, 0f, 0.625f, 0.6875f, 0.5f, 1.125f);
     static VoxelShape shape1 = VoxelShapes.cuboid(0.1875f, 1.5f, 0.625f, 0.6875f, 2f, 1.125f);
@@ -1732,32 +1806,29 @@ public class Szar implements ModInitializer {
         }
     }
 
-    private static void shootBullet(ServerPlayerEntity player) {
-        World world = player.getWorld();
-        Vec3d start = player.getEyePos();
-        Vec3d dir = player.getRotationVec(1.0f);
-        Vec3d end = start.add(dir.multiply(100)); // 100 block range
-
-        net.minecraft.util.hit.HitResult hit = world.raycast(new net.minecraft.world.RaycastContext(
-                start, end,
-                net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
-                net.minecraft.world.RaycastContext.FluidHandling.NONE,
-                player
-        ));
-
-        // Entity hit check
-        Box box = new Box(start, end).expand(1);
-        net.minecraft.util.hit.EntityHitResult entityHit =
-                net.minecraft.entity.projectile.ProjectileUtil.raycast(
-                        player, start, end, box,
-                        e -> !e.isSpectator() && e != player && e.canHit(), 100 * 100
-                );
-
-        if (entityHit != null) {
-            entityHit.getEntity().damage(
-                    world.getDamageSources().playerAttack(player), 8.0f
-            );
+    public static void recoil(ServerPlayerEntity player, double recoil) {
+        if (player.isCreative()) {
+            return;
         }
+        double recoilfinal = player.isOnGround() ? recoil / 2 : recoil;
+
+        // Opposite of the direction the player is looking
+        float pitch = (float) Math.toRadians(player.getPitch());
+        float yaw   = (float) Math.toRadians(player.getYaw());
+
+        double dx = -(-Math.cos(pitch) * Math.sin(yaw)) * recoilfinal;
+        double dy = -(- Math.sin(pitch))                 * recoilfinal;
+        double dz = -( Math.cos(pitch) * Math.cos(yaw))  * recoilfinal;
+
+        player.addVelocity(dx, dy, dz);
+        player.velocityModified = true;
+        player.fallDistance = Math.max(0, player.fallDistance - (float)(dy * 8));
+    }
+
+    private static void playRevolverClick(ServerPlayerEntity player) {
+        float pitch = 0.9F + player.getWorld().getRandom().nextFloat() * 0.2F; // 0.9 to 1.1
+        player.getWorld().playSound(null, player.getBlockPos(),
+                Szar.REVOLVER_CLICK2_SOUND, SoundCategory.PLAYERS, 1f, pitch);
     }
 }
 
