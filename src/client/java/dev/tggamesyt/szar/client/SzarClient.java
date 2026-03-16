@@ -92,6 +92,9 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(OPEN_DETONATOR_SCREEN, (client, handler, buf, responseSender) -> {
+            client.execute(() -> client.setScreen(new CoordInputScreen()));
+        });
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (!AK47InputState.mouseHeld) return;
             if (client.player == null || client.currentScreen != null) {
@@ -384,6 +387,14 @@ public class SzarClient implements ClientModInitializer {
         EntityRendererRegistry.register(
                 Szar.HitterEntityType,
                 HitterEntityRenderer::new
+        );
+        EntityRendererRegistry.register(
+                Szar.StalinEntityType,
+                StalinEntityRenderer::new
+        );
+        EntityRendererRegistry.register(
+                Szar.CommunistEntityType,
+                CommunistEntityRenderer::new
         );
         EntityRendererRegistry.register(
                 Szar.MerlEntityType,

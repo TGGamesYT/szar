@@ -1,9 +1,12 @@
 package dev.tggamesyt.szar;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -31,6 +34,23 @@ public class AtomSummonerItem extends Item {
 
         ServerWorld serverWorld = (ServerWorld) world;
         ItemStack stack = player.getStackInHand(hand);
+
+        // Shift + right-click → open coordinate screen
+        if (player.isSneaking()) {
+            if (world.isClient()) {
+                return TypedActionResult.success(stack);
+            }
+            // Tell the client to open the screen
+            ServerPlayNetworking.send(
+                    (ServerPlayerEntity) player,
+                    Szar.OPEN_DETONATOR_SCREEN,
+                    PacketByteBufs.empty()
+            );
+            return TypedActionResult.success(stack);
+        }
+
+        // Normal right-click → existing raycast behaviour
+        if (world.isClient()) return TypedActionResult.success(stack);
 
         // Raycast from eyes
         Vec3d start = player.getCameraPosVec(1.0F);

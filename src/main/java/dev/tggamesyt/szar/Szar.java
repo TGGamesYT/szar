@@ -26,6 +26,7 @@ import net.fabricmc.fabric.api.object.builder.v1.world.poi.PointOfInterestHelper
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.block.*;
+import net.minecraft.block.dispenser.FallibleItemDispenserBehavior;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
@@ -40,6 +41,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.*;
 import net.minecraft.loot.LootPool;
 import net.minecraft.loot.entry.ItemEntry;
@@ -66,14 +68,15 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.gen.GenerationStep;
@@ -100,6 +103,8 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final Identifier OPEN_DETONATOR_SCREEN = new Identifier(MOD_ID, "open_coord_screen");
+    public static final Identifier DETONATOR_INPUT = new Identifier(MOD_ID, "coord_input");
     public static final Identifier REVOLVER_SHOOT = new Identifier(MOD_ID, "revolver_shoot");
     public static final Identifier REVOLVER_SPIN = new Identifier(MOD_ID, "revolver_spin");
     public static final Identifier REVOLVER_STATE_SYNC = new Identifier(MOD_ID, "revolver_state_sync");
@@ -265,6 +270,15 @@ public class Szar implements ModInitializer {
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
+    public static final EntityType<StalinEntity> StalinEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "stalin"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, StalinEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
     public static final EntityType<MerlEntity> MerlEntityType =
             Registry.register(
                     Registries.ENTITY_TYPE,
@@ -280,6 +294,15 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "nazi"),
                     FabricEntityTypeBuilder
                             .create(SpawnGroup.CREATURE, NaziEntity::new)
+                            .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
+                            .build()
+            );
+    public static final EntityType<CommunistEntity> CommunistEntityType =
+            Registry.register(
+                    Registries.ENTITY_TYPE,
+                    new Identifier(MOD_ID, "communist"),
+                    FabricEntityTypeBuilder
+                            .create(SpawnGroup.CREATURE, CommunistEntity::new)
                             .dimensions(EntityDimensions.fixed(0.6F, 1.8F)) // player-sized
                             .build()
             );
@@ -336,6 +359,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NWORD_PASS);
                         entries.add(Szar.HITTER_SPAWNEGG);
                         entries.add(Szar.NAZI_SPAWNEGG);
+                        entries.add(Szar.STALIN_SPAWNEGG);
+                        entries.add(Szar.COMMUNIST_SPAWNEGG);
                         entries.add(Szar.NIGGER_SPAWNEGG);
                         entries.add(Szar.GYPSY_SPAWNEGG);
                         entries.add(Szar.TERRORIST_SPAWNEGG);
@@ -506,6 +531,7 @@ public class Szar implements ModInitializer {
                         bullet.setVelocity(player, player.getPitch(), player.getYaw(), 0f, 4.5f, 0.0f);
                         player.getWorld().spawnEntity(bullet);
                         // Recoil when shooting downward while falling
+                        stack.damage(1, player, p -> p.sendToolBreakStatus(p.getActiveHand()));
                         recoil(player, 0.2);
                     }
                 }
@@ -724,6 +750,14 @@ public class Szar implements ModInitializer {
                 HitterEntity.createAttributes()
         );
         FabricDefaultAttributeRegistry.register(
+                CommunistEntityType,
+                CommunistEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
+                StalinEntityType,
+                StalinEntity.createAttributes()
+        );
+        FabricDefaultAttributeRegistry.register(
                 MerlEntityType,
                 MerlEntity.createAttributes()
         );
@@ -784,6 +818,12 @@ public class Szar implements ModInitializer {
                 BiomeSelectors.includeByKey(BiomeKeys.WINDSWEPT_HILLS, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, BiomeKeys.STONY_PEAKS),
                 SpawnGroup.MONSTER,
                 HitterEntityType,
+                1, 1, 1
+        );
+        BiomeModifications.addSpawn(
+                BiomeSelectors.includeByKey(BiomeKeys.WINDSWEPT_HILLS, BiomeKeys.WINDSWEPT_GRAVELLY_HILLS, BiomeKeys.STONY_PEAKS),
+                SpawnGroup.MONSTER,
+                StalinEntityType,
                 1, 1, 1
         );
         BiomeModifications.addSpawn(
@@ -972,6 +1012,56 @@ public class Szar implements ModInitializer {
             nbt.remove("szar_chest_type");
 
             return ActionResult.PASS;
+        });
+        DispenserBlock.registerBehavior(Szar.ATOM, new FallibleItemDispenserBehavior() {
+            @Override
+            protected ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
+                ServerWorld serverWorld = pointer.getWorld();
+                BlockPos dispenserPos = pointer.getPos();
+                Direction facing = pointer.getBlockState().get(DispenserBlock.FACING);
+
+                // Spawn 1 block in front of the dispenser (mimics useOnBlock)
+                BlockPos spawnBlock = dispenserPos.offset(facing);
+                Vec3d spawnPos = Vec3d.ofCenter(spawnBlock).add(0, 1, 0);
+
+                AtomEntity atom = new AtomEntity(Szar.AtomEntityType, serverWorld);
+                atom.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
+                serverWorld.spawnEntity(atom);
+
+                // Damage item, remove if broken
+                stack.damage(1, serverWorld.getRandom(), null);
+                if (stack.getDamage() >= stack.getMaxDamage()) {
+                    stack.decrement(1);
+                }
+
+                return stack;
+            }
+        });
+        ServerPlayNetworking.registerGlobalReceiver(DETONATOR_INPUT, (server, player, handler, buf, responseSender) -> {
+            int x = buf.readInt();
+            int z = buf.readInt();
+            if (!player.getMainHandStack().isOf(Szar.ATOM_DETONATOR)) {return;}
+            server.execute(() -> {
+                ServerWorld world = player.getServerWorld();
+
+                int topY = world.getTopY(
+                        Heightmap.Type.WORLD_SURFACE, x, z
+                );
+
+                Vec3d spawnPos = new Vec3d(x + 0.5, topY + 100, z + 0.5);
+
+                AtomEntity atom = new AtomEntity(Szar.AtomEntityType, world);
+                atom.setPosition(spawnPos.x, spawnPos.y, spawnPos.z);
+                atom.readCustomDataFromNbt(new NbtCompound() {{
+                    putBoolean("Armed", true);
+                }});
+
+                world.spawnEntity(atom);
+
+                player.getItemCooldownManager().set(Szar.ATOM_DETONATOR, 20 * 60);
+                player.getMainHandStack().damage(1, player,
+                        p -> p.sendToolBreakStatus(player.getActiveHand()));
+            });
         });
     }
 
@@ -1573,6 +1663,26 @@ public class Szar implements ModInitializer {
                     HitterEntityType,
                     0xC4A484,
                     0xFF0000,
+                    new Item.Settings()
+            )
+    );
+    public static final Item STALIN_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "stalin_spawn_egg"),
+            new SpawnEggItem(
+                    StalinEntityType,
+                    0xA82100,
+                    0x404040,
+                    new Item.Settings()
+            )
+    );
+    public static final Item COMMUNIST_SPAWNEGG = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "communist_spawn_egg"),
+            new SpawnEggItem(
+                    CommunistEntityType,
+                    0xA82100,
+                    0xF8C912,
                     new Item.Settings()
             )
     );

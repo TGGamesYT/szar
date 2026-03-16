@@ -1,19 +1,21 @@
 package dev.tggamesyt.szar;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.EnumSet;
 
 public class AK47AttackGoal extends Goal {
 
-    private final NaziEntity mob;
+    private final PathAwareEntity mob;
     private final float range;
     private final int cooldownTicks;
     private int cooldown;
 
-    public AK47AttackGoal(NaziEntity mob, float range, int cooldownTicks) {
+    public AK47AttackGoal(PathAwareEntity mob, float range, int cooldownTicks) {
         this.mob = mob;
         this.range = range;
         this.cooldownTicks = cooldownTicks;

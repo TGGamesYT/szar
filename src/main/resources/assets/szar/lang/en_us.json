@@ -128,5 +128,10 @@
   "item.szar.bullet_shell": "Revolver Bullet Shell",
 
   "key.categories.szar": "Szar",
-  "key.szar.spin": "Interact with Revolver"
+  "key.szar.spin": "Interact with Revolver",
+
+  "entity.szar.stalin": "Stalin",
+  "item.szar.stalin_spawn_egg":"Stalin Spawn Egg",
+  "entity.szar.communist": "Communist",
+  "item.szar.communist_spawn_egg":"Communist Spawn Egg"
 }

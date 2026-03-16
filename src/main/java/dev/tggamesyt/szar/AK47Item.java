@@ -11,7 +11,7 @@ import net.minecraft.world.World;
 public class AK47Item extends Item {
 
     public AK47Item(Settings settings) {
-        super(settings);
+        super(settings.maxDamage(512));
     }
 
     public boolean consumeAmmo(PlayerEntity player) {
@@ -21,6 +21,10 @@ public class AK47Item extends Item {
             ItemStack stack = player.getInventory().getStack(i);
             if (stack.isOf(Szar.BULLET_ITEM)) {
                 stack.decrement(1);
+                ItemStack gun = player.getMainHandStack();
+                if (gun.isOf(Szar.AK47)) {
+                    gun.damage(1, player, p -> p.sendToolBreakStatus(p.getActiveHand()));
+                }
                 return true;
             }
         }

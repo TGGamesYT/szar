@@ -24,7 +24,7 @@ public class RevolverItem extends Item {
     public static final int CHAMBERS = 6;
 
     public RevolverItem(Settings settings) {
-        super(settings);
+        super(settings.maxDamage(384));
     }
 
     // ── NBT helpers ──────────────────────────────────────────────
