@@ -194,5 +194,13 @@
         "stream": true
       }
     ]
+  },
+  "ussr": {
+    "sounds": [
+      {
+        "name": "szar:ussr",
+        "stream": true
+      }
+    ]
   }
 }

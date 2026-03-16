@@ -20,5 +20,6 @@ public class ModItemTagProvider extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.EFN_DISK);
         getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.HELLO_DISC);
         getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.ERIKA_DISC);
+        getOrCreateTagBuilder(ItemTags.MUSIC_DISCS).add(Szar.USSR_DISC);
     }
 }

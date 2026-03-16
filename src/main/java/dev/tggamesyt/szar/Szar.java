@@ -392,6 +392,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.FIRTANA);
                         entries.add(Szar.HELLO_DISC);
                         entries.add(Szar.ERIKA_DISC);
+                        entries.add(Szar.USSR_DISC);
                         // nsfw
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
@@ -1611,6 +1612,13 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "erika"),
             new MusicDiscItem(9, ERIKA,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 180)
+    );
+    public static final SoundEvent USSR =
+            SoundEvent.of(new Identifier(MOD_ID, "ussr"));
+    public static final Item USSR_DISC = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "ussr"),
+            new MusicDiscItem(8, USSR,  new Item.Settings().maxCount(1).rarity(Rarity.RARE), 225)
     );
     public static final SoundEvent HELLO =
             SoundEvent.of(new Identifier(MOD_ID, "firtana"));

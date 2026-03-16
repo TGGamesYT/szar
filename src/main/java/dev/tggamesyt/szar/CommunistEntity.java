@@ -48,7 +48,7 @@ public class CommunistEntity extends PathAwareEntity implements Arrestable{
             this.dropItem(Szar.AK47);
         }
         if (rand.nextFloat() < 0.01F) {
-            this.dropItem(Szar.ERIKA_DISC);
+            this.dropItem(Szar.USSR_DISC);
         }
         if (rand.nextFloat() < 0.01F) {
             ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
