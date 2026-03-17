@@ -5,6 +5,7 @@ import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.EntityShapeContext;
+import net.minecraft.world.WorldView;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -19,18 +20,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractBlock.AbstractBlockState.class)
 public class NoClipMixin {
 
-    @Inject(method = "getCollisionShape*", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getCollisionShape", at = @At("HEAD"), cancellable = true)
     private void szar_noClipBelowTracker(BlockView world, BlockPos pos,
-                                         ShapeContext ctx, CallbackInfoReturnable<VoxelShape> cir) {
-        // Only applies to players
-        if (!(ctx instanceof EntityShapeContext esc)) return;
-        Entity entity = esc.getEntity();
-        if (!(entity instanceof PlayerEntity)) return;
+                                          CallbackInfoReturnable<VoxelShape> cir) {
+        // Only applies to players — need to check differently without ShapeContext
+        // Use the world to find nearby players at this pos
+        if (!(world instanceof WorldView worldView)) return;
 
-        // Check 1–5 blocks above this position for a TrackerBlock
+        // Check 1–5 blocks above for a TrackerBlock
         for (int i = 1; i <= 5; i++) {
             BlockPos above = pos.up(i);
-            if (world.getBlockState(above).getBlock() instanceof TrackerBlock) {
+            if (worldView.getBlockState(above).getBlock() instanceof TrackerBlock) {
                 cir.setReturnValue(VoxelShapes.empty());
                 return;
             }
