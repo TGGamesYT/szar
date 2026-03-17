@@ -136,5 +136,13 @@
   "item.szar.communist_spawn_egg":"Communist Spawn Egg",
 
   "item.szar.ussr": "Music Disc",
-  "item.szar.ussr.desc": "A. Alexandrov - USSR Anthem"
+  "item.szar.ussr.desc": "A. Alexandrov - USSR Anthem",
+
+  "block.szar.tracker": "Portal Tracker Block",
+  "block.szar.portal": "Portal",
+
+  "block.szar.plastic": "Plastic",
+  "block.szar.ceiling": "Ceiling",
+  "block.szar.wall": "Wall",
+  "block.szar.wall_bottom": "Wall Bottom"
 }

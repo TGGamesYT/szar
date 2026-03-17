@@ -1,0 +1,8 @@
+{
+  "type": "szar:backrooms",
+  "generator": {
+    "type": "szar:backrooms",
+    "biome": "minecraft:the_void",
+    "settings": "szar:backrooms"
+  }
+}

@@ -23,6 +23,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.entity.EmptyEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
@@ -361,10 +362,10 @@ public class SzarClient implements ClientModInitializer {
                     });
                 }
         );
-        /*BlockEntityRendererRegistry.register(
-                SLOT_MACHINE_BLOCKENTITY,
-                SlotMachineRenderer::new
-        );*/
+        BlockEntityRendererFactories.register(
+                Szar.TRACKER_BLOCK_ENTITY,
+                TGTrackerBlockRenderer::new
+        );
         HandledScreens.register(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, SlotMachineScreen::new);
         HandledScreens.register(Szar.ROULETTE_SCREEN_HANDLER_TYPE, RouletteScreen::new);
         EntityRendererRegistry.register(Szar.BULLET, BulletRenderer::new);

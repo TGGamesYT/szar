@@ -172,7 +172,10 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "play_video");
     public static final Identifier CONFIG_SYNC = new Identifier(MOD_ID, "config_sync");
 
-
+    public static final RegistryKey<World> BACKROOMS_KEY = RegistryKey.of(
+            RegistryKeys.WORLD,
+            new Identifier(MOD_ID, "backrooms")
+    );
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final Block URANIUM_BLOCK =
@@ -349,36 +352,6 @@ public class Szar implements ModInitializer {
                     .displayName(Text.translatable("itemgroup.szar_group"))
                     .icon(() -> new ItemStack(Szar.CANNABIS_ITEM)) // icon item
                     .entries((displayContext, entries) -> {
-                        // drugs
-                        entries.add(Szar.CANNABIS_ITEM);
-                        entries.add(Szar.WEED_ITEM);
-                        entries.add(Szar.WEED_JOINT_ITEM);
-                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
-                        // racism
-                        entries.add(Szar.CIGANYBLOCK);
-                        entries.add(Szar.NWORD_PASS);
-                        entries.add(Szar.HITTER_SPAWNEGG);
-                        entries.add(Szar.NAZI_SPAWNEGG);
-                        entries.add(Szar.STALIN_SPAWNEGG);
-                        entries.add(Szar.COMMUNIST_SPAWNEGG);
-                        entries.add(Szar.NIGGER_SPAWNEGG);
-                        entries.add(Szar.GYPSY_SPAWNEGG);
-                        entries.add(Szar.TERRORIST_SPAWNEGG);
-                        entries.add(Szar.POLICE_SPAWNEGG);
-                        entries.add(Szar.KEY_ITEM);
-                        entries.add(Szar.HANDCUFF_ITEM);
-                        // crazy weponary
-                        entries.add(Szar.BULLET_ITEM);
-                        entries.add(Szar.AK47);
-                        entries.add(Szar.REVOLVER);
-                        entries.add(Szar.ATOM_DETONATOR);
-                        entries.add(Szar.URANIUM_ORE);
-                        entries.add(Szar.URANIUM);
-                        entries.add(Szar.URANIUM_ROD);
-                        entries.add(Szar.ATOM_CORE);
-                        entries.add(Szar.ATOM);
-                        entries.add(Szar.WHEEL);
-                        entries.add(Szar.PLANE);
                         // random ahh silly stuff
                         entries.add(Szar.POPTART);
                         entries.add(Szar.NYAN_SPAWNEGG);
@@ -391,13 +364,45 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ROULETTE);
                         entries.add(Szar.FIRTANA);
                         entries.add(Szar.HELLO_DISC);
+                        entries.add(Szar.TRACKER_BLOCK_ITEM);
+                        entries.add(Szar.PORTAL_BLOCK_ITEM);
+                        entries.add(Szar.WALL_ITEM);
+                        entries.add(Szar.WALL_BOTTOM_ITEM);
+                        entries.add(Szar.CEILING_ITEM);
+                        entries.add(Szar.PLASTIC_ITEM);
+                        // crazy weponary
+                        entries.add(Szar.BULLET_ITEM);
+                        entries.add(Szar.AK47);
+                        entries.add(Szar.REVOLVER);
+                        entries.add(Szar.ATOM_DETONATOR);
+                        entries.add(Szar.URANIUM_ORE);
+                        entries.add(Szar.URANIUM);
+                        entries.add(Szar.URANIUM_ROD);
+                        entries.add(Szar.ATOM_CORE);
+                        entries.add(Szar.ATOM);
+                        entries.add(Szar.WHEEL);
+                        entries.add(Szar.PLANE);
+                        // drugs
+                        entries.add(Szar.CANNABIS_ITEM);
+                        entries.add(Szar.WEED_ITEM);
+                        entries.add(Szar.WEED_JOINT_ITEM);
+                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
+                        // war guys
+                        entries.add(Szar.HITTER_SPAWNEGG);
+                        entries.add(Szar.NAZI_SPAWNEGG);
+                        entries.add(Szar.STALIN_SPAWNEGG);
+                        entries.add(Szar.COMMUNIST_SPAWNEGG);
                         entries.add(Szar.ERIKA_DISC);
                         entries.add(Szar.USSR_DISC);
-                        // nsfw
-                        entries.add(Szar.FASZITEM);
-                        entries.add(Szar.CNDM);
-                        entries.add(Szar.LATEX);
-                        entries.add(Szar.WHITE_LIQUID);
+                        // racism
+                        entries.add(Szar.CIGANYBLOCK);
+                        entries.add(Szar.NWORD_PASS);
+                        entries.add(Szar.NIGGER_SPAWNEGG);
+                        entries.add(Szar.GYPSY_SPAWNEGG);
+                        entries.add(Szar.TERRORIST_SPAWNEGG);
+                        entries.add(Szar.POLICE_SPAWNEGG);
+                        entries.add(Szar.KEY_ITEM);
+                        entries.add(Szar.HANDCUFF_ITEM);
                         // niggerite shits at the end
                         entries.add(Szar.NIGGERITE_INGOT);
                         entries.add(Szar.NIGGERITE_SWORD);
@@ -410,12 +415,22 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_LEGGINGS);
                         entries.add(Szar.NIGGERITE_BOOTS);
                         entries.add(Szar.NIGGERITE_BLOCK);
+                        // nsfw
+                        entries.add(Szar.FASZITEM);
+                        entries.add(Szar.CNDM);
+                        entries.add(Szar.LATEX);
+                        entries.add(Szar.WHITE_LIQUID);
                     })
                     .build()
     );
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        Registry.register(
+                Registries.CHUNK_GENERATOR,
+                new Identifier(MOD_ID, "backrooms"),
+                BackroomsChunkGenerator.CODEC
+        );
         ServerPlayNetworking.registerGlobalReceiver(AK47_SHOOT, (server, player, handler, buf, responseSender) -> {
             server.execute(() -> {
                 ItemStack stack = player.getMainHandStack();
@@ -1068,15 +1083,18 @@ public class Szar implements ModInitializer {
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "tracker"),
-            new TrackerBlock(FabricBlockSettings.create().noCollision().air())
-            // .air() makes it not render and not block light
+            new TrackerBlock(FabricBlockSettings.create()
+                    .noCollision()
+                    .nonOpaque()
+                    .strength(2f, 2f))
     );
 
     public static final PortalBlock PORTAL_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "portal"),
-            new PortalBlock(FabricBlockSettings.create().noCollision()
-                    .strength(-1.0f) // indestructible by default, change if needed
-                    .luminance(state -> 11)) // slight glow so you can see it
+            new PortalBlock(FabricBlockSettings.create()
+                    .noCollision()
+                    .nonOpaque()
+                    .strength(2f, 2f))
     );
 
     // Block items (so you can place them)
@@ -1097,6 +1115,42 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "tracker"),
                     FabricBlockEntityTypeBuilder.create(TrackerBlockEntity::new, TRACKER_BLOCK).build()
             );
+    public static final Block WALL_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "wall"),
+            new Block(AbstractBlock.Settings.create())
+    );
+    public static final Block WALL_BOTTOM_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "wall_bottom"),
+            new Block(AbstractBlock.Settings.create())
+    );
+    public static final Block CEILING = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "ceiling"),
+            new Block(AbstractBlock.Settings.create())
+    );
+    public static final Block PLASTIC = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "plastic"),
+            new Block(AbstractBlock.Settings.create())
+    );
+    public static final Item WALL_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "wall"),
+            new BlockItem(WALL_BLOCK, new Item.Settings())
+    );
+    public static final Item WALL_BOTTOM_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "wall_bottom"),
+            new BlockItem(WALL_BOTTOM_BLOCK, new Item.Settings())
+    );
+    public static final Item CEILING_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "ceiling"),
+            new BlockItem(CEILING, new Item.Settings())
+    );
+    public static final Item PLASTIC_ITEM = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "plastic"),
+            new BlockItem(PLASTIC, new Item.Settings())
+    );
 
     // In your ModItems or wherever you register items
     public static final Item REVOLVER = Registry.register(
