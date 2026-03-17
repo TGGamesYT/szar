@@ -1065,6 +1065,38 @@ public class Szar implements ModInitializer {
             });
         });
     }
+    // Blocks
+    public static final TrackerBlock TRACKER_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "tracker"),
+            new TrackerBlock(FabricBlockSettings.create().noCollision().air())
+            // .air() makes it not render and not block light
+    );
+
+    public static final PortalBlock PORTAL_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "portal"),
+            new PortalBlock(FabricBlockSettings.create().noCollision()
+                    .strength(-1.0f) // indestructible by default, change if needed
+                    .luminance(state -> 11)) // slight glow so you can see it
+    );
+
+    // Block items (so you can place them)
+    public static final BlockItem TRACKER_BLOCK_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "tracker"),
+            new BlockItem(TRACKER_BLOCK, new FabricItemSettings())
+    );
+
+    public static final BlockItem PORTAL_BLOCK_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "portal"),
+            new BlockItem(PORTAL_BLOCK, new FabricItemSettings())
+    );
+
+    // Block entity
+    public static final BlockEntityType<TrackerBlockEntity> TRACKER_BLOCK_ENTITY =
+            Registry.register(
+                    Registries.BLOCK_ENTITY_TYPE,
+                    new Identifier(MOD_ID, "tracker"),
+                    FabricBlockEntityTypeBuilder.create(TrackerBlockEntity::new, TRACKER_BLOCK).build()
+            );
 
     // In your ModItems or wherever you register items
     public static final Item REVOLVER = Registry.register(

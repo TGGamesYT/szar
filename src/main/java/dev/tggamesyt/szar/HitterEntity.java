@@ -25,7 +25,7 @@ import java.util.List;
 
 import static dev.tggamesyt.szar.Szar.NaziEntityType;
 
-public class HitterEntity extends PathAwareEntity implements Arrestable{
+public class HitterEntity extends PathAwareEntity implements Arrestable, TeamMember {
 
     public static boolean arrestable = true;
 
@@ -40,6 +40,7 @@ public class HitterEntity extends PathAwareEntity implements Arrestable{
         this.goalSelector.add(3, new LookAroundGoal(this));
 
         this.targetSelector.add(1, new AggroOnHitRevengeGoal(this));
+        this.targetSelector.add(2, new AttackEnemyTeamGoal(this, "nazi"));
     }
 
 
@@ -146,5 +147,8 @@ public class HitterEntity extends PathAwareEntity implements Arrestable{
         }
     }
 
-
+    @Override
+    public String getTeam() {
+        return "nazi";
+    }
 }

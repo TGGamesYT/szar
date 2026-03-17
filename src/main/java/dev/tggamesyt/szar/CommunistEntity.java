@@ -1,7 +1,9 @@
 package dev.tggamesyt.szar;
 
+import net.minecraft.entity.EntityData;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -13,10 +15,13 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.LocalDifficulty;
+import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class CommunistEntity extends PathAwareEntity implements Arrestable{
+public class CommunistEntity extends PathAwareEntity implements Arrestable, TeamMember {
 
     public static boolean arrestable = false;
     @Nullable
@@ -31,6 +36,9 @@ public class CommunistEntity extends PathAwareEntity implements Arrestable{
         this.goalSelector.add(2, new FollowLeaderWanderGoal(this, 1.0D, 6.0F));
         this.goalSelector.add(3, new WanderAroundFarGoal(this, 0.8D));
         this.goalSelector.add(1, new AK47AttackGoal(this, 16.0F, 2));
+
+        this.targetSelector.add(1, new AggroOnHitRevengeGoal(this));
+        this.targetSelector.add(2, new AttackEnemyTeamGoal(this, "communist"));
     }
 
 
@@ -85,5 +93,41 @@ public class CommunistEntity extends PathAwareEntity implements Arrestable{
     public StalinEntity getLeader() {
         return this.leader;
     }
+    @Override
+    public String getTeam() {
+        return "communist";
+    }
 
+    @Override
+    @Nullable
+    public EntityData initialize(
+            ServerWorldAccess world,
+            LocalDifficulty difficulty,
+            SpawnReason spawnReason,
+            @Nullable EntityData entityData,
+            @Nullable NbtCompound entityNbt
+    ) {
+        EntityData data = super.initialize(world, difficulty, spawnReason, entityData, entityNbt);
+
+        // Only auto-assign if NOT spawned as part of Stalin's group
+        // (Stalin's group sets the leader manually after this call)
+        if (this.leader == null && world instanceof ServerWorld serverWorld) {
+            StalinEntity nearest = serverWorld.getEntitiesByClass(
+                            StalinEntity.class,
+                            this.getBoundingBox().expand(24),
+                            s -> s.isAlive()
+                    ).stream()
+                    .min((a, b) -> Double.compare(
+                            a.squaredDistanceTo(this),
+                            b.squaredDistanceTo(this)
+                    ))
+                    .orElse(null);
+
+            if (nearest != null) {
+                this.setLeader(nearest);
+            }
+        }
+
+        return data;
+    }
 }
