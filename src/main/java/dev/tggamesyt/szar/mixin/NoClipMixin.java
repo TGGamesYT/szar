@@ -20,15 +20,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractBlock.AbstractBlockState.class)
 public class NoClipMixin {
 
-    @Inject(method = "getCollisionShape*", at = @At("HEAD"), cancellable = true)
+    @Inject(
+        method = "getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/ShapeContext;)Lnet/minecraft/util/shape/VoxelShape;",
+        at = @At("HEAD"), cancellable = true
+    )
     private void szar_noClipBelowTracker(BlockView world, BlockPos pos,
-                                         ShapeContext ctx, CallbackInfoReturnable<VoxelShape> cir) {
-        // Only applies to players
+                                          ShapeContext ctx,
+                                          CallbackInfoReturnable<VoxelShape> cir) {
         if (!(ctx instanceof EntityShapeContext esc)) return;
-        Entity entity = esc.getEntity();
-        if (!(entity instanceof PlayerEntity)) return;
+        if (!(esc.getEntity() instanceof PlayerEntity)) return;
 
-        // Check 1–5 blocks above this position for a TrackerBlock
         for (int i = 1; i <= 5; i++) {
             BlockPos above = pos.up(i);
             if (world.getBlockState(above).getBlock() instanceof TrackerBlock) {
