@@ -285,11 +285,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 
         if (!isOpenSpace(chunkX * 16 + lx, chunkZ * 16 + lz)) return;
 
-        // Tracker hangs from ceiling (Y=8, top wall block level)
-        // Portal is 4 blocks below at Y=4 (floor level, replacing floor block)
-        // Gap between: Y=5, Y=6, Y=7 = 3 air blocks + tracker at 8 = exactly 4 apart
-        BlockPos trackerPos = new BlockPos(lx, CEILING_Y - 1, lz); // Y=8
-        BlockPos portalPos = trackerPos.down(4);                    // Y=4
+        BlockPos trackerPos = new BlockPos(lx, FLOOR_Y + 1, lz); // Y=5
+        BlockPos portalPos = trackerPos.down(4);                  // Y=1, underground
 
         chunk.setBlockState(portalPos, Szar.PORTAL_BLOCK.getDefaultState(), false);
         chunk.setBlockState(trackerPos, Szar.TRACKER_BLOCK.getDefaultState(), false);
