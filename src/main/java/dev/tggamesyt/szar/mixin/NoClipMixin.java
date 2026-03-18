@@ -27,9 +27,6 @@ public class NoClipMixin {
     private void szar_noClipBelowTracker(BlockView world, BlockPos pos,
                                           ShapeContext ctx,
                                           CallbackInfoReturnable<VoxelShape> cir) {
-        if (!(ctx instanceof EntityShapeContext esc)) return;
-        if (!(esc.getEntity() instanceof PlayerEntity)) return;
-
         for (int i = 1; i <= 5; i++) {
             BlockPos above = pos.up(i);
             if (world.getBlockState(above).getBlock() instanceof TrackerBlock) {

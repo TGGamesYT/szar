@@ -355,8 +355,6 @@ public class Szar implements ModInitializer {
                         // random ahh silly stuff
                         entries.add(Szar.POPTART);
                         entries.add(Szar.NYAN_SPAWNEGG);
-                        entries.add(Szar.EPSTEIN_FILES);
-                        entries.add(Szar.EPSTEIN_SPAWNEGG);
                         entries.add(Szar.BAITER_DISC);
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
@@ -416,6 +414,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.NIGGERITE_BOOTS);
                         entries.add(Szar.NIGGERITE_BLOCK);
                         // nsfw
+                        entries.add(Szar.EPSTEIN_FILES);
+                        entries.add(Szar.EPSTEIN_SPAWNEGG);
                         entries.add(Szar.FASZITEM);
                         entries.add(Szar.CNDM);
                         entries.add(Szar.LATEX);

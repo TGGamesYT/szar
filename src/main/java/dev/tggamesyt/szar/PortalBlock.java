@@ -42,12 +42,12 @@ public class PortalBlock extends Block {
     @Override
     public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
         if (world.isClient) return;
-        if (!(entity instanceof ServerPlayerEntity player)) return;
 
+        // Cooldown check
         long now = world.getTime();
-        Long last = cooldowns.get(player.getUuid());
+        Long last = cooldowns.get(entity.getUuid());
         if (last != null && now - last < 60) return;
-        cooldowns.put(player.getUuid(), now);
+        cooldowns.put(entity.getUuid(), now);
 
         TrackerBlockEntity tracker = findTrackerAbove(world, pos);
         if (tracker == null) return;
@@ -55,11 +55,51 @@ public class PortalBlock extends Block {
         MinecraftServer server = world.getServer();
         if (server == null) return;
 
-        // Detect dimension instead of reading isNetherSide
-        if (world.getRegistryKey() == World.OVERWORLD) {
-            teleportToNether(player, tracker, server, pos);
-        } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
-            teleportToOverworld(player, tracker, server);
+        if (entity instanceof ServerPlayerEntity player) {
+            // Full player handling — inventory save, tracker registration, etc.
+            if (world.getRegistryKey() == World.OVERWORLD) {
+                teleportToNether(player, tracker, server, pos);
+            } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
+                teleportToOverworld(player, tracker, server);
+            }
+        } else {
+            // Non-player entity — just teleport, no inventory or tracker registration
+            if (world.getRegistryKey() == World.OVERWORLD) {
+                ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
+                if (backrooms == null) return;
+                double safeY = findSafeY(backrooms, (int) entity.getX(), (int) entity.getZ());
+                entity.teleport(backrooms, entity.getX(), safeY, entity.getZ(),
+                        java.util.Set.of(), entity.getYaw(), entity.getPitch());
+            } else {
+                // Non-player entity — just teleport, no inventory or tracker registration
+                if (world.getRegistryKey() == World.OVERWORLD) {
+                    ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
+                    if (backrooms == null) return;
+                    double safeY = findSafeY(backrooms, (int) entity.getX(), (int) entity.getZ());
+                    entity.teleport(backrooms, entity.getX(), safeY, entity.getZ(),
+                            java.util.Set.of(), entity.getYaw(), entity.getPitch());
+                } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
+                    ServerWorld overworld = server.getWorld(World.OVERWORLD);
+                    if (overworld == null) return;
+
+                    double baseX = tracker.returnX;
+                    double baseY = tracker.returnY;
+                    double baseZ = tracker.returnZ;
+
+                    // If no player has used this portal yet, fallback
+                    if (baseX == 0 && baseY == 0 && baseZ == 0) {
+                        double safeY = findSafeY(overworld, (int) entity.getX(), (int) entity.getZ());
+                        entity.teleport(overworld, entity.getX(), safeY, entity.getZ(),
+                                java.util.Set.of(), entity.getYaw(), entity.getPitch());
+                        return;
+                    }
+
+                    // Search up to 10 blocks offset in XZ and Y for a safe spot not above a portal
+                    BlockPos safePos = findSafeSpotNearEntry(overworld, baseX, baseY, baseZ);
+                    entity.teleport(overworld, safePos.getX() + 0.5, safePos.getY(), safePos.getZ() + 0.5,
+                            java.util.Set.of(), entity.getYaw(), entity.getPitch());
+                }
+            }
         }
     }
 
@@ -73,6 +113,11 @@ public class PortalBlock extends Block {
         tag.putInt("OwnerTrackerX", tracker.getPos().getX());
         tag.putInt("OwnerTrackerY", tracker.getPos().getY());
         tag.putInt("OwnerTrackerZ", tracker.getPos().getZ());
+
+        tracker.returnX = player.getX();
+        tracker.returnY = player.getY() + 6;
+        tracker.returnZ = player.getZ();
+        tracker.markDirty();
 
         // Save inventory
         NbtList savedInventory = saveInventory(player);
@@ -94,6 +139,20 @@ public class PortalBlock extends Block {
 
         player.teleport(nether, netherX, netherY, netherZ,
                 player.getYaw(), player.getPitch());
+
+        BlockPos destPortalPos = new BlockPos((int) netherX, (int) netherY, (int) netherZ);
+        for (int i = 1; i <= 5; i++) {
+            BlockPos check = destPortalPos.up(i);
+            if (nether.getBlockState(check).getBlock() instanceof TrackerBlock) {
+                if (nether.getBlockEntity(check) instanceof TrackerBlockEntity backroomsTracker) {
+                    backroomsTracker.returnX = player.getX();
+                    backroomsTracker.returnY = player.getY() + 6;
+                    backroomsTracker.returnZ = player.getZ();
+                    backroomsTracker.markDirty();
+                }
+                break;
+            }
+        }
     }
 
     private void teleportToOverworld(ServerPlayerEntity player, TrackerBlockEntity netherTracker,
@@ -103,7 +162,6 @@ public class PortalBlock extends Block {
         double returnY = tag.getDouble("EntryY");
         double returnZ = tag.getDouble("EntryZ");
 
-        // Read overworld tracker pos
         BlockPos owTrackerPos = null;
         if (tag.contains("OwnerTrackerX")) {
             owTrackerPos = new BlockPos(
@@ -117,22 +175,36 @@ public class PortalBlock extends Block {
         netherTracker.removePlayer(player.getUuid());
 
         ServerWorld overworld = server.getWorld(World.OVERWORLD);
-        ServerWorld nether = server.getWorld(Szar.BACKROOMS_KEY);
+        ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
 
-        // Clean up nether side if empty
-        if (!netherTracker.hasPlayers() && nether != null) {
-            TrackerBlock.restoreAndCleanup(nether,
-                    netherTracker.getPos(), netherTracker, server);
-        }
-
-        // Clean up overworld tracker too
         if (owTrackerPos != null && overworld != null) {
             if (overworld.getBlockEntity(owTrackerPos) instanceof TrackerBlockEntity owTracker) {
-                owTracker.removePlayer(player.getUuid());
-                if (!owTracker.hasPlayers()) {
-                    TrackerBlock.restoreAndCleanup(overworld, owTrackerPos, owTracker, server);
+                // Resolve to root of the overworld group
+                TrackerBlockEntity root = owTracker.getRoot(overworld);
+                root.removePlayer(player.getUuid());
+
+                if (!root.hasPlayers()) {
+                    // Collect and clean up all connected trackers
+                    List<BlockPos> allTrackers = new ArrayList<>();
+                    allTrackers.add(root.getPos());
+                    for (BlockPos childPortal : root.getControlledPortals()) {
+                        allTrackers.add(childPortal.up(4));
+                    }
+
+                    for (BlockPos trackerPos : allTrackers) {
+                        if (overworld.getBlockEntity(trackerPos)
+                                instanceof TrackerBlockEntity te) {
+                            TrackerBlock.restoreAndCleanup(overworld, trackerPos, te, server);
+                        }
+                    }
                 }
             }
+        }
+
+        // Clean up backrooms tracker too
+        if (!netherTracker.hasPlayers() && backrooms != null) {
+            TrackerBlock.restoreAndCleanup(backrooms,
+                    netherTracker.getPos(), netherTracker, server);
         }
 
         if (overworld == null) return;
@@ -147,7 +219,8 @@ public class PortalBlock extends Block {
             BlockPos check = portalPos.up(i);
             if (world.getBlockState(check).getBlock() instanceof TrackerBlock) {
                 if (world.getBlockEntity(check) instanceof TrackerBlockEntity te) {
-                    return te;
+                    // Always delegate to root
+                    return te.getRoot(world);
                 }
             }
         }
@@ -262,5 +335,38 @@ public class PortalBlock extends Block {
         }
 
         state.removePlayerData(player.getUuid());
+    }
+
+    private BlockPos findSafeSpotNearEntry(ServerWorld world, double baseX, double baseY, double baseZ) {
+        System.out.println(baseX + ", " +  baseY + ", " +  baseZ);
+        int bx = (int) baseX;
+        int by = (int) baseY;
+        int bz = (int) baseZ;
+
+        // First try exact position
+        BlockPos exact = new BlockPos(bx, by, bz);
+        if (isSafeAndNotPortal(world, exact)) return exact;
+
+        // Spiral outward in XZ only, keep Y fixed to entry Y
+        for (int radius = 1; radius <= 10; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.abs(dx) != radius && Math.abs(dz) != radius) continue;
+                    BlockPos candidate = new BlockPos(bx + dx, by, bz + dz);
+                    if (isSafeAndNotPortal(world, candidate)) return candidate;
+                }
+            }
+        }
+
+        return exact; // fallback
+    }
+
+    private boolean isSafeAndNotPortal(ServerWorld world, BlockPos feet) {
+        BlockPos head = feet.up();
+        BlockPos ground = feet.down();
+        return !world.getBlockState(feet).isSolidBlock(world, feet)
+                && !world.getBlockState(head).isSolidBlock(world, head)
+                && world.getBlockState(ground).isSolidBlock(world, ground)
+                && !(world.getBlockState(ground).getBlock() instanceof PortalBlock);
     }
 }

@@ -8,10 +8,10 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class TrackerBlockEntity extends BlockEntity {
     // Add these fields
@@ -72,6 +72,21 @@ public class TrackerBlockEntity extends BlockEntity {
                 .ifPresent(nbt1 -> originalBlock.put("State", nbt1));
         nbt.put("OriginalPortalBlock", originalBlock);
         nbt.putBoolean("PlacedByPlayer", placedByPlayer);
+        if (parentTrackerPos != null) {
+            nbt.putInt("ParentX", parentTrackerPos.getX());
+            nbt.putInt("ParentY", parentTrackerPos.getY());
+            nbt.putInt("ParentZ", parentTrackerPos.getZ());
+        }
+
+        NbtList portalList = new NbtList();
+        for (BlockPos p : controlledPortals) {
+            NbtCompound entry = new NbtCompound();
+            entry.putInt("X", p.getX());
+            entry.putInt("Y", p.getY());
+            entry.putInt("Z", p.getZ());
+            portalList.add(entry);
+        }
+        nbt.put("ControlledPortals", portalList);
     }
 
     @Override
@@ -103,5 +118,63 @@ public class TrackerBlockEntity extends BlockEntity {
             }
         }
         placedByPlayer = nbt.getBoolean("PlacedByPlayer");
+        if (nbt.contains("ParentX")) {
+            parentTrackerPos = new BlockPos(
+                    nbt.getInt("ParentX"),
+                    nbt.getInt("ParentY"),
+                    nbt.getInt("ParentZ")
+            );
+        } else {
+            parentTrackerPos = null;
+        }
+
+        controlledPortals.clear();
+        NbtList portalList = nbt.getList("ControlledPortals", 10);
+        for (int i = 0; i < portalList.size(); i++) {
+            NbtCompound entry = portalList.getCompound(i);
+            controlledPortals.add(new BlockPos(
+                    entry.getInt("X"), entry.getInt("Y"), entry.getInt("Z")
+            ));
+        }
+    }
+
+    // null = this is a root/parent tracker
+// non-null = this is a child, delegate to parent
+    @Nullable
+    public BlockPos parentTrackerPos = null;
+
+    // List of portal positions this tracker controls (only used by parent)
+    private final List<BlockPos> controlledPortals = new ArrayList<>();
+
+    public void addPortal(BlockPos portalPos) {
+        if (!controlledPortals.contains(portalPos)) {
+            controlledPortals.add(portalPos);
+            markDirty();
+        }
+    }
+
+    public void removePortal(BlockPos portalPos) {
+        controlledPortals.remove(portalPos);
+        markDirty();
+    }
+
+    public List<BlockPos> getControlledPortals() {
+        return controlledPortals;
+    }
+
+    public boolean isChild() {
+        return parentTrackerPos != null;
+    }
+
+    // Resolves to the root parent, following chain if needed
+    public TrackerBlockEntity getRoot(World world) {
+        if (parentTrackerPos == null) return this;
+        if (world.getBlockEntity(parentTrackerPos) instanceof TrackerBlockEntity parent) {
+            return parent.getRoot(world);
+        }
+        // Parent is gone — become root
+        parentTrackerPos = null;
+        markDirty();
+        return this;
     }
 }
