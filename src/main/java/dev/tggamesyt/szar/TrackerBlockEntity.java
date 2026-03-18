@@ -10,7 +10,9 @@ import net.minecraft.nbt.NbtString;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import java.util.*;
 
 public class TrackerBlockEntity extends BlockEntity {
@@ -176,5 +178,14 @@ public class TrackerBlockEntity extends BlockEntity {
         parentTrackerPos = null;
         markDirty();
         return this;
+    }
+    @Override
+    public Packet<ClientPlayPacketListener> toUpdatePacket() {
+        return BlockEntityUpdateS2CPacket.create(this);
+    }
+
+    @Override
+    public NbtCompound toInitialChunkDataNbt() {
+        return createNbt();
     }
 }
