@@ -101,10 +101,17 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                 }
 
                 if (isOpen) {
-                    // Air inside the room
                     for (int y = WALL_BASE_Y; y <= WALL_TOP_Y; y++) {
                         chunk.setBlockState(new BlockPos(lx, y, lz),
                                 Blocks.AIR.getDefaultState(), false);
+                    }
+
+                    // 1 in 40 chance of a barrel on the floor
+                    // With this — 1 per ~40x40 block area:
+                    long barrelHash = hash(worldX * 31 + 17, worldZ * 29 + 11);
+                    if ((barrelHash % 1600) == 0) {
+                        chunk.setBlockState(new BlockPos(lx, FLOOR_Y + 1, lz),
+                                Blocks.BARREL.getDefaultState(), false);
                     }
                 } else {
                     // Wall column
@@ -115,8 +122,6 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                                 Szar.WALL_BLOCK.getDefaultState(), false);
                     }
                 }
-                // After the lx/lz loop, still inside populateNoise:
-                placeBackroomsPortals(chunk, chunkX, chunkZ);
             }
         }
 
@@ -240,55 +245,47 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
     @Override
     public void generateFeatures(StructureWorldAccess world, Chunk chunk,
                                  StructureAccessor structureAccessor) {
-        // Initialize wall block entities after chunk is placed
         BlockPos.Mutable mutable = new BlockPos.Mutable();
         int chunkX = chunk.getPos().getStartX();
         int chunkZ = chunk.getPos().getStartZ();
 
+        // Initialize wall block entities
         for (int lx = 0; lx < 16; lx++) {
             for (int lz = 0; lz < 16; lz++) {
                 for (int y = 0; y < 64; y++) {
                     mutable.set(chunkX + lx, y, chunkZ + lz);
                     if (world.getBlockState(mutable).getBlock() instanceof WallBlock) {
-                        if (world.getBlockEntity(mutable) == null) {
-                            // Force block entity creation by re-setting the block
-                            world.setBlockState(mutable, Szar.WALL_BLOCK.getDefaultState(),
-                                    Block.NOTIFY_LISTENERS);
-                        }
+                        world.setBlockState(mutable, Szar.WALL_BLOCK.getDefaultState(),
+                                Block.NOTIFY_ALL);
                         if (world.getBlockEntity(mutable) instanceof WallBlockEntity wall) {
                             wall.initializeIfNeeded();
                         }
                     }
                 }
-                mutable.set(chunkX + lx, CEILING_Y - 1, chunkZ + lz); // Y=8
-                if (world.getBlockState(mutable).getBlock() instanceof TrackerBlock) {
-                    if (world.getBlockEntity(mutable) == null) {
-                        world.setBlockState(mutable, Szar.TRACKER_BLOCK.getDefaultState(),
-                                Block.NOTIFY_ALL);
-                    }
-                    if (world.getBlockEntity(mutable) instanceof TrackerBlockEntity te) {
-                        te.placedByPlayer = false;
-                        te.originalPortalBlock = Szar.PLASTIC.getDefaultState();
-                        te.markDirty();
-                    }
+            }
+        }
+
+        // Place tracker portals
+        long chunkHash = hash((chunkX / 16) * 7 + 3, (chunkZ / 16) * 13 + 7);
+        if ((chunkHash % 20) == 0) {
+            int lx = 4 + (int)(chunkHash >> 8 & 0x7);
+            int lz = 4 + (int)(chunkHash >> 12 & 0x7);
+
+            if (isOpenSpace(chunkX + lx, chunkZ + lz)) {
+                BlockPos trackerPos = new BlockPos(chunkX + lx, FLOOR_Y + 1, chunkZ + lz);
+                BlockPos portalPos = trackerPos.down(4);
+
+                world.setBlockState(portalPos, Szar.PORTAL_BLOCK.getDefaultState(),
+                        Block.NOTIFY_ALL);
+                world.setBlockState(trackerPos, Szar.TRACKER_BLOCK.getDefaultState(),
+                        Block.NOTIFY_ALL);
+
+                if (world.getBlockEntity(trackerPos) instanceof TrackerBlockEntity te) {
+                    te.placedByPlayer = false;
+                    te.originalPortalBlock = Szar.PLASTIC.getDefaultState();
+                    te.markDirty();
                 }
             }
         }
-    }
-
-    private void placeBackroomsPortals(Chunk chunk, int chunkX, int chunkZ) {
-        long chunkHash = hash(chunkX * 7 + 3, chunkZ * 13 + 7);
-        if ((chunkHash % 20) != 0) return;
-
-        int lx = 4 + (int)(chunkHash >> 8 & 0x7);
-        int lz = 4 + (int)(chunkHash >> 12 & 0x7);
-
-        if (!isOpenSpace(chunkX * 16 + lx, chunkZ * 16 + lz)) return;
-
-        BlockPos trackerPos = new BlockPos(lx, FLOOR_Y + 1, lz); // Y=5
-        BlockPos portalPos = trackerPos.down(4);                  // Y=1, underground
-
-        chunk.setBlockState(portalPos, Szar.PORTAL_BLOCK.getDefaultState(), false);
-        chunk.setBlockState(trackerPos, Szar.TRACKER_BLOCK.getDefaultState(), false);
     }
 }

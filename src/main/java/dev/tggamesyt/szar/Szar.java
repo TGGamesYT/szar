@@ -1087,6 +1087,7 @@ public class Szar implements ModInitializer {
                 RegistryKey.of(RegistryKeys.PLACED_FEATURE,
                         new Identifier(MOD_ID, "overworld_portal"))
         );
+        BackroomsBarrelManager.register();
     }
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
