@@ -144,5 +144,8 @@
   "block.szar.plastic": "Plastic",
   "block.szar.ceiling": "Ceiling",
   "block.szar.wall": "Wall",
-  "block.szar.wall_bottom": "Wall Bottom"
+  "block.szar.wall_bottom": "Wall Bottom",
+
+  "item.szar.bean": "Bean",
+  "item.szar.can_of_beans": "Can of Beans"
 }

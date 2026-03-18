@@ -368,6 +368,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.WALL_BOTTOM_ITEM);
                         entries.add(Szar.CEILING_ITEM);
                         entries.add(Szar.PLASTIC_ITEM);
+                        entries.add(Szar.BEAN);
+                        entries.add(Szar.CAN_OF_BEANS);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -1079,6 +1081,12 @@ public class Szar implements ModInitializer {
                         p -> p.sendToolBreakStatus(player.getActiveHand()));
             });
         });
+        BiomeModifications.addFeature(
+                BiomeSelectors.foundInOverworld(),
+                GenerationStep.Feature.SURFACE_STRUCTURES,
+                RegistryKey.of(RegistryKeys.PLACED_FEATURE,
+                        new Identifier(MOD_ID, "overworld_portal"))
+        );
     }
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
@@ -1115,9 +1123,13 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "tracker"),
                     FabricBlockEntityTypeBuilder.create(TrackerBlockEntity::new, TRACKER_BLOCK).build()
             );
-    public static final Block WALL_BLOCK = Registry.register(
+    public static final WallBlock WALL_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "wall"),
-            new Block(AbstractBlock.Settings.create())
+            new WallBlock(AbstractBlock.Settings.create())
+    );
+    public static final BlockEntityType<WallBlockEntity> WALL_BLOCK_ENTITY = Registry.register(
+            Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "wall"),
+            FabricBlockEntityTypeBuilder.create(WallBlockEntity::new, WALL_BLOCK).build()
     );
     public static final Block WALL_BOTTOM_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "wall_bottom"),
@@ -1317,6 +1329,11 @@ public class Szar implements ModInitializer {
                     new Identifier(MOD_ID, "island"),
                     () -> IslandStructure.CODEC
             );
+    public static Feature<DefaultFeatureConfig> OVERWORLD_PORTAL_FEATURE = Registry.register(
+            Registries.FEATURE,
+            new Identifier(MOD_ID, "overworld_portal"),
+            new OverworldPortalFeature(DefaultFeatureConfig.CODEC)
+    );
     static VoxelShape shape0 = VoxelShapes.cuboid(0.1875f, 0f, 0.625f, 0.6875f, 0.5f, 1.125f);
     static VoxelShape shape1 = VoxelShapes.cuboid(0.1875f, 1.5f, 0.625f, 0.6875f, 2f, 1.125f);
     static VoxelShape shape2 = VoxelShapes.cuboid(0.5625f, 0f, 0.25f, 1.0625f, 2f, 0.75f);
@@ -1684,6 +1701,18 @@ public class Szar implements ModInitializer {
                             .saturationModifier(0.6f).
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
                             .build()), 217)
+    );
+
+    public static final Item BEAN = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "bean"),
+            new Item(new Item.Settings()
+                    .food(new FoodComponent.Builder().saturationModifier(0.6f).hunger(1).build()))
+    );
+    public static final Item CAN_OF_BEANS = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "can_of_beans"),
+            new CanOfBeansItem(new Item.Settings())
     );
     public static final SoundEvent BAITER =
             SoundEvent.of(new Identifier(MOD_ID, "baiter"));

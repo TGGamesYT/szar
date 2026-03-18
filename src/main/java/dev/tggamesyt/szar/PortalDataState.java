@@ -43,4 +43,27 @@ public class PortalDataState extends PersistentState {
         return overworld.getPersistentStateManager()
                 .getOrCreate(PortalDataState::fromNbt, PortalDataState::new, KEY);
     }
+
+    public void saveEntityEntry(UUID uuid, double x, double y, double z) {
+        NbtCompound entry = new NbtCompound();
+        entry.putDouble("X", x);
+        entry.putDouble("Y", y);
+        entry.putDouble("Z", z);
+        data.put("entity_" + uuid, entry);
+        markDirty();
+    }
+
+    public double[] getAndRemoveEntityEntry(UUID uuid) {
+        String key = "entity_" + uuid;
+        if (!data.contains(key)) return null;
+        NbtCompound entry = data.getCompound(key);
+        double[] coords = new double[]{
+                entry.getDouble("X"),
+                entry.getDouble("Y"),
+                entry.getDouble("Z")
+        };
+        data.remove(key);
+        markDirty();
+        return coords;
+    }
 }

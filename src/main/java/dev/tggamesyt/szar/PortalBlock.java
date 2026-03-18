@@ -28,7 +28,6 @@ public class PortalBlock extends Block {
 
     // Cooldown tracker so players don't teleport 20x per second
     private static final java.util.Map<java.util.UUID, Long> cooldowns = new java.util.HashMap<>();
-
     public PortalBlock(Settings settings) {
         super(settings);
     }
@@ -63,42 +62,47 @@ public class PortalBlock extends Block {
                 teleportToOverworld(player, tracker, server);
             }
         } else {
-            // Non-player entity — just teleport, no inventory or tracker registration
+            // Non-player entity — teleport only, no inventory or tracker registration
             if (world.getRegistryKey() == World.OVERWORLD) {
                 ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
                 if (backrooms == null) return;
+
+                // Save overworld entry coords for this entity
+                PortalDataState.getOrCreate(server.getWorld(World.OVERWORLD))
+                        .saveEntityEntry(entity.getUuid(), entity.getX(), entity.getY() + 6, entity.getZ());
+
                 double safeY = findSafeY(backrooms, (int) entity.getX(), (int) entity.getZ());
                 entity.teleport(backrooms, entity.getX(), safeY, entity.getZ(),
                         java.util.Set.of(), entity.getYaw(), entity.getPitch());
-            } else {
-                // Non-player entity — just teleport, no inventory or tracker registration
-                if (world.getRegistryKey() == World.OVERWORLD) {
-                    ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
-                    if (backrooms == null) return;
-                    double safeY = findSafeY(backrooms, (int) entity.getX(), (int) entity.getZ());
-                    entity.teleport(backrooms, entity.getX(), safeY, entity.getZ(),
-                            java.util.Set.of(), entity.getYaw(), entity.getPitch());
-                } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
-                    ServerWorld overworld = server.getWorld(World.OVERWORLD);
-                    if (overworld == null) return;
 
-                    double baseX = tracker.returnX;
-                    double baseY = tracker.returnY;
-                    double baseZ = tracker.returnZ;
+            } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
+                ServerWorld overworld = server.getWorld(World.OVERWORLD);
+                if (overworld == null) return;
 
-                    // If no player has used this portal yet, fallback
-                    if (baseX == 0 && baseY == 0 && baseZ == 0) {
-                        double safeY = findSafeY(overworld, (int) entity.getX(), (int) entity.getZ());
-                        entity.teleport(overworld, entity.getX(), safeY, entity.getZ(),
-                                java.util.Set.of(), entity.getYaw(), entity.getPitch());
-                        return;
-                    }
+                double rx, ry, rz;
 
-                    // Search up to 10 blocks offset in XZ and Y for a safe spot not above a portal
-                    BlockPos safePos = findSafeSpotNearEntry(overworld, baseX, baseY, baseZ);
-                    entity.teleport(overworld, safePos.getX() + 0.5, safePos.getY(), safePos.getZ() + 0.5,
-                            java.util.Set.of(), entity.getYaw(), entity.getPitch());
+                double[] saved = PortalDataState.getOrCreate(server.getWorld(World.OVERWORLD))
+                        .getAndRemoveEntityEntry(entity.getUuid());
+                if (saved != null) {
+                    // Use entity's own saved entry coords
+                    rx = saved[0];
+                    ry = saved[1];
+                    rz = saved[2];
+                } else if (tracker.returnX != 0 || tracker.returnY != 0 || tracker.returnZ != 0) {
+                    // Fall back to last player's entry coords on this tracker
+                    rx = tracker.returnX;
+                    ry = tracker.returnY;
+                    rz = tracker.returnZ;
+                } else {
+                    // Fall back to entity's current position + 6
+                    rx = entity.getX();
+                    ry = entity.getY() + 6;
+                    rz = entity.getZ();
                 }
+
+                BlockPos safePos = findSafeSpotNearEntry(overworld, rx, ry, rz);
+                entity.teleport(overworld, safePos.getX() + 0.5, safePos.getY(), safePos.getZ() + 0.5,
+                        java.util.Set.of(), entity.getYaw(), entity.getPitch());
             }
         }
     }

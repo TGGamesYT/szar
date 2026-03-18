@@ -3,6 +3,7 @@ package dev.tggamesyt.szar;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.tggamesyt.szar.Szar;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryCodecs;
@@ -12,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -113,6 +115,8 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                                 Szar.WALL_BLOCK.getDefaultState(), false);
                     }
                 }
+                // After the lx/lz loop, still inside populateNoise:
+                placeBackroomsPortals(chunk, chunkX, chunkZ);
             }
         }
 
@@ -232,4 +236,62 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
     @Override
     public void getDebugHudText(List<String> text, NoiseConfig noiseConfig,
                                 BlockPos pos) {}
+
+    @Override
+    public void generateFeatures(StructureWorldAccess world, Chunk chunk,
+                                 StructureAccessor structureAccessor) {
+        // Initialize wall block entities after chunk is placed
+        BlockPos.Mutable mutable = new BlockPos.Mutable();
+        int chunkX = chunk.getPos().getStartX();
+        int chunkZ = chunk.getPos().getStartZ();
+
+        for (int lx = 0; lx < 16; lx++) {
+            for (int lz = 0; lz < 16; lz++) {
+                for (int y = 0; y < 64; y++) {
+                    mutable.set(chunkX + lx, y, chunkZ + lz);
+                    if (world.getBlockState(mutable).getBlock() instanceof WallBlock) {
+                        if (world.getBlockEntity(mutable) == null) {
+                            // Force block entity creation by re-setting the block
+                            world.setBlockState(mutable, Szar.WALL_BLOCK.getDefaultState(),
+                                    Block.NOTIFY_LISTENERS);
+                        }
+                        if (world.getBlockEntity(mutable) instanceof WallBlockEntity wall) {
+                            wall.initializeIfNeeded();
+                        }
+                    }
+                }
+                mutable.set(chunkX + lx, CEILING_Y - 1, chunkZ + lz); // Y=8
+                if (world.getBlockState(mutable).getBlock() instanceof TrackerBlock) {
+                    if (world.getBlockEntity(mutable) == null) {
+                        world.setBlockState(mutable, Szar.TRACKER_BLOCK.getDefaultState(),
+                                Block.NOTIFY_ALL);
+                    }
+                    if (world.getBlockEntity(mutable) instanceof TrackerBlockEntity te) {
+                        te.placedByPlayer = false;
+                        te.originalPortalBlock = Szar.PLASTIC.getDefaultState();
+                        te.markDirty();
+                    }
+                }
+            }
+        }
+    }
+
+    private void placeBackroomsPortals(Chunk chunk, int chunkX, int chunkZ) {
+        long chunkHash = hash(chunkX * 7 + 3, chunkZ * 13 + 7);
+        if ((chunkHash % 20) != 0) return;
+
+        int lx = 4 + (int)(chunkHash >> 8 & 0x7);
+        int lz = 4 + (int)(chunkHash >> 12 & 0x7);
+
+        if (!isOpenSpace(chunkX * 16 + lx, chunkZ * 16 + lz)) return;
+
+        // Tracker hangs from ceiling (Y=8, top wall block level)
+        // Portal is 4 blocks below at Y=4 (floor level, replacing floor block)
+        // Gap between: Y=5, Y=6, Y=7 = 3 air blocks + tracker at 8 = exactly 4 apart
+        BlockPos trackerPos = new BlockPos(lx, CEILING_Y - 1, lz); // Y=8
+        BlockPos portalPos = trackerPos.down(4);                    // Y=4
+
+        chunk.setBlockState(portalPos, Szar.PORTAL_BLOCK.getDefaultState(), false);
+        chunk.setBlockState(trackerPos, Szar.TRACKER_BLOCK.getDefaultState(), false);
+    }
 }

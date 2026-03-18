@@ -362,6 +362,7 @@ public class SzarClient implements ClientModInitializer {
                     });
                 }
         );
+        BlockEntityRendererFactories.register(Szar.WALL_BLOCK_ENTITY, WallBlockRenderer::new);
         BlockEntityRendererFactories.register(
                 Szar.TRACKER_BLOCK_ENTITY,
                 TGTrackerBlockRenderer::new
