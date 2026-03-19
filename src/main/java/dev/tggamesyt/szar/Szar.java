@@ -55,6 +55,7 @@ import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -370,6 +371,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.PLASTIC_ITEM);
                         entries.add(Szar.BEAN);
                         entries.add(Szar.CAN_OF_BEANS);
+                        entries.add(Szar.ALMOND_WATER);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -970,6 +972,90 @@ public class Szar implements ModInitializer {
                                 return 0;
                             })
             );
+            dispatcher.register(
+                    LiteralArgumentBuilder.<ServerCommandSource>literal("backroomlights")
+                            .requires(context -> context.hasPermissionLevel(2))
+                            .then(CommandManager.literal("get")
+                                    .executes(context -> {
+                                        ServerCommandSource source = context.getSource();
+                                        BackroomsLightManager.GlobalEvent event = BackroomsLightManager.currentEvent;
+                                        int timer = BackroomsLightManager.eventTimer;
+
+                                        String mode = switch (event) {
+                                            case NONE -> "normal";
+                                            case FLICKER -> "flickering";
+                                            case BLACKOUT -> "blackout";
+                                        };
+
+                                        if (event == BackroomsLightManager.GlobalEvent.NONE) {
+                                            int cooldown = BackroomsLightManager.cooldownTimer;
+                                            source.sendMessage(Text.literal(
+                                                    "Current mode: §anormal§r — next event check in §e"
+                                                            + cooldown + "§r ticks ("
+                                                            + (cooldown / 20) + "s)"
+                                            ));
+                                        } else {
+                                            source.sendMessage(Text.literal(
+                                                    "Current mode: §e" + mode + "§r — ends in §c"
+                                                            + timer + "§r ticks ("
+                                                            + (timer / 20) + "s)"
+                                            ));
+                                        }
+                                        return 1;
+                                    })
+                            )
+                            .then(CommandManager.literal("set")
+                                    .then(CommandManager.literal("normal")
+                                            .executes(context -> {
+                                                ServerCommandSource source = context.getSource();
+                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
+                                                if (backrooms == null) {
+                                                    source.sendError(Text.literal("Backrooms dimension not found"));
+                                                    return 0;
+                                                }
+                                                // End current event cleanly
+                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.NONE;
+                                                BackroomsLightManager.eventTimer = 0;
+                                                BackroomsLightManager.cooldownTimer = 3600;
+                                                // Restore all lights
+                                                BackroomsLightManager.forceRestoreAllLights(backrooms);
+                                                source.sendMessage(Text.literal("§aBackrooms lights set to normal"));
+                                                return 1;
+                                            })
+                                    )
+                                    .then(CommandManager.literal("flickering")
+                                            .executes(context -> {
+                                                ServerCommandSource source = context.getSource();
+                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
+                                                if (backrooms == null) {
+                                                    source.sendError(Text.literal("Backrooms dimension not found"));
+                                                    return 0;
+                                                }
+                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.FLICKER;
+                                                BackroomsLightManager.eventTimer = 3600; // 3 minutes default
+                                                BackroomsLightManager.cooldownTimer = 3600;
+                                                source.sendMessage(Text.literal("§eBackrooms lights set to flickering"));
+                                                return 1;
+                                            })
+                                    )
+                                    .then(CommandManager.literal("blackout")
+                                            .executes(context -> {
+                                                ServerCommandSource source = context.getSource();
+                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
+                                                if (backrooms == null) {
+                                                    source.sendError(Text.literal("Backrooms dimension not found"));
+                                                    return 0;
+                                                }
+                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.BLACKOUT;
+                                                BackroomsLightManager.eventTimer = 3600;
+                                                BackroomsLightManager.cooldownTimer = 3600;
+                                                BackroomsLightManager.forceBlackout(backrooms);
+                                                source.sendMessage(Text.literal("§4Backrooms lights set to blackout"));
+                                                return 1;
+                                            })
+                                    )
+                            )
+            );
         });
         Registry.register(
                 Registries.PAINTING_VARIANT,
@@ -1088,6 +1174,7 @@ public class Szar implements ModInitializer {
                         new Identifier(MOD_ID, "overworld_portal"))
         );
         BackroomsBarrelManager.register();
+        BackroomsLightManager.register();
     }
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
@@ -1715,6 +1802,31 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "can_of_beans"),
             new CanOfBeansItem(new Item.Settings())
     );
+    public static final Item ALMOND_WATER = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "almond_water"),
+            new AlmondWaterItem(new Item.Settings())
+    );
+    public static final BackroomsLightBlock BACKROOMS_LIGHT = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "backrooms_light"),
+            new BackroomsLightBlock(FabricBlockSettings.create()
+                    .nonOpaque()
+                    .luminance(state -> BackroomsLightBlock.getLightLevel(state))
+                    .strength(0.3f))
+    );
+
+    public static final BlockItem BACKROOMS_LIGHT_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "backrooms_light"),
+            new BlockItem(BACKROOMS_LIGHT, new FabricItemSettings())
+    );
+
+    public static final BlockEntityType<BackroomsLightBlockEntity> BACKROOMS_LIGHT_ENTITY =
+            Registry.register(
+                    Registries.BLOCK_ENTITY_TYPE,
+                    new Identifier(MOD_ID, "backrooms_light"),
+                    FabricBlockEntityTypeBuilder.create(BackroomsLightBlockEntity::new,
+                            BACKROOMS_LIGHT).build()
+            );
     public static final SoundEvent BAITER =
             SoundEvent.of(new Identifier(MOD_ID, "baiter"));
     public static final Item BAITER_DISC = Registry.register(

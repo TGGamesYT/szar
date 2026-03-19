@@ -87,11 +87,28 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                             Szar.PLASTIC.getDefaultState(), false);
                 }
 
-                // Ceiling
                 boolean isGlowstone = isGlowstonePos(worldX, worldZ);
-                BlockState ceilingBlock = isGlowstone
-                        ? Blocks.GLOWSTONE.getDefaultState()
-                        : Szar.CEILING.getDefaultState();
+                BlockState ceilingBlock;
+                if (isGlowstone) {
+                    long lightRoll = hash(worldX * 53 + 7, worldZ * 47 + 13);
+                    int roll = (int)(Math.abs(lightRoll) % 100);
+                    if (roll < 95) {
+                        // 95% ON
+                        ceilingBlock = Szar.BACKROOMS_LIGHT.getDefaultState()
+                                .with(BackroomsLightBlock.LIGHT_STATE,
+                                        BackroomsLightBlock.LightState.ON);
+                    } else if (roll < 98) {
+                        // 3% FLICKERING_ON
+                        ceilingBlock = Szar.BACKROOMS_LIGHT.getDefaultState()
+                                .with(BackroomsLightBlock.LIGHT_STATE,
+                                        BackroomsLightBlock.LightState.FLICKERING_ON);
+                    } else {
+                        // 2% missing — ceiling block, no light
+                        ceilingBlock = Szar.CEILING.getDefaultState();
+                    }
+                } else {
+                    ceilingBlock = Szar.CEILING.getDefaultState();
+                }
                 chunk.setBlockState(new BlockPos(lx, CEILING_Y, lz), ceilingBlock, false);
 
                 // Above ceiling — solid wall block fill so there's no void above
@@ -106,10 +123,17 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                                 Blocks.AIR.getDefaultState(), false);
                     }
 
-                    // 1 in 40 chance of a barrel on the floor
-                    // With this — 1 per ~40x40 block area:
-                    long barrelHash = hash(worldX * 31 + 17, worldZ * 29 + 11);
-                    if ((barrelHash % 1600) == 0) {
+                    int cellX = Math.floorDiv(worldX, 40);
+                    int cellZ = Math.floorDiv(worldZ, 40);
+                    long cellHash = hash(cellX * 31 + 17, cellZ * 29 + 11);
+
+                    int barrelLocalX = (int)(cellHash & 0x1F) % 40; // 0-39
+                    int barrelLocalZ = (int)((cellHash >> 8) & 0x1F) % 40; // 0-39
+                    int cellStartX = cellX * 40;
+                    int cellStartZ = cellZ * 40;
+
+                    if (worldX == cellStartX + barrelLocalX && worldZ == cellStartZ + barrelLocalZ
+                            && isOpenSpace(worldX, worldZ)) {
                         chunk.setBlockState(new BlockPos(lx, FLOOR_Y + 1, lz),
                                 Blocks.BARREL.getDefaultState(), false);
                     }
@@ -260,6 +284,19 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                         if (world.getBlockEntity(mutable) instanceof WallBlockEntity wall) {
                             wall.initializeIfNeeded();
                         }
+                    }
+                }
+                // Inside the lx/lz loop in generateFeatures, after the wall block section:
+                mutable.set(chunkX + lx, 9, chunkZ + lz); // CEILING_Y = 9
+                BlockState lightState = world.getBlockState(mutable);
+                if (lightState.getBlock() instanceof BackroomsLightBlock) {
+                    if (world.getBlockEntity(mutable) == null) {
+                        world.setBlockState(mutable, lightState, Block.NOTIFY_ALL);
+                    }
+                    if (world.getBlockEntity(mutable) instanceof BackroomsLightBlockEntity light) {
+                        light.flickerOffset = (int)(Math.abs(hash(chunkX + lx, chunkZ + lz)) % 100);
+                        light.flickerTimer = light.flickerOffset; // stagger initial timers
+                        light.markDirty();
                     }
                 }
             }

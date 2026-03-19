@@ -147,5 +147,7 @@
   "block.szar.wall_bottom": "Wall Bottom",
 
   "item.szar.bean": "Bean",
-  "item.szar.can_of_beans": "Can of Beans"
+  "item.szar.can_of_beans": "Can of Beans",
+  "item.szar.almond_water": "Almond Water",
+  "block.szar.backrooms_light": "Light"
 }

@@ -183,21 +183,17 @@ public class PortalBlock extends Block {
 
         if (owTrackerPos != null && overworld != null) {
             if (overworld.getBlockEntity(owTrackerPos) instanceof TrackerBlockEntity owTracker) {
-                // Resolve to root of the overworld group
                 TrackerBlockEntity root = owTracker.getRoot(overworld);
                 root.removePlayer(player.getUuid());
 
                 if (!root.hasPlayers()) {
-                    // Collect and clean up all connected trackers
                     List<BlockPos> allTrackers = new ArrayList<>();
                     allTrackers.add(root.getPos());
                     for (BlockPos childPortal : root.getControlledPortals()) {
                         allTrackers.add(childPortal.up(4));
                     }
-
                     for (BlockPos trackerPos : allTrackers) {
-                        if (overworld.getBlockEntity(trackerPos)
-                                instanceof TrackerBlockEntity te) {
+                        if (overworld.getBlockEntity(trackerPos) instanceof TrackerBlockEntity te) {
                             TrackerBlock.restoreAndCleanup(overworld, trackerPos, te, server);
                         }
                     }
@@ -205,15 +201,93 @@ public class PortalBlock extends Block {
             }
         }
 
-        // Clean up backrooms tracker too
         if (!netherTracker.hasPlayers() && backrooms != null) {
             TrackerBlock.restoreAndCleanup(backrooms,
                     netherTracker.getPos(), netherTracker, server);
         }
 
         if (overworld == null) return;
-        player.teleport(overworld, returnX, returnY, returnZ,
+
+        // Find a safe landing spot — try entry coords first, then spiral, then spawn
+        BlockPos safePos = findSafeOverworldSpot(overworld, returnX, returnY, returnZ, player);
+        player.teleport(overworld,
+                safePos.getX() + 0.5, safePos.getY(), safePos.getZ() + 0.5,
                 player.getYaw(), player.getPitch());
+    }
+
+    private BlockPos findSafeOverworldSpot(ServerWorld world, double baseX, double baseY,
+                                           double baseZ, ServerPlayerEntity player) {
+        int bx = (int) baseX;
+        int by = (int) baseY;
+        int bz = (int) baseZ;
+
+        // Try exact entry position first
+        BlockPos exact = new BlockPos(bx, by, bz);
+        if (isSafeOverworld(world, exact)) return exact;
+
+        // Try scanning Y up and down from entry Y at exact XZ
+        for (int dy = 0; dy <= 10; dy++) {
+            BlockPos up = new BlockPos(bx, by + dy, bz);
+            if (isSafeOverworld(world, up)) return up;
+            BlockPos down = new BlockPos(bx, by - dy, bz);
+            if (isSafeOverworld(world, down)) return down;
+        }
+
+        // Spiral outward in XZ, scan Y at each spot
+        for (int radius = 1; radius <= 10; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.abs(dx) != radius && Math.abs(dz) != radius) continue;
+                    int cx = bx + dx;
+                    int cz = bz + dz;
+                    // Scan Y range at this XZ
+                    for (int dy = 0; dy <= 10; dy++) {
+                        BlockPos up = new BlockPos(cx, by + dy, cz);
+                        if (isSafeOverworld(world, up)) return up;
+                        BlockPos down = new BlockPos(cx, by - dy, cz);
+                        if (isSafeOverworld(world, down)) return down;
+                    }
+                }
+            }
+        }
+
+        // Last resort — use player's spawn point
+        BlockPos spawnPos = player.getSpawnPointPosition();
+        if (spawnPos != null) {
+            // Scan Y near spawn to make sure it's safe
+            for (int dy = 0; dy <= 10; dy++) {
+                BlockPos sp = new BlockPos(spawnPos.getX(), spawnPos.getY() + dy, spawnPos.getZ());
+                if (isSafeOverworld(world, sp)) return sp;
+            }
+            return spawnPos;
+        }
+
+        // Absolute fallback — world spawn
+        BlockPos worldSpawn = world.getSpawnPos();
+        return new BlockPos(worldSpawn.getX(),
+                world.getTopY(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES,
+                        worldSpawn.getX(), worldSpawn.getZ()),
+                worldSpawn.getZ());
+    }
+
+    private boolean isSafeOverworld(ServerWorld world, BlockPos feet) {
+        BlockPos head = feet.up();
+        BlockPos ground = feet.down();
+        // Ground must be solid, feet and head must be non-solid and not dangerous
+        if (world.getBlockState(ground).isSolidBlock(world, ground)
+                && !world.getBlockState(feet).isSolidBlock(world, feet)
+                && !world.getBlockState(head).isSolidBlock(world, head)) {
+            // Also check not standing in fire, lava, or cactus
+            net.minecraft.block.Block feetBlock = world.getBlockState(feet).getBlock();
+            net.minecraft.block.Block groundBlock = world.getBlockState(ground).getBlock();
+            if (feetBlock == net.minecraft.block.Blocks.LAVA) return false;
+            if (feetBlock == net.minecraft.block.Blocks.FIRE) return false;
+            if (feetBlock == net.minecraft.block.Blocks.CACTUS) return false;
+            if (groundBlock == net.minecraft.block.Blocks.LAVA) return false;
+            if (groundBlock instanceof net.minecraft.block.CactusBlock) return false;
+            return true;
+        }
+        return false;
     }
 
     // --- Helpers ---
