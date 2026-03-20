@@ -92,16 +92,11 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                 if (isGlowstone) {
                     long lightRoll = hash(worldX * 53 + 7, worldZ * 47 + 13);
                     int roll = (int)(Math.abs(lightRoll) % 100);
-                    if (roll < 95) {
-                        // 95% ON
+                    if (roll < 98) {
+                        // 98% ON (flickering determined by block entity in generateFeatures)
                         ceilingBlock = Szar.BACKROOMS_LIGHT.getDefaultState()
                                 .with(BackroomsLightBlock.LIGHT_STATE,
                                         BackroomsLightBlock.LightState.ON);
-                    } else if (roll < 98) {
-                        // 3% FLICKERING_ON
-                        ceilingBlock = Szar.BACKROOMS_LIGHT.getDefaultState()
-                                .with(BackroomsLightBlock.LIGHT_STATE,
-                                        BackroomsLightBlock.LightState.FLICKERING_ON);
                     } else {
                         // 2% missing — ceiling block, no light
                         ceilingBlock = Szar.CEILING.getDefaultState();
@@ -273,9 +268,10 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
         int chunkX = chunk.getPos().getStartX();
         int chunkZ = chunk.getPos().getStartZ();
 
-        // Initialize wall block entities
         for (int lx = 0; lx < 16; lx++) {
             for (int lz = 0; lz < 16; lz++) {
+
+                // Initialize wall block entities
                 for (int y = 0; y < 64; y++) {
                     mutable.set(chunkX + lx, y, chunkZ + lz);
                     if (world.getBlockState(mutable).getBlock() instanceof WallBlock) {
@@ -286,16 +282,20 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                         }
                     }
                 }
-                // Inside the lx/lz loop in generateFeatures, after the wall block section:
-                mutable.set(chunkX + lx, 9, chunkZ + lz); // CEILING_Y = 9
+
+                // Initialize light block entities
+                mutable.set(chunkX + lx, 9, chunkZ + lz);
                 BlockState lightState = world.getBlockState(mutable);
                 if (lightState.getBlock() instanceof BackroomsLightBlock) {
-                    if (world.getBlockEntity(mutable) == null) {
-                        world.setBlockState(mutable, lightState, Block.NOTIFY_ALL);
-                    }
-                    if (world.getBlockEntity(mutable) instanceof BackroomsLightBlockEntity light) {
+                    // Always re-set to force block entity creation — no null check needed
+                    world.setBlockState(mutable, lightState, Block.NOTIFY_ALL);
+                    BlockPos immutable = mutable.toImmutable();
+                    if (world.getBlockEntity(immutable) instanceof BackroomsLightBlockEntity light) {
+                        long typeRoll = hash(chunkX + lx, chunkZ + lz);
+                        light.isFlickering = (Math.abs(typeRoll) % 10) >= 8;
                         light.flickerOffset = (int)(Math.abs(hash(chunkX + lx, chunkZ + lz)) % 100);
-                        light.flickerTimer = light.flickerOffset; // stagger initial timers
+                        light.flickerTimer = light.flickerOffset;
+                        light.brightness = 1.0f;
                         light.markDirty();
                     }
                 }

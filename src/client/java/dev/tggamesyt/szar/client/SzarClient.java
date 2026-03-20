@@ -367,6 +367,9 @@ public class SzarClient implements ClientModInitializer {
                 Szar.TRACKER_BLOCK_ENTITY,
                 TGTrackerBlockRenderer::new
         );
+        BlockEntityRendererFactories.register(
+                Szar.BACKROOMS_LIGHT_ENTITY,
+                BackroomsLightBlockEntityRenderer::new);
         HandledScreens.register(Szar.SLOT_MACHINE_SCREEN_HANDLER_TYPE, SlotMachineScreen::new);
         HandledScreens.register(Szar.ROULETTE_SCREEN_HANDLER_TYPE, RouletteScreen::new);
         EntityRendererRegistry.register(Szar.BULLET, BulletRenderer::new);

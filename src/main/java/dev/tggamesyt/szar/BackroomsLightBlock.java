@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 public class BackroomsLightBlock extends BlockWithEntity {
 
     public enum LightState implements StringIdentifiable {
-        ON, OFF, FLICKERING_ON, FLICKERING_OFF;
+        ON, OFF;
 
         @Override
         public String asString() {
@@ -59,9 +59,6 @@ public class BackroomsLightBlock extends BlockWithEntity {
 
     // Light level based on state
     public static int getLightLevel(BlockState state) {
-        return switch (state.get(LIGHT_STATE)) {
-            case ON, FLICKERING_ON -> 15;
-            case OFF, FLICKERING_OFF -> 0;
-        };
+        return state.get(LIGHT_STATE) == LightState.ON ? 15 : 0;
     }
 }

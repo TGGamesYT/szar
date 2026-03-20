@@ -10,12 +10,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class BackroomsLightBlockEntity extends BlockEntity {
-
+    public float brightness = 1.0f; // 0.0 = black, 1.0 = full bright
     // Random offset so each light flickers at different times
     public int flickerOffset = 0;
     // How many ticks until next state toggle during flicker
     public int flickerTimer = 0;
     private boolean initialized = false;
+    public boolean isFlickering = false; // true for lights generated as flickering type
 
     public BackroomsLightBlockEntity(BlockPos pos, BlockState state) {
         super(Szar.BACKROOMS_LIGHT_ENTITY, pos, state);
@@ -38,6 +39,7 @@ public class BackroomsLightBlockEntity extends BlockEntity {
         nbt.putInt("FlickerOffset", flickerOffset);
         nbt.putInt("FlickerTimer", flickerTimer);
         nbt.putBoolean("Initialized", initialized);
+        nbt.putFloat("Brightness", brightness);
     }
 
     @Override
@@ -46,6 +48,7 @@ public class BackroomsLightBlockEntity extends BlockEntity {
         flickerOffset = nbt.getInt("FlickerOffset");
         flickerTimer = nbt.getInt("FlickerTimer");
         initialized = nbt.getBoolean("Initialized");
+        brightness = nbt.getFloat("Brightness");
     }
 
     @Override
