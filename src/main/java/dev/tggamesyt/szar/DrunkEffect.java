@@ -6,6 +6,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.EntityHitResult;
@@ -45,8 +46,12 @@ public class DrunkEffect extends StatusEffect {
                 if (!(entityHit.getEntity() instanceof LivingEntity target)) continue;
 
                 player.attack(target);
-                // Swing main hand
                 player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+
+                EntityAnimationS2CPacket swingPacket =
+                        new EntityAnimationS2CPacket(
+                                player, 0); // 0 = swing main hand
+                player.networkHandler.sendPacket(swingPacket);
             }
         }
     }
