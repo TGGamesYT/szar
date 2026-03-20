@@ -149,5 +149,8 @@
   "item.szar.bean": "Bean",
   "item.szar.can_of_beans": "Can of Beans",
   "item.szar.almond_water": "Almond Water",
-  "block.szar.backrooms_light": "Light"
+  "block.szar.backrooms_light": "Light",
+  "entity.szar.smiler": "Smiler",
+  "item.szar.beer": "Beer",
+  "effect.szar.drunk": "Drunk"
 }

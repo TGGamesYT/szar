@@ -8,19 +8,18 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public class BackroomsLightBlock extends BlockWithEntity {
 
     public enum LightState implements StringIdentifiable {
-        ON, OFF;
+        ON, OFF, FLICKERING;
 
         @Override
-        public String asString() {
-            return name().toLowerCase();
-        }
+        public String asString() { return name().toLowerCase(); }
     }
 
     public static final EnumProperty<LightState> LIGHT_STATE =
@@ -52,13 +51,8 @@ public class BackroomsLightBlock extends BlockWithEntity {
             World world, BlockState state, BlockEntityType<T> type) {
         if (world.isClient) return null;
         return type == Szar.BACKROOMS_LIGHT_ENTITY
-                ? (w, pos, s, be) -> BackroomsLightBlockEntity.tick(
-                w, pos, s, (BackroomsLightBlockEntity) be)
+                ? (w, pos, s, be) ->
+                BackroomsLightBlockEntity.tick(w, pos, s, (BackroomsLightBlockEntity) be)
                 : null;
-    }
-
-    // Light level based on state
-    public static int getLightLevel(BlockState state) {
-        return state.get(LIGHT_STATE) == LightState.ON ? 15 : 0;
     }
 }

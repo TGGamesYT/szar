@@ -1,8 +1,7 @@
 {
   "variants": {
-    "light_state=on":           { "model": "szar:block/backrooms_light_on" },
-    "light_state=off":          { "model": "szar:block/backrooms_light_off" },
-    "light_state=flickering_on":  { "model": "szar:block/backrooms_light_on" },
-    "light_state=flickering_off": { "model": "szar:block/backrooms_light_off" }
+    "light_state=on":        { "model": "szar:block/backrooms_light_on" },
+    "light_state=off":       { "model": "szar:block/backrooms_light_off" },
+    "light_state=flickering": { "model": "szar:block/backrooms_light_on" }
   }
 }

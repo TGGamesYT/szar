@@ -93,6 +93,8 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        SmilerEffectRenderer.register();
+        EntityRendererRegistry.register(Szar.SMILER_ENTITY_TYPE, SmilerRenderer::new);
         ClientPlayNetworking.registerGlobalReceiver(OPEN_DETONATOR_SCREEN, (client, handler, buf, responseSender) -> {
             client.execute(() -> client.setScreen(new CoordInputScreen()));
         });

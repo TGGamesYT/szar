@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " W ",
+    "WPW",
+    " W "
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:wheat"
+    },
+    "P": {
+      "item": "minecraft:potion"
+    }
+  },
+  "result": {
+    "item": "szar:beer",
+    "count": 1
+  }
+}

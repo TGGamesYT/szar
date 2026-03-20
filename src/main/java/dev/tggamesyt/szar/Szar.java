@@ -6,6 +6,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -369,6 +371,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.WALL_BOTTOM_ITEM);
                         entries.add(Szar.CEILING_ITEM);
                         entries.add(Szar.PLASTIC_ITEM);
+                        entries.add(Szar.BACKROOMS_LIGHT_ITEM);
                         entries.add(Szar.BEAN);
                         entries.add(Szar.CAN_OF_BEANS);
                         entries.add(Szar.ALMOND_WATER);
@@ -389,6 +392,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
                         entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
+                        entries.add(Szar.BEER);
                         // war guys
                         entries.add(Szar.HITTER_SPAWNEGG);
                         entries.add(Szar.NAZI_SPAWNEGG);
@@ -793,6 +797,10 @@ public class Szar implements ModInitializer {
                 TERRORIST_ENTITY_TYPE,
                 IslamTerrorist.createAttributes()
         );
+        FabricDefaultAttributeRegistry.register(
+                SMILER_ENTITY_TYPE,
+                SmilerEntity.createAttributes()
+        );
         SpawnRestriction.register(
                 Szar.PoliceEntityType,
                 SpawnRestriction.Location.ON_GROUND,      // spawn on solid blocks
@@ -1175,6 +1183,30 @@ public class Szar implements ModInitializer {
         );
         BackroomsBarrelManager.register();
         BackroomsLightManager.register();
+        SmilerSpawnManager.register();
+        // 🔄 Dimension change
+        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
+            if (origin.getRegistryKey() == Szar.BACKROOMS_KEY) {
+                restoreIfNeeded(player);
+            }
+        });
+
+        // 💀 Death (handled on respawn copy)
+        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
+            if (!alive) {
+                restoreIfNeeded(newPlayer);
+            }
+        });
+
+        // 🔌 Join (failsafe)
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+
+            if (player.getWorld().getRegistryKey() != Szar.BACKROOMS_KEY) {
+                restoreIfNeeded(player);
+            }
+        });
+        ServerTickEvents.END_SERVER_TICK.register(DrunkEffect::tick);
     }
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
@@ -1213,7 +1245,7 @@ public class Szar implements ModInitializer {
             );
     public static final WallBlock WALL_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "wall"),
-            new WallBlock(AbstractBlock.Settings.create())
+            new WallBlock(AbstractBlock.Settings.create().strength(-1.0f, 3600000f))
     );
     public static final BlockEntityType<WallBlockEntity> WALL_BLOCK_ENTITY = Registry.register(
             Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "wall"),
@@ -1221,15 +1253,15 @@ public class Szar implements ModInitializer {
     );
     public static final Block WALL_BOTTOM_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "wall_bottom"),
-            new Block(AbstractBlock.Settings.create())
+            new Block(AbstractBlock.Settings.create().strength(-1.0f, 3600000f))
     );
     public static final Block CEILING = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "ceiling"),
-            new Block(AbstractBlock.Settings.create())
+            new Block(AbstractBlock.Settings.create().strength(-1.0f, 3600000f))
     );
     public static final Block PLASTIC = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "plastic"),
-            new Block(AbstractBlock.Settings.create())
+            new Block(AbstractBlock.Settings.create().strength(-1.0f, 3600000f))
     );
     public static final Item WALL_ITEM = Registry.register(
             Registries.ITEM,
@@ -1805,14 +1837,18 @@ public class Szar implements ModInitializer {
     public static final Item ALMOND_WATER = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "almond_water"),
-            new AlmondWaterItem(new Item.Settings())
+            new AlmondWaterItem(new Item.Settings().maxCount(16))
     );
     public static final BackroomsLightBlock BACKROOMS_LIGHT = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "backrooms_light"),
             new BackroomsLightBlock(FabricBlockSettings.create()
-                    .nonOpaque()
-                    .luminance(state -> BackroomsLightBlock.getLightLevel(state))
-                    .strength(0.3f))
+                    .luminance(state -> {
+                        return switch (state.get(BackroomsLightBlock.LIGHT_STATE)) {
+                            case ON, FLICKERING -> 15;
+                            case OFF -> 0;
+                        };
+                    })
+                    .strength(-1.0f, 3600000f))
     );
 
     public static final BlockItem BACKROOMS_LIGHT_ITEM = Registry.register(
@@ -1827,6 +1863,25 @@ public class Szar implements ModInitializer {
                     FabricBlockEntityTypeBuilder.create(BackroomsLightBlockEntity::new,
                             BACKROOMS_LIGHT).build()
             );
+
+    public static final EntityType<SmilerEntity> SMILER_ENTITY_TYPE = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier(MOD_ID, "smiler"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, SmilerEntity::new)
+                    .dimensions(EntityDimensions.fixed(1.0f, 1.5f))
+                    .build()
+    );
+    public static final DrunkEffect DRUNK_EFFECT = Registry.register(
+            Registries.STATUS_EFFECT,
+            new Identifier(MOD_ID, "drunk"),
+            new DrunkEffect()
+    );
+    public static final Item BEER = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "beer"),
+            new BeerItem(new Item.Settings().maxCount(16))
+    );
+
     public static final SoundEvent BAITER =
             SoundEvent.of(new Identifier(MOD_ID, "baiter"));
     public static final Item BAITER_DISC = Registry.register(
@@ -2175,6 +2230,42 @@ public class Szar implements ModInitializer {
         float pitch = 0.9F + player.getWorld().getRandom().nextFloat() * 0.2F; // 0.9 to 1.1
         player.getWorld().playSound(null, player.getBlockPos(),
                 Szar.REVOLVER_CLICK2_SOUND, SoundCategory.PLAYERS, 1f, pitch);
+    }
+
+    private static void restoreIfNeeded(ServerPlayerEntity player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+
+        ServerWorld overworld = server.getWorld(World.OVERWORLD);
+        if (overworld == null) return;
+
+        PortalDataState state = PortalDataState.getOrCreate(overworld);
+        NbtCompound tag = state.getOrCreatePlayerData(player.getUuid());
+
+        // 🔑 THIS is the only condition that matters
+        if (!tag.contains("SzarSavedInventory")) return;
+
+        // ✅ Restore inventory
+        PortalBlock.restoreInventory(player, server);
+
+        // 🧹 CLEANUP tracker using YOUR existing data
+        if (tag.contains("OwnerTrackerX")) {
+            BlockPos pos = new BlockPos(
+                    tag.getInt("OwnerTrackerX"),
+                    tag.getInt("OwnerTrackerY"),
+                    tag.getInt("OwnerTrackerZ")
+            );
+
+            if (overworld.getBlockEntity(pos) instanceof TrackerBlockEntity tracker) {
+                TrackerBlockEntity root = tracker.getRoot(overworld);
+                root.removePlayer(player.getUuid());
+            }
+        }
+
+        // 🧽 Clean up leftover data
+        tag.remove("OwnerTrackerX");
+        tag.remove("OwnerTrackerY");
+        tag.remove("OwnerTrackerZ");
     }
 }
 

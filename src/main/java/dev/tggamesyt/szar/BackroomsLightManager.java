@@ -1,16 +1,15 @@
 package dev.tggamesyt.szar;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class BackroomsLightManager {
 
@@ -19,6 +18,7 @@ public class BackroomsLightManager {
     public static GlobalEvent currentEvent = GlobalEvent.NONE;
     public static int eventTimer = 0;
     public static int cooldownTimer = 3600;
+    public static int globalFlickerTimer = 0;
 
     private static final int FLICKER_DURATION_MIN = 60;
     private static final int FLICKER_DURATION_MAX = 160;
@@ -34,25 +34,45 @@ public class BackroomsLightManager {
         ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
         if (backrooms == null) return;
 
+        globalFlickerTimer++;
+
+        // Every 20 ticks, fix any lights in wrong state for current event
+        if (globalFlickerTimer % 20 == 0) {
+            if (currentEvent == GlobalEvent.BLACKOUT) {
+                forEachLightEntity(backrooms, (entity, state, pos) -> {
+                    if (state.get(BackroomsLightBlock.LIGHT_STATE)
+                            != BackroomsLightBlock.LightState.OFF) {
+                        backrooms.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                                BackroomsLightBlock.LightState.OFF), Block.NOTIFY_ALL);
+                    }
+                });
+            } else if (currentEvent == GlobalEvent.NONE) {
+                forEachLightEntity(backrooms, (entity, state, pos) -> {
+                    if (state.get(BackroomsLightBlock.LIGHT_STATE) == BackroomsLightBlock.LightState.OFF) {
+                        BackroomsLightBlock.LightState restore = entity.isFlickering
+                                ? BackroomsLightBlock.LightState.FLICKERING
+                                : BackroomsLightBlock.LightState.ON;
+                        backrooms.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                                restore), Block.NOTIFY_ALL);
+                    }
+                });
+            }
+        }
+
         if (currentEvent != GlobalEvent.NONE) {
             eventTimer--;
-            if (eventTimer <= 0) {
-                endEvent(backrooms);
-            }
+            if (eventTimer <= 0) endEvent(backrooms);
         } else {
             cooldownTimer--;
             if (cooldownTimer <= 0) {
                 int roll = backrooms.random.nextInt(100);
-                if (roll < 30) {
-                    startBlackout(backrooms);
-                } else if (roll < 63) {
-                    startFlicker(backrooms);
-                } else {
-                    cooldownTimer = EVENT_COOLDOWN;
-                }
+                if (roll < 30) startBlackout(backrooms);
+                else if (roll < 63) startFlicker(backrooms);
+                else cooldownTimer = EVENT_COOLDOWN;
             }
         }
     }
+
 
     private static void startFlicker(ServerWorld world) {
         currentEvent = GlobalEvent.FLICKER;
@@ -65,65 +85,66 @@ public class BackroomsLightManager {
         currentEvent = GlobalEvent.BLACKOUT;
         eventTimer = BLACKOUT_MIN + world.random.nextInt(BLACKOUT_MAX - BLACKOUT_MIN);
         cooldownTimer = EVENT_COOLDOWN;
-        // Set all lights to brightness 0
-        forEachLightEntity(world, entity -> {
-            entity.brightness = 0.0f;
-            entity.markDirty();
+        forEachLightEntity(world, (entity, state, pos) -> {
+            if (state.get(BackroomsLightBlock.LIGHT_STATE) != BackroomsLightBlock.LightState.OFF) {
+                world.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                        BackroomsLightBlock.LightState.OFF), Block.NOTIFY_ALL);
+            }
         });
     }
 
     private static void endEvent(ServerWorld world) {
-        // Restore all lights to full brightness
-        forEachLightEntity(world, entity -> {
-            entity.brightness = 1.0f;
-            entity.markDirty();
-        });
         currentEvent = GlobalEvent.NONE;
         eventTimer = 0;
         cooldownTimer = EVENT_COOLDOWN;
-    }
-
-    // Called per-light from BackroomsLightBlockEntity.tick
-    public static void tickLight(World world, BlockPos pos, BlockState state,
-                                 BackroomsLightBlockEntity entity) {
-        if (currentEvent == GlobalEvent.BLACKOUT) return;
-
-        BackroomsLightBlock.LightState ls = state.get(BackroomsLightBlock.LIGHT_STATE);
-        if (ls == BackroomsLightBlock.LightState.OFF) return;
-
-        boolean inFlickerEvent = currentEvent == GlobalEvent.FLICKER;
-
-        // Always-flickering lights tick regardless of event
-        // During flicker event, all ON lights also flicker
-        if (!entity.isFlickering && !inFlickerEvent) {
-            // Normal ON light, not in event — ensure full brightness
-            if (entity.brightness != 1.0f) {
-                entity.brightness = 1.0f;
-                entity.markDirty();
+        forEachLightEntity(world, (entity, state, pos) -> {
+            BackroomsLightBlock.LightState ls = state.get(BackroomsLightBlock.LIGHT_STATE);
+            // Restore any light that was turned off by an event
+            if (ls == BackroomsLightBlock.LightState.OFF) {
+                BackroomsLightBlock.LightState restore = entity.isFlickering
+                        ? BackroomsLightBlock.LightState.FLICKERING
+                        : BackroomsLightBlock.LightState.ON;
+                world.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                        restore), Block.NOTIFY_ALL);
             }
-            return;
-        }
-
-        entity.flickerTimer--;
-        if (entity.flickerTimer > 0) return;
-
-        // Random new brightness and timer
-        float newBrightness;
-        if (world.random.nextFloat() < 0.3f) {
-            // 30% chance of a dim flicker
-            newBrightness = 0.1f + world.random.nextFloat() * 0.4f;
-        } else {
-            // 70% chance of full or near-full
-            newBrightness = 0.7f + world.random.nextFloat() * 0.3f;
-        }
-
-        entity.brightness = newBrightness;
-        entity.flickerTimer = 2 + world.random.nextInt(8 + (entity.flickerOffset % 5));
-        entity.markDirty();
+        });
     }
 
-    private static void forEachLightEntity(ServerWorld world,
-                                           Consumer<BackroomsLightBlockEntity> consumer) {
+    // Called from generateFeatures when a new chunk loads — apply current event state
+    public static void applyCurrentEventToChunk(ServerWorld world, WorldChunk chunk) {
+        if (currentEvent == GlobalEvent.NONE) return;
+
+        int cx = chunk.getPos().getStartX();
+        int cz = chunk.getPos().getStartZ();
+        BlockPos.Mutable mutable = new BlockPos.Mutable();
+
+        for (int lx = 0; lx < 16; lx++) {
+            for (int lz = 0; lz < 16; lz++) {
+                mutable.set(cx + lx, 9, cz + lz);
+                BlockPos immutable = mutable.toImmutable();
+                BlockState state = world.getBlockState(immutable);
+                if (!(state.getBlock() instanceof BackroomsLightBlock)) continue;
+                if (!(world.getBlockEntity(immutable) instanceof BackroomsLightBlockEntity entity)) continue;
+
+                if (currentEvent == GlobalEvent.BLACKOUT) {
+                    if (state.get(BackroomsLightBlock.LIGHT_STATE)
+                            != BackroomsLightBlock.LightState.OFF) {
+                        world.setBlockState(immutable, state.with(
+                                BackroomsLightBlock.LIGHT_STATE,
+                                BackroomsLightBlock.LightState.OFF), Block.NOTIFY_ALL);
+                    }
+                }
+                // FLICKER is handled per-tick so no chunk-load action needed
+            }
+        }
+    }
+
+    @FunctionalInterface
+    interface LightConsumer {
+        void accept(BackroomsLightBlockEntity entity, BlockState state, BlockPos pos);
+    }
+
+    private static void forEachLightEntity(ServerWorld world, LightConsumer consumer) {
         for (WorldChunk chunk : getLoadedChunks(world)) {
             int cx = chunk.getPos().getStartX();
             int cz = chunk.getPos().getStartZ();
@@ -131,9 +152,12 @@ public class BackroomsLightManager {
             for (int lx = 0; lx < 16; lx++) {
                 for (int lz = 0; lz < 16; lz++) {
                     mutable.set(cx + lx, 9, cz + lz);
-                    if (world.getBlockEntity(mutable.toImmutable())
+                    BlockPos immutable = mutable.toImmutable();
+                    BlockState state = world.getBlockState(immutable);
+                    if (state.getBlock() instanceof BackroomsLightBlock
+                            && world.getBlockEntity(immutable)
                             instanceof BackroomsLightBlockEntity entity) {
-                        consumer.accept(entity);
+                        consumer.accept(entity, state, immutable);
                     }
                 }
             }
@@ -159,21 +183,23 @@ public class BackroomsLightManager {
     }
 
     public static void forceRestoreAllLights(ServerWorld world) {
-        forEachLightEntity(world, entity -> {
-            entity.brightness = 1.0f;
-            entity.markDirty();
-        });
         currentEvent = GlobalEvent.NONE;
         eventTimer = 0;
         cooldownTimer = EVENT_COOLDOWN;
+        forEachLightEntity(world, (entity, state, pos) -> {
+            BackroomsLightBlock.LightState restore = entity.isFlickering
+                    ? BackroomsLightBlock.LightState.FLICKERING
+                    : BackroomsLightBlock.LightState.ON;
+            world.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                    restore), Block.NOTIFY_ALL);
+        });
     }
 
     public static void forceBlackout(ServerWorld world) {
-        forEachLightEntity(world, entity -> {
-            entity.brightness = 0.0f;
-            entity.markDirty();
-        });
         currentEvent = GlobalEvent.BLACKOUT;
         eventTimer = 3600;
+        forEachLightEntity(world, (entity, state, pos) ->
+                world.setBlockState(pos, state.with(BackroomsLightBlock.LIGHT_STATE,
+                        BackroomsLightBlock.LightState.OFF), Block.NOTIFY_ALL));
     }
 }

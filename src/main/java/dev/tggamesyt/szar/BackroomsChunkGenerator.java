@@ -9,6 +9,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryCodecs;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
@@ -19,6 +20,7 @@ import net.minecraft.world.biome.BiomeKeys;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.FixedBiomeSource;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
@@ -93,12 +95,10 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                     long lightRoll = hash(worldX * 53 + 7, worldZ * 47 + 13);
                     int roll = (int)(Math.abs(lightRoll) % 100);
                     if (roll < 98) {
-                        // 98% ON (flickering determined by block entity in generateFeatures)
                         ceilingBlock = Szar.BACKROOMS_LIGHT.getDefaultState()
                                 .with(BackroomsLightBlock.LIGHT_STATE,
                                         BackroomsLightBlock.LightState.ON);
                     } else {
-                        // 2% missing — ceiling block, no light
                         ceilingBlock = Szar.CEILING.getDefaultState();
                     }
                 } else {
@@ -283,19 +283,23 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                     }
                 }
 
-                // Initialize light block entities
+                // Initialize light block entities — set mutable explicitly to Y=9
                 mutable.set(chunkX + lx, 9, chunkZ + lz);
                 BlockState lightState = world.getBlockState(mutable);
                 if (lightState.getBlock() instanceof BackroomsLightBlock) {
-                    // Always re-set to force block entity creation — no null check needed
                     world.setBlockState(mutable, lightState, Block.NOTIFY_ALL);
                     BlockPos immutable = mutable.toImmutable();
                     if (world.getBlockEntity(immutable) instanceof BackroomsLightBlockEntity light) {
                         long typeRoll = hash(chunkX + lx, chunkZ + lz);
                         light.isFlickering = (Math.abs(typeRoll) % 10) >= 8;
-                        light.flickerOffset = (int)(Math.abs(hash(chunkX + lx, chunkZ + lz)) % 100);
-                        light.flickerTimer = light.flickerOffset;
+                        light.flickerOffset = (int)(Math.abs(hash(chunkX + lx, chunkZ + lz)) % 1000);
                         light.brightness = 1.0f;
+                        if (light.isFlickering) {
+                            world.setBlockState(immutable,
+                                    world.getBlockState(immutable).with(BackroomsLightBlock.LIGHT_STATE,
+                                            BackroomsLightBlock.LightState.FLICKERING),
+                                    Block.NOTIFY_ALL);
+                        }
                         light.markDirty();
                     }
                 }
@@ -323,6 +327,12 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
                     te.markDirty();
                 }
             }
+        }
+
+        // At the end of generateFeatures, after all block entity init:
+        if (world instanceof ServerWorld sw) {
+            WorldChunk wc = sw.getChunk(chunk.getPos().x, chunk.getPos().z);
+            BackroomsLightManager.applyCurrentEventToChunk(sw, wc);
         }
     }
 }

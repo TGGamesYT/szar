@@ -202,5 +202,29 @@
         "stream": true
       }
     ]
+  },
+  "real": {
+    "sounds": [
+      {
+        "name": "szar:real",
+        "stream": true
+      }
+    ]
+  },
+  "scary": {
+    "sounds": [
+      {
+        "name": "szar:scary",
+        "stream": true
+      }
+    ]
+  },
+  "flashbang": {
+    "sounds": [
+      {
+        "name": "szar:flashbang",
+        "stream": true
+      }
+    ]
   }
 }

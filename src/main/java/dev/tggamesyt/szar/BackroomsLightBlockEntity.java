@@ -10,13 +10,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class BackroomsLightBlockEntity extends BlockEntity {
-    public float brightness = 1.0f; // 0.0 = black, 1.0 = full bright
-    // Random offset so each light flickers at different times
+    public boolean isFlickering = false;
+    // Used by renderer — offset into the global flicker timer
     public int flickerOffset = 0;
-    // How many ticks until next state toggle during flicker
-    public int flickerTimer = 0;
+    // Visual brightness — only changed during blackout, not during flicker
+    public float brightness = 1.0f;
     private boolean initialized = false;
-    public boolean isFlickering = false; // true for lights generated as flickering type
 
     public BackroomsLightBlockEntity(BlockPos pos, BlockState state) {
         super(Szar.BACKROOMS_LIGHT_ENTITY, pos, state);
@@ -25,36 +24,32 @@ public class BackroomsLightBlockEntity extends BlockEntity {
     public static void tick(World world, BlockPos pos, BlockState state,
                             BackroomsLightBlockEntity entity) {
         if (!entity.initialized) {
-            entity.flickerOffset = world.random.nextInt(100);
+            entity.flickerOffset = world.random.nextInt(1000);
             entity.initialized = true;
             entity.markDirty();
         }
-
-        BackroomsLightManager.tickLight(world, pos, state, entity);
     }
 
     @Override
     public void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
         nbt.putInt("FlickerOffset", flickerOffset);
-        nbt.putInt("FlickerTimer", flickerTimer);
-        nbt.putBoolean("Initialized", initialized);
         nbt.putFloat("Brightness", brightness);
+        nbt.putBoolean("Initialized", initialized);
+        nbt.putBoolean("IsFlickering", isFlickering);
     }
 
     @Override
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
         flickerOffset = nbt.getInt("FlickerOffset");
-        flickerTimer = nbt.getInt("FlickerTimer");
-        initialized = nbt.getBoolean("Initialized");
         brightness = nbt.getFloat("Brightness");
+        initialized = nbt.getBoolean("Initialized");
+        isFlickering = nbt.getBoolean("IsFlickering");
     }
 
     @Override
-    public NbtCompound toInitialChunkDataNbt() {
-        return createNbt();
-    }
+    public NbtCompound toInitialChunkDataNbt() { return createNbt(); }
 
     @Override
     public Packet<ClientPlayPacketListener> toUpdatePacket() {
