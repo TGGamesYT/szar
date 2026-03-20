@@ -20,23 +20,33 @@ public class DrunkEffect extends StatusEffect {
 
     static void tick(MinecraftServer server) {
         for (var world : server.getWorlds()) {
-            // Every 20 ticks = 1 second
             if (world.getTime() % 20 != 0) continue;
 
             for (ServerPlayerEntity player : world.getPlayers()) {
                 if (!player.hasStatusEffect(Szar.DRUNK_EFFECT)) continue;
+                if (world.random.nextInt(5) >= 2) continue; // 2 in 5 chance
 
-                // 1 in 5 chance
-                if (world.random.nextInt(5) != 0) continue;
+                double reach = 4.5;
+                net.minecraft.util.math.Vec3d eyePos = player.getEyePos();
+                net.minecraft.util.math.Vec3d lookVec = player.getRotationVector();
+                net.minecraft.util.math.Vec3d endPos = eyePos.add(lookVec.multiply(reach));
 
-                // Raycast to find what the player is looking at
-                HitResult hit = player.raycast(4.5, 0, false);
-                if (hit.getType() != HitResult.Type.ENTITY) continue;
-                if (!(hit instanceof EntityHitResult entityHit)) continue;
+                EntityHitResult entityHit = net.minecraft.entity.projectile.ProjectileUtil
+                        .getEntityCollision(
+                                world,
+                                player,
+                                eyePos,
+                                endPos,
+                                player.getBoundingBox().stretch(lookVec.multiply(reach)).expand(1.0),
+                                e -> e instanceof LivingEntity && e != player && !e.isSpectator()
+                        );
+
+                if (entityHit == null) continue;
                 if (!(entityHit.getEntity() instanceof LivingEntity target)) continue;
 
-                // Hit the entity as if the player attacked it
                 player.attack(target);
+                // Swing main hand
+                player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
             }
         }
     }
