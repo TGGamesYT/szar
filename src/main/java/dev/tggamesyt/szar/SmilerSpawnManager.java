@@ -26,7 +26,7 @@ public class SmilerSpawnManager {
     }
 
     private static void tick(MinecraftServer server) {
-        ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
+        ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_LEVEL_KEY);
         if (backrooms == null) return;
 
         // Only spawn during blackout

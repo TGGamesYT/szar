@@ -93,6 +93,10 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(Szar.DRUNK_TYPE_PACKET, (client, handler, buf, responseSender) -> {
+            String typeName = buf.readString();
+            client.execute(() -> DrunkEffect.setDisplayType(typeName));
+        });
         SmilerEffectRenderer.register();
         EntityRendererRegistry.register(Szar.SMILER_ENTITY_TYPE, SmilerRenderer::new);
         ClientPlayNetworking.registerGlobalReceiver(OPEN_DETONATOR_SCREEN, (client, handler, buf, responseSender) -> {

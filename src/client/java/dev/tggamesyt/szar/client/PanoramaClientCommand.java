@@ -21,8 +21,11 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 public class PanoramaClientCommand {
 
     static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        dispatcher.register(literal("takepanorama")
-                .executes(PanoramaClientCommand::execute));
+        dispatcher.register(
+                literal("szar")
+                        .then(literal("takepanorama")
+                                .executes(PanoramaClientCommand::execute))
+        );
     }
 
     private static int execute(CommandContext<FabricClientCommandSource> context) {

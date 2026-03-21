@@ -6,6 +6,7 @@
   "mixins": [
     "CraftingScreenHandlerMixin",
     "CraftingScreenHandlerMixin2",
+    "LevelSummaryMixin",
     "LivingEntityFallDamageMixin",
     "NoClipMixin",
     "PlaneBlockInteractionMixin",

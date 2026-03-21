@@ -14,7 +14,6 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -43,12 +42,7 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.*;
-import net.minecraft.loot.LootPool;
-import net.minecraft.loot.entry.ItemEntry;
-import net.minecraft.loot.function.SetCountLootFunction;
-import net.minecraft.loot.provider.number.ConstantLootNumberProvider;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.*;
@@ -71,17 +65,16 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.Heightmap;
-import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.YOffset;
 import net.minecraft.world.gen.feature.*;
@@ -93,9 +86,10 @@ import net.minecraft.world.gen.structure.StructureType;
 import net.minecraft.world.poi.PointOfInterestType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.jmx.Server;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
@@ -106,6 +100,7 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static final Identifier DRUNK_TYPE_PACKET = new Identifier(MOD_ID, "drunk_type");
     public static final Identifier OPEN_DETONATOR_SCREEN = new Identifier(MOD_ID, "open_coord_screen");
     public static final Identifier DETONATOR_INPUT = new Identifier(MOD_ID, "coord_input");
     public static final Identifier REVOLVER_SHOOT = new Identifier(MOD_ID, "revolver_shoot");
@@ -174,9 +169,16 @@ public class Szar implements ModInitializer {
     public static final Identifier PLAY_VIDEO =
             new Identifier(MOD_ID, "play_video");
     public static final Identifier CONFIG_SYNC = new Identifier(MOD_ID, "config_sync");
-
-    public static final RegistryKey<World> BACKROOMS_KEY = RegistryKey.of(
+    public static final RegistryKey<DimensionOptions> BACKROOMS_KEY = RegistryKey.of(
+            RegistryKeys.DIMENSION,
+            new Identifier(MOD_ID, "backrooms")
+    );
+    public static final RegistryKey<World> BACKROOMS_LEVEL_KEY = RegistryKey.of(
             RegistryKeys.WORLD,
+            new Identifier(MOD_ID, "backrooms")
+    );
+    public static final RegistryKey<DimensionType> BACKROOMS_DIM_TYPE = RegistryKey.of(
+            RegistryKeys.DIMENSION_TYPE,
             new Identifier(MOD_ID, "backrooms")
     );
     public static final Block SZAR_BLOCK =
@@ -946,121 +948,138 @@ public class Szar implements ModInitializer {
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(
-                    LiteralArgumentBuilder.<ServerCommandSource>literal("ny")
+                    LiteralArgumentBuilder.<ServerCommandSource>literal("szar")
                             .requires(context -> context.hasPermissionLevel(2))
-                            .executes(context -> {
-                                ServerCommandSource source = context.getSource();
-                                ServerWorld world = source.getWorld();
 
-                                // Kill all KidEntity instances
-                                int count = world.getEntitiesByType(NyanEntityType, e -> true).size();
-                                world.getEntitiesByType(NyanEntityType, e -> true).forEach(e -> e.kill());
-
-                                source.sendMessage(Text.literal("Killed " + count + " nyan cats."));
-                                return count;
-                            })
-            );
-            dispatcher.register(
-                    LiteralArgumentBuilder.<ServerCommandSource>literal("getnearestobeliskcore")
-                            .requires(context -> context.hasPermissionLevel(2))
-                            .executes(context -> {
-                                ServerCommandSource source = context.getSource();
-                                ServerWorld world = source.getWorld();
-
-                                assert source.getEntity() != null;
-                                ObeliskCoreBlockEntity nearest = findNearestObelisk(world, source.getEntity().getBlockPos(), 100);
-                                if (nearest != null) {
-                                    boolean hasPlane = nearest.hasPlaneMob();
-
-                                    source.sendMessage(Text.literal(
-                                            "HasPlane: " + hasPlane
-                                    ));
-                                    return 1;
-                                }
-                                return 0;
-                            })
-            );
-            dispatcher.register(
-                    LiteralArgumentBuilder.<ServerCommandSource>literal("backroomlights")
-                            .requires(context -> context.hasPermissionLevel(2))
-                            .then(CommandManager.literal("get")
+                            // /szar ny
+                            .then(CommandManager.literal("ny")
                                     .executes(context -> {
                                         ServerCommandSource source = context.getSource();
-                                        BackroomsLightManager.GlobalEvent event = BackroomsLightManager.currentEvent;
-                                        int timer = BackroomsLightManager.eventTimer;
-
-                                        String mode = switch (event) {
-                                            case NONE -> "normal";
-                                            case FLICKER -> "flickering";
-                                            case BLACKOUT -> "blackout";
-                                        };
-
-                                        if (event == BackroomsLightManager.GlobalEvent.NONE) {
-                                            int cooldown = BackroomsLightManager.cooldownTimer;
-                                            source.sendMessage(Text.literal(
-                                                    "Current mode: §anormal§r — next event check in §e"
-                                                            + cooldown + "§r ticks ("
-                                                            + (cooldown / 20) + "s)"
-                                            ));
-                                        } else {
-                                            source.sendMessage(Text.literal(
-                                                    "Current mode: §e" + mode + "§r — ends in §c"
-                                                            + timer + "§r ticks ("
-                                                            + (timer / 20) + "s)"
-                                            ));
-                                        }
-                                        return 1;
+                                        ServerWorld world = source.getWorld();
+                                        int count = world.getEntitiesByType(NyanEntityType, e -> true).size();
+                                        world.getEntitiesByType(NyanEntityType, e -> true).forEach(e -> e.kill());
+                                        source.sendMessage(Text.literal("Killed " + count + " nyan cats."));
+                                        return count;
                                     })
                             )
-                            .then(CommandManager.literal("set")
-                                    .then(CommandManager.literal("normal")
+
+                            // /szar getnearestobeliskcore
+                            .then(CommandManager.literal("getnearestobeliskcore")
+                                    .executes(context -> {
+                                        ServerCommandSource source = context.getSource();
+                                        ServerWorld world = source.getWorld();
+                                        assert source.getEntity() != null;
+                                        ObeliskCoreBlockEntity nearest = findNearestObelisk(world,
+                                                source.getEntity().getBlockPos(), 100);
+                                        if (nearest != null) {
+                                            boolean hasPlane = nearest.hasPlaneMob();
+                                            source.sendMessage(Text.literal("HasPlane: " + hasPlane));
+                                            return 1;
+                                        }
+                                        return 0;
+                                    })
+                            )
+
+                            // /szar backroomlights get/set
+                            .then(CommandManager.literal("backroomlights")
+                                    .then(CommandManager.literal("get")
                                             .executes(context -> {
                                                 ServerCommandSource source = context.getSource();
-                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
-                                                if (backrooms == null) {
-                                                    source.sendError(Text.literal("Backrooms dimension not found"));
-                                                    return 0;
+                                                BackroomsLightManager.GlobalEvent event = BackroomsLightManager.currentEvent;
+                                                int timer = BackroomsLightManager.eventTimer;
+                                                String mode = switch (event) {
+                                                    case NONE -> "normal";
+                                                    case FLICKER -> "flickering";
+                                                    case BLACKOUT -> "blackout";
+                                                };
+                                                if (event == BackroomsLightManager.GlobalEvent.NONE) {
+                                                    int cooldown = BackroomsLightManager.cooldownTimer;
+                                                    source.sendMessage(Text.literal(
+                                                            "Current mode: §anormal§r — next event check in §e"
+                                                                    + cooldown + "§r ticks (" + (cooldown / 20) + "s)"));
+                                                } else {
+                                                    source.sendMessage(Text.literal(
+                                                            "Current mode: §e" + mode + "§r — ends in §c"
+                                                                    + timer + "§r ticks (" + (timer / 20) + "s)"));
                                                 }
-                                                // End current event cleanly
-                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.NONE;
-                                                BackroomsLightManager.eventTimer = 0;
-                                                BackroomsLightManager.cooldownTimer = 3600;
-                                                // Restore all lights
-                                                BackroomsLightManager.forceRestoreAllLights(backrooms);
-                                                source.sendMessage(Text.literal("§aBackrooms lights set to normal"));
                                                 return 1;
                                             })
                                     )
-                                    .then(CommandManager.literal("flickering")
-                                            .executes(context -> {
-                                                ServerCommandSource source = context.getSource();
-                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
-                                                if (backrooms == null) {
-                                                    source.sendError(Text.literal("Backrooms dimension not found"));
-                                                    return 0;
-                                                }
-                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.FLICKER;
-                                                BackroomsLightManager.eventTimer = 3600; // 3 minutes default
-                                                BackroomsLightManager.cooldownTimer = 3600;
-                                                source.sendMessage(Text.literal("§eBackrooms lights set to flickering"));
-                                                return 1;
-                                            })
+                                    .then(CommandManager.literal("set")
+                                            .then(CommandManager.literal("normal")
+                                                    .executes(context -> {
+                                                        ServerCommandSource source = context.getSource();
+                                                        ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_LEVEL_KEY);
+                                                        if (backrooms == null) {
+                                                            source.sendError(Text.literal("Backrooms dimension not found"));
+                                                            return 0;
+                                                        }
+                                                        BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.NONE;
+                                                        BackroomsLightManager.eventTimer = 0;
+                                                        BackroomsLightManager.cooldownTimer = 3600;
+                                                        BackroomsLightManager.forceRestoreAllLights(backrooms);
+                                                        source.sendMessage(Text.literal("§aBackrooms lights set to normal"));
+                                                        return 1;
+                                                    })
+                                            )
+                                            .then(CommandManager.literal("flickering")
+                                                    .executes(context -> {
+                                                        ServerCommandSource source = context.getSource();
+                                                        ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_LEVEL_KEY);
+                                                        if (backrooms == null) {
+                                                            source.sendError(Text.literal("Backrooms dimension not found"));
+                                                            return 0;
+                                                        }
+                                                        BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.FLICKER;
+                                                        BackroomsLightManager.eventTimer = 3600;
+                                                        BackroomsLightManager.cooldownTimer = 3600;
+                                                        source.sendMessage(Text.literal("§eBackrooms lights set to flickering"));
+                                                        return 1;
+                                                    })
+                                            )
+                                            .then(CommandManager.literal("blackout")
+                                                    .executes(context -> {
+                                                        ServerCommandSource source = context.getSource();
+                                                        ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_LEVEL_KEY);
+                                                        if (backrooms == null) {
+                                                            source.sendError(Text.literal("Backrooms dimension not found"));
+                                                            return 0;
+                                                        }
+                                                        BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.BLACKOUT;
+                                                        BackroomsLightManager.eventTimer = 3600;
+                                                        BackroomsLightManager.cooldownTimer = 3600;
+                                                        BackroomsLightManager.forceBlackout(backrooms);
+                                                        source.sendMessage(Text.literal("§4Backrooms lights set to blackout"));
+                                                        return 1;
+                                                    })
+                                            )
                                     )
-                                    .then(CommandManager.literal("blackout")
-                                            .executes(context -> {
-                                                ServerCommandSource source = context.getSource();
-                                                ServerWorld backrooms = source.getServer().getWorld(Szar.BACKROOMS_KEY);
-                                                if (backrooms == null) {
-                                                    source.sendError(Text.literal("Backrooms dimension not found"));
-                                                    return 0;
-                                                }
-                                                BackroomsLightManager.currentEvent = BackroomsLightManager.GlobalEvent.BLACKOUT;
-                                                BackroomsLightManager.eventTimer = 3600;
-                                                BackroomsLightManager.cooldownTimer = 3600;
-                                                BackroomsLightManager.forceBlackout(backrooms);
-                                                source.sendMessage(Text.literal("§4Backrooms lights set to blackout"));
-                                                return 1;
-                                            })
+                            )
+
+                            // /szar drunk <targets> <type>
+                            .then(CommandManager.literal("drunk")
+                                    .then(CommandManager.argument("targets",
+                                                    net.minecraft.command.argument.EntityArgumentType.players())
+                                            .then(CommandManager.literal("aggressive")
+                                                    .executes(ctx -> applyDrunk(ctx,
+                                                            net.minecraft.command.argument.EntityArgumentType.getPlayers(ctx, "targets"),
+                                                            DrunkEffect.DrunkType.AGGRESSIVE)))
+                                            .then(CommandManager.literal("stumbling")
+                                                    .executes(ctx -> applyDrunk(ctx,
+                                                            net.minecraft.command.argument.EntityArgumentType.getPlayers(ctx, "targets"),
+                                                            DrunkEffect.DrunkType.STUMBLING)))
+                                            .then(CommandManager.literal("sleepy")
+                                                    .executes(ctx -> applyDrunk(ctx,
+                                                            net.minecraft.command.argument.EntityArgumentType.getPlayers(ctx, "targets"),
+                                                            DrunkEffect.DrunkType.SLEEPY)))
+                                            .then(CommandManager.literal("generous")
+                                                    .executes(ctx -> applyDrunk(ctx,
+                                                            net.minecraft.command.argument.EntityArgumentType.getPlayers(ctx, "targets"),
+                                                            DrunkEffect.DrunkType.GENEROUS)))
+                                            .then(CommandManager.literal("paranoid")
+                                                    .executes(ctx -> applyDrunk(ctx,
+                                                            net.minecraft.command.argument.EntityArgumentType.getPlayers(ctx, "targets"),
+                                                            DrunkEffect.DrunkType.PARANOID)))
                                     )
                             )
             );
@@ -1186,7 +1205,7 @@ public class Szar implements ModInitializer {
         SmilerSpawnManager.register();
         // 🔄 Dimension change
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
-            if (origin.getRegistryKey() == Szar.BACKROOMS_KEY) {
+            if (origin.getRegistryKey() == Szar.BACKROOMS_LEVEL_KEY) {
                 restoreIfNeeded(player);
             }
         });
@@ -1202,7 +1221,7 @@ public class Szar implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity player = handler.getPlayer();
 
-            if (player.getWorld().getRegistryKey() != Szar.BACKROOMS_KEY) {
+            if (player.getWorld().getRegistryKey() != Szar.BACKROOMS_LEVEL_KEY) {
                 restoreIfNeeded(player);
             }
         });
@@ -2266,6 +2285,27 @@ public class Szar implements ModInitializer {
         tag.remove("OwnerTrackerX");
         tag.remove("OwnerTrackerY");
         tag.remove("OwnerTrackerZ");
+    }
+
+    private static int applyDrunk(com.mojang.brigadier.context.CommandContext<ServerCommandSource> ctx,
+                                  java.util.Collection<ServerPlayerEntity> players,
+                                  DrunkEffect.DrunkType type) {
+        for (ServerPlayerEntity player : players) {
+            // Pre-assign the type before applying effect so tick() doesn't randomize it
+            DrunkEffect.preAssignType(player.getUuid(), type);
+
+            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    Szar.DRUNK_EFFECT, 2400, 0, false, true, true));
+
+            // Sync type to client immediately
+            String typeName = type.name().charAt(0) + type.name().substring(1).toLowerCase();
+            net.minecraft.network.PacketByteBuf buf =
+                    net.fabricmc.fabric.api.networking.v1.PacketByteBufs.create();
+            buf.writeString(typeName);
+            net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(
+                    player, Szar.DRUNK_TYPE_PACKET, buf);
+        }
+        return players.size();
     }
 }
 

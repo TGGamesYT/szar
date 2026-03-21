@@ -5,17 +5,13 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
@@ -58,13 +54,13 @@ public class PortalBlock extends Block {
             // Full player handling — inventory save, tracker registration, etc.
             if (world.getRegistryKey() == World.OVERWORLD) {
                 teleportToNether(player, tracker, server, pos);
-            } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
+            } else if (world.getRegistryKey() == Szar.BACKROOMS_LEVEL_KEY) {
                 teleportToOverworld(player, tracker, server);
             }
         } else {
             // Non-player entity — teleport only, no inventory or tracker registration
             if (world.getRegistryKey() == World.OVERWORLD) {
-                ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
+                ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_LEVEL_KEY);
                 if (backrooms == null) return;
 
                 // Save overworld entry coords for this entity
@@ -75,7 +71,7 @@ public class PortalBlock extends Block {
                 entity.teleport(backrooms, entity.getX(), safeY, entity.getZ(),
                         java.util.Set.of(), entity.getYaw(), entity.getPitch());
 
-            } else if (world.getRegistryKey() == Szar.BACKROOMS_KEY) {
+            } else if (world.getRegistryKey() == Szar.BACKROOMS_LEVEL_KEY) {
                 ServerWorld overworld = server.getWorld(World.OVERWORLD);
                 if (overworld == null) return;
 
@@ -134,7 +130,7 @@ public class PortalBlock extends Block {
         tracker.addPlayer(player.getUuid());
 
         // Teleport
-        ServerWorld nether = server.getWorld(Szar.BACKROOMS_KEY);
+        ServerWorld nether = server.getWorld(Szar.BACKROOMS_LEVEL_KEY);
         if (nether == null) return;
 
         double netherX = player.getX();
@@ -179,7 +175,7 @@ public class PortalBlock extends Block {
         netherTracker.removePlayer(player.getUuid());
 
         ServerWorld overworld = server.getWorld(World.OVERWORLD);
-        ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_KEY);
+        ServerWorld backrooms = server.getWorld(Szar.BACKROOMS_LEVEL_KEY);
 
         if (owTrackerPos != null && overworld != null) {
             if (overworld.getBlockEntity(owTrackerPos) instanceof TrackerBlockEntity owTracker) {
@@ -307,7 +303,7 @@ public class PortalBlock extends Block {
 
     private double findSafeY(ServerWorld world, int x, int z) {
         // For backrooms, search from y=8 downward only
-        int startY = world.getRegistryKey() == Szar.BACKROOMS_KEY ? 8 : 100;
+        int startY = world.getRegistryKey() == Szar.BACKROOMS_LEVEL_KEY ? 8 : 100;
         for (int y = startY; y > 1; y--) {
             BlockPos feet = new BlockPos(x, y, z);
             BlockPos head = feet.up();
