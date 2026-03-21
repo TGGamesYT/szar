@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:baiter"
+    },
+    "title": {"translate": "advancement.szar.crazy.title"},
+    "description": {"translate": "advancement.szar.crazy.description"},
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

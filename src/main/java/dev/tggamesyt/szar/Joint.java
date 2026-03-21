@@ -38,6 +38,7 @@ public class Joint extends SpyglassItem {
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        Szar.grantAdvancement(user, "high");
         // play custom smoke sound
         user.playSound(Szar.BESZIV, 1.0F, 1.0F);
         user.incrementStat(Stats.USED.getOrCreateStat(this));

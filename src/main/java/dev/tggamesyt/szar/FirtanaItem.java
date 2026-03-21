@@ -22,7 +22,7 @@ public class FirtanaItem extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
 
         if (!world.isClient) {
-
+            Szar.grantAdvancement(user, "oi");
             for (ServerPlayerEntity player : ((ServerWorld) world).getPlayers()) {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeString(user.getUuidAsString());

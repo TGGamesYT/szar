@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:slot_machine"
+    },
+    "title": {"translate": "advancement.szar.gamble.title"},
+    "description": {"translate": "advancement.szar.gamble.description"},
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -59,8 +59,8 @@ import static dev.tggamesyt.szar.client.ClientCosmetics.loadTextureFromURL;
 
 public class SzarClient implements ClientModInitializer {
     // add this field to your client init class
-    public static final int april = 4;
-    public static final int fools = 1;
+    public static final int april = Szar.april;
+    public static final int fools = Szar.fools;
     private float drogOverlayProgress = 0.0F;
     private long lastTime = 0;
     private static final Map<KeyBinding, KeyBinding> activeScramble = new HashMap<>();

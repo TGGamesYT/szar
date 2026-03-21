@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:april"
+    },
+    "title": {"translate": "advancement.szar.april.title"},
+    "description": {"translate": "advancement.szar.april.description"},
+    "show_toast": false
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

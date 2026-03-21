@@ -19,6 +19,7 @@ public class EpsteinFile extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         if (!world.isClient && player instanceof ServerPlayerEntity serverPlayer) {
+            Szar.grantAdvancement(player, "files");
             PacketByteBuf buf = PacketByteBufs.create();
 
             ServerPlayNetworking.send(serverPlayer, Szar.OPEN_URL, buf);

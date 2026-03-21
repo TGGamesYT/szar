@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:police_handcuff"
+    },
+    "title": {"translate": "advancement.szar.arrested.title"},
+    "description": {"translate": "advancement.szar.arrested.description"},
+    "show_toast": false
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

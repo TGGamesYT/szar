@@ -105,7 +105,7 @@ public class RouletteBlock extends Block implements BlockEntityProvider {
             return ActionResult.PASS;
         }
         if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
-
+        Szar.grantAdvancement(player, "gamble");
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (!(blockEntity instanceof RouletteBlockEntity)) {
             return ActionResult.PASS;

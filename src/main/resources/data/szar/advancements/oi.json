@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:firtana"
+    },
+    "title": {"translate": "advancement.szar.oi.title"},
+    "description": {"translate": "advancement.szar.oi.description"},
+    "show_toast": false
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

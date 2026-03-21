@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:pop_tart"
+    },
+    "title": {"translate": "advancement.szar.nyan.title"},
+    "description": {"translate": "advancement.szar.nyan.description"},
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

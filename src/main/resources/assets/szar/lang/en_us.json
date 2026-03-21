@@ -152,5 +152,35 @@
   "block.szar.backrooms_light": "Light",
   "entity.szar.smiler": "Smiler",
   "item.szar.beer": "Beer",
-  "effect.szar.drunk": "Drunk"
+  "effect.szar.drunk": "Drunk",
+
+  "item.szar.kebab": "Kebab",
+  "death.attack.fart": "%1$s was farted on by %2$s",
+
+  "advancement.szar.high.title": "Did I always have no hands?",
+  "advancement.szar.high.description": "Get high using weed.",
+
+  "advancement.szar.arrested.title": "Officer, I swear I didn't do anything!",
+  "advancement.szar.arrested.description": "Get arrested",
+
+  "advancement.szar.files.title": "I wonder if I'm in the files..",
+  "advancement.szar.files.description": "Read the Epstein files.",
+
+  "advancement.szar.nyan.title": "You are starting to annoy me!",
+  "advancement.szar.nyan.description": "Get near a Nyan Cat",
+
+  "advancement.szar.oi.title": "DO THE THING",
+  "advancement.szar.oi.description": "Play Firtana's sound",
+
+  "advancement.szar.crazy.title": "Crazy",
+  "advancement.szar.crazy.description": "Play a crazy music disc from the Szar Mod",
+
+  "advancement.szar.gamble.title": "Let's go gambling!",
+  "advancement.szar.gamble.description": "Gamble in a gambling machine.",
+
+  "advancement.szar.april.title": "I think you were used to be the other way, no?",
+  "advancement.szar.april.description": "Play the game on April 1st",
+
+  "advancement.szar.dontknow.title": "I think she doesn't know",
+  "advancement.szar.dontknow.description": "Ask a question from Merl"
 }

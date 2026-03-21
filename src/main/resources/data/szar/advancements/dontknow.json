@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:merl_spawn_egg"
+    },
+    "title": {"translate": "advancement.szar.dontknow.title"},
+    "description": {"translate": "advancement.szar.dontknow.description"},
+    "show_toast": false
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

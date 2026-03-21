@@ -77,6 +77,13 @@ public class NyanEntity extends PathAwareEntity {
 
             this.getNavigation().startMovingTo(this.getX() + dx * 5, this.getY(), this.getZ() + dz * 5, speed);
         }
+        if (!this.getWorld().isClient && this.age % 20 == 0) {
+            this.getWorld().getEntitiesByClass(
+                    net.minecraft.entity.player.PlayerEntity.class,
+                    this.getBoundingBox().expand(128), // ~8 chunks, reasonable render distance
+                    p -> true
+            ).forEach(p -> Szar.grantAdvancement(p, "nyan"));
+        }
     }
 
 

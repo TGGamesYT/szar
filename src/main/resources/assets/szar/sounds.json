@@ -226,5 +226,21 @@
         "stream": true
       }
     ]
+  },
+  "fart1": {
+    "sounds": [
+      {
+        "name": "szar:fart1",
+        "stream": true
+      }
+    ]
+  },
+  "fart": {
+    "sounds": [
+      {
+        "name": "szar:fart",
+        "stream": true
+      }
+    ]
   }
 }

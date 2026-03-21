@@ -31,6 +31,12 @@ public class OverworldPortalFeature extends Feature<DefaultFeatureConfig> {
         BlockPos trackerPos = new BlockPos(origin.getX(), surfaceY, origin.getZ());
         BlockPos portalPos = trackerPos.down(4);
 
+        // Don't spawn on or in water
+        if (world.getBlockState(trackerPos).isOf(Blocks.WATER)) return false;
+        if (world.getBlockState(trackerPos.down()).isOf(Blocks.WATER)) return false;
+        if (world.getFluidState(trackerPos).isStill()) return false;
+        if (world.getFluidState(portalPos).isStill()) return false;
+
         BlockState original = world.getBlockState(portalPos);
 
         world.setBlockState(trackerPos, Szar.TRACKER_BLOCK.getDefaultState(),

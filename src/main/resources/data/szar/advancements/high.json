@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:weed_joint"
+    },
+    "title": {"translate": "advancement.szar.high.title"},
+    "description": {"translate": "advancement.szar.high.description"},
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

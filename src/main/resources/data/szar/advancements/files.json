@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": {
+      "item": "szar:epstein_files"
+    },
+    "title": {"translate": "advancement.szar.files.title"},
+    "description": {"translate": "advancement.szar.files.description"},
+    "show_toast": true
+  },
+  "criteria": {
+    "used_item": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

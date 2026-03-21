@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " KB",
+    " BK",
+    "S  "
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "B": {
+      "tag": "szar:cooked_meat"
+    },
+    "K": {
+      "item": "minecraft:kelp"
+    }
+  },
+  "result": {
+    "item": "szar:kebab",
+    "count": 1
+  }
+}

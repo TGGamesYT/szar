@@ -100,6 +100,8 @@ public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static MinecraftServer SERVER;
+    public static int april = 4;
+    public static int fools = 1;
     public static final Identifier DRUNK_TYPE_PACKET = new Identifier(MOD_ID, "drunk_type");
     public static final Identifier OPEN_DETONATOR_SCREEN = new Identifier(MOD_ID, "open_coord_screen");
     public static final Identifier DETONATOR_INPUT = new Identifier(MOD_ID, "coord_input");
@@ -377,6 +379,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.BEAN);
                         entries.add(Szar.CAN_OF_BEANS);
                         entries.add(Szar.ALMOND_WATER);
+                        entries.add(Szar.KEBAB);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -929,9 +932,16 @@ public class Szar implements ModInitializer {
                                     1.0F,
                                     1.0F
                             );
+                            Szar.grantAdvancement(player, "dontknow");
                         }
                     });
                 });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            java.time.LocalDate today = java.time.LocalDate.now();
+            if (today.getMonthValue() == april && today.getDayOfMonth() == fools) {
+                Szar.grantAdvancement(handler.player, "april");
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                 if (player.isSleeping()) {
@@ -1082,6 +1092,47 @@ public class Szar implements ModInitializer {
                                                             DrunkEffect.DrunkType.PARANOID)))
                                     )
                             )
+
+                            .then(CommandManager.literal("fart")
+                                    .then(CommandManager.literal("get")
+                                            .then(CommandManager.argument("target",
+                                                            net.minecraft.command.argument.EntityArgumentType.player())
+                                                    .executes(context -> {
+                                                        ServerCommandSource source = context.getSource();
+                                                        ServerPlayerEntity target = net.minecraft.command.argument
+                                                                .EntityArgumentType.getPlayer(context, "target");
+                                                        long ticks = FartManager.getTicksForPlayer(target.getUuid());
+                                                        int level = FartManager.getDamageLevelForPlayer(target.getUuid());
+                                                        source.sendMessage(Text.literal(
+                                                                "§e" + target.getName().getString() + "§r fart timer: §a"
+                                                                        + ticks + "§r ticks, damage level: §c" + level + "§r/10"
+                                                        ));
+                                                        return 1;
+                                                    })
+                                            )
+                                    )
+                                    .then(CommandManager.literal("set")
+                                            .then(CommandManager.argument("target",
+                                                            net.minecraft.command.argument.EntityArgumentType.player())
+                                                    .then(CommandManager.argument("ticks",
+                                                                    com.mojang.brigadier.arguments.LongArgumentType.longArg(0))
+                                                            .executes(context -> {
+                                                                ServerCommandSource source = context.getSource();
+                                                                ServerPlayerEntity target = net.minecraft.command.argument
+                                                                        .EntityArgumentType.getPlayer(context, "target");
+                                                                long ticks = com.mojang.brigadier.arguments.LongArgumentType
+                                                                        .getLong(context, "ticks");
+                                                                FartManager.setTicksForPlayer(target.getUuid(), ticks);
+                                                                source.sendMessage(Text.literal(
+                                                                        "§aSet §e" + target.getName().getString()
+                                                                                + "§a's fart timer to §e" + ticks + "§a ticks"
+                                                                ));
+                                                                return 1;
+                                                            })
+                                                    )
+                                            )
+                                    )
+                            )
             );
         });
         Registry.register(
@@ -1226,6 +1277,7 @@ public class Szar implements ModInitializer {
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(DrunkEffect::tick);
+        FartManager.register();
     }
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
@@ -1841,7 +1893,15 @@ public class Szar implements ModInitializer {
                             hunger((Math.random() < 0.5) ? 6 : 7) // SIX OR SEVEN
                             .build()), 217)
     );
-
+    public static final Item KEBAB = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "kebab"),
+            new Item(new Item.Settings()
+                    .food(new FoodComponent.Builder()
+                            .saturationModifier(1.2f)
+                            .hunger(14)
+                            .build()))
+    );
     public static final Item BEAN = Registry.register(
             Registries.ITEM,
             new Identifier(MOD_ID, "bean"),
@@ -1900,7 +1960,11 @@ public class Szar implements ModInitializer {
             new Identifier(MOD_ID, "beer"),
             new BeerItem(new Item.Settings().maxCount(16))
     );
-
+    public static final Item APRIL = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "april"),
+            new Item(new Item.Settings())
+    );
     public static final SoundEvent BAITER =
             SoundEvent.of(new Identifier(MOD_ID, "baiter"));
     public static final Item BAITER_DISC = Registry.register(
@@ -2306,6 +2370,24 @@ public class Szar implements ModInitializer {
                     player, Szar.DRUNK_TYPE_PACKET, buf);
         }
         return players.size();
+    }
+
+    public static void grantAdvancement(PlayerEntity player, String advancement) {
+        if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
+        MinecraftServer server = serverPlayer.getServer();
+        if (server == null) return;
+
+        var entry = server.getAdvancementLoader().get(new Identifier(Szar.MOD_ID, advancement));
+        if (entry == null) return;
+
+        net.minecraft.advancement.AdvancementProgress progress =
+                serverPlayer.getAdvancementTracker().getProgress(entry);
+
+        if (!progress.isDone()) {
+            for (String criterion : progress.getUnobtainedCriteria()) {
+                serverPlayer.getAdvancementTracker().grantCriterion(entry, criterion);
+            }
+        }
     }
 }
 

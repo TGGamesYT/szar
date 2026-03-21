@@ -7,6 +7,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.UUID;
 
@@ -41,6 +42,7 @@ public class ArrestedEffect extends StatusEffect {
 
     @Override
     public void onApplied(LivingEntity entity, AttributeContainer attributes, int amplifier) {
+        if (entity instanceof PlayerEntity player) {Szar.grantAdvancement(player, "arrested");}
         var speed = entity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
         if (speed == null) return;
 
