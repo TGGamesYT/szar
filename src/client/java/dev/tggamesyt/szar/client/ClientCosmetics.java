@@ -110,7 +110,6 @@ public class ClientCosmetics {
 
     public static void fetchMojangCapes(UUID uuid) {
         try {
-            System.out.println("SZAR: fetching Mojang capes for " + uuid);
             MinecraftClient client = MinecraftClient.getInstance();
             String accessToken = client.getSession().getAccessToken();
             if (accessToken == null) return;
@@ -155,7 +154,6 @@ public class ClientCosmetics {
                     buf.writeString(cape.name);
                     buf.writeString(cape.url);
                 }
-                System.out.println("SZAR: found " + list.size() + " Mojang capes, sending to server");
 
                 ClientPlayNetworking.send(MOJANG_CAPES_SYNC, buf);
             }

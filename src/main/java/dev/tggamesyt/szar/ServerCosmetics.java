@@ -57,7 +57,6 @@ public class ServerCosmetics {
             int size = buf.readInt();
             List<MojangCape> list = new ArrayList<>();
 
-            System.out.println("SZAR: server received Mojang capes for " + uuid + ", count=" + size);
 
             for (int i = 0; i < size; i++) {
                 MojangCape c = new MojangCape();
@@ -151,7 +150,6 @@ public class ServerCosmetics {
 
                                     // Mojang capes from server-side map
                                     List<MojangCape> mojang = PLAYER_MOJANG_CAPES.get(player.getUuid());
-                                    System.out.println("SZAR: suggestions - mojang capes for " + player.getName().getString() + ": " + (mojang == null ? "null" : mojang.size()));
                                     if (mojang != null) {
                                         for (MojangCape c : mojang) {
                                             builder.suggest(c.name);
