@@ -40,10 +40,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.util.math.random.Random;
 import org.lwjgl.glfw.GLFW;
 
@@ -93,6 +90,28 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        // Open screen
+        ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_OPEN_SCREEN, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            TicTacToeBlockEntity.State state = TicTacToeBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> client.setScreen(new TicTacToeScreen(pos, state)));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_CLOSE_SCREEN, (client, handler, buf, sender) -> {
+            client.execute(() -> {
+                if (client.currentScreen instanceof TicTacToeScreen) {
+                    client.setScreen(null);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_STATE_SYNC, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            TicTacToeBlockEntity.State state = TicTacToeBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> {
+                if (client.currentScreen instanceof TicTacToeScreen screen) {
+                    screen.updateState(state);
+                }
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(Szar.DRUNK_TYPE_PACKET, (client, handler, buf, responseSender) -> {
             String typeName = buf.readString();
             client.execute(() -> DrunkEffect.setDisplayType(typeName));
@@ -242,23 +261,37 @@ public class SzarClient implements ClientModInitializer {
             ClientPlayNetworking.send(PlayerMovementManager.PACKET_ID, buf);
         });
         ClientPlayNetworking.registerGlobalReceiver(SYNC_PACKET, (client, handler, buf, responseSender) -> {
-            // First read the player UUID
             UUID playerUuid = buf.readUuid();
-
-            // Read cosmetic data
             NameType nameType = buf.readEnumConstant(NameType.class);
             Integer staticColor = buf.readBoolean() ? buf.readInt() : null;
             Integer gradientStart = buf.readBoolean() ? buf.readInt() : null;
             Integer gradientEnd = gradientStart != null ? buf.readInt() : null;
-
             String textureUrl = buf.readString();
-            Identifier capeTexture = loadTextureFromURL(textureUrl, playerUuid.toString());
 
-            // Apply the cosmetic profile on the main thread
+            // Load texture off main thread, apply on main thread
+            Identifier capeTexture = textureUrl.isEmpty() ? null
+                    : loadTextureFromURL(textureUrl, playerUuid.toString());
+
             client.execute(() -> {
-                ClientCosmetics.fetchMojangCapes(playerUuid);
-                ClientCosmetics.apply(playerUuid, nameType, staticColor, gradientStart, gradientEnd, capeTexture);
+                // Check BEFORE applying if this is first sync for local player
+                boolean isFirstSync = client.player != null
+                        && playerUuid.equals(client.player.getUuid())
+                        && ClientCosmetics.get(playerUuid) == null;
+
+                ClientCosmetics.apply(playerUuid, nameType, staticColor,
+                        gradientStart, gradientEnd, capeTexture);
+
+                if (isFirstSync) {
+                    java.util.concurrent.CompletableFuture.runAsync(() ->
+                            ClientCosmetics.fetchMojangCapes(playerUuid));
+                }
             });
+        });
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            if (client.player == null) return;
+            UUID uuid = client.player.getUuid();
+            java.util.concurrent.CompletableFuture.runAsync(() ->
+                    ClientCosmetics.fetchMojangCapes(uuid));
         });
         ClientPlayNetworking.registerGlobalReceiver(Szar.OPEN_MERL_SCREEN,
                 (client, handler, buf, responseSender) -> {

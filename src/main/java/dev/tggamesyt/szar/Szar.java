@@ -186,6 +186,7 @@ public class Szar implements ModInitializer {
             RegistryKeys.DIMENSION_TYPE,
             new Identifier(MOD_ID, "backrooms")
     );
+    public static final Map<UUID, BlockPos> tttActivePlayers = new java.util.HashMap<>();
     public static final Block SZAR_BLOCK =
             new SzarBlock();
     public static final Block URANIUM_BLOCK =
@@ -383,6 +384,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.CAN_OF_BEANS);
                         entries.add(Szar.ALMOND_WATER);
                         entries.add(Szar.KEBAB);
+                        entries.add(Szar.TIC_TAC_TOE_ITEM);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -611,19 +613,32 @@ public class Szar implements ModInitializer {
         PlayerMovementManager.init();
         ServerCosmetics.init();
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
+            ServerPlayerEntity joiner = handler.getPlayer();
 
-            ServerCosmetics.UserCosmetics user = USERS.get(player.getUuid());
-            if (user != null) {
-
-                // AUTO SELECT FIRST CAPE IF NONE SELECTED
-                if (user.selectedCape == null && !user.ownedCapes.isEmpty()) {
-                    user.selectedCape = user.ownedCapes.get(0);
-                } else {
-                    user.selectedCape = null;
+            // Send joiner's own cosmetics to themselves
+            ServerCosmetics.UserCosmetics joinerUser = USERS.get(joiner.getUuid());
+            if (joinerUser != null) {
+                if (joinerUser.selectedCape == null && !joinerUser.ownedCapes.isEmpty()) {
+                    joinerUser.selectedCape = joinerUser.ownedCapes.get(0);
                 }
+                ServerCosmetics.syncTo(joiner, joiner, joinerUser);
+            }
 
-                sync(player, user);
+            // Send all other online players' cosmetics to the joiner
+            for (ServerPlayerEntity other : server.getPlayerManager().getPlayerList()) {
+                if (other.equals(joiner)) continue;
+                ServerCosmetics.UserCosmetics otherUser = USERS.get(other.getUuid());
+                if (otherUser != null) {
+                    ServerCosmetics.syncTo(joiner, other, otherUser);
+                }
+            }
+
+            // Send joiner's cosmetics to all other online players
+            if (joinerUser != null) {
+                for (ServerPlayerEntity other : server.getPlayerManager().getPlayerList()) {
+                    if (other.equals(joiner)) continue;
+                    ServerCosmetics.syncTo(other, joiner, joinerUser);
+                }
             }
         });
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
@@ -1313,7 +1328,38 @@ public class Szar implements ModInitializer {
         });
         ServerTickEvents.END_SERVER_TICK.register(DrunkEffect::tick);
         FartManager.register();
+        ServerPlayNetworking.registerGlobalReceiver(TTT_MAKE_MOVE, (server, player, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            int cell = buf.readInt();
+            server.execute(() -> {
+                if (player.getWorld().getBlockEntity(pos) instanceof TicTacToeBlockEntity be) {
+                    be.handleMove(player, cell);
+                }
+            });
+        });
     }
+
+    public static final Block TIC_TAC_TOE_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "tictactoe"),
+            new TicTacToeBlock(AbstractBlock.Settings.create().strength(2f))
+    );
+    public static final BlockItem TIC_TAC_TOE_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "tictactoe"),
+            new BlockItem(TIC_TAC_TOE_BLOCK, new Item.Settings())
+    );
+    public static final BlockEntityType<TicTacToeBlockEntity> TIC_TAC_TOE_ENTITY =
+            Registry.register(
+                    Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "tictactoe"),
+                    FabricBlockEntityTypeBuilder.create(TicTacToeBlockEntity::new,
+                            TIC_TAC_TOE_BLOCK).build()
+            );
+
+    // Networking
+    public static final Identifier TTT_OPEN_SCREEN = new Identifier(MOD_ID, "ttt_open");
+    public static final Identifier TTT_MAKE_MOVE = new Identifier(MOD_ID, "ttt_move");
+    public static final Identifier TTT_STATE_SYNC = new Identifier(MOD_ID, "ttt_sync");
+    public static final Identifier TTT_CLOSE_SCREEN = new Identifier(MOD_ID, "ttt_close");
+
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "tracker"),

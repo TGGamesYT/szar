@@ -57,6 +57,8 @@ public class ServerCosmetics {
             int size = buf.readInt();
             List<MojangCape> list = new ArrayList<>();
 
+            System.out.println("SZAR: server received Mojang capes for " + uuid + ", count=" + size);
+
             for (int i = 0; i < size; i++) {
                 MojangCape c = new MojangCape();
                 c.id = buf.readString();
@@ -66,25 +68,6 @@ public class ServerCosmetics {
             }
 
             PLAYER_MOJANG_CAPES.put(uuid, list);
-        });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
-
-            // Send this player's own cosmetics to themselves
-            UserCosmetics user = USERS.get(player.getUuid());
-            if (user != null) {
-                sync(player, user);
-            }
-
-            // Optionally: send all other players' cosmetics to this new player
-            for (ServerPlayerEntity other : server.getPlayerManager().getPlayerList()) {
-                if (other.equals(player)) continue;
-
-                UserCosmetics otherUser = USERS.get(other.getUuid());
-                if (otherUser != null) {
-                    sync(player, otherUser); // send other players’ cosmetics to the new player
-                }
-            }
         });
     }
 
@@ -152,20 +135,27 @@ public class ServerCosmetics {
     private static void registerCommand() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(CommandManager.literal("cape")
-                        .then(CommandManager.argument("id", StringArgumentType.greedyString()) // <-- change here
+                        .then(CommandManager.argument("id", StringArgumentType.greedyString())
                                 .suggests((ctx, builder) -> {
-
                                     ServerPlayerEntity player = ctx.getSource().getPlayer();
+                                    if (player == null) return builder.buildFuture();
 
-                                    // Custom capes
-                                    for (String id : CAPES.keySet())
-                                        builder.suggest(id);
+                                    UserCosmetics user = USERS.get(player.getUuid());
 
-                                    // Mojang capes
+                                    // Only suggest capes this player actually owns
+                                    if (user != null) {
+                                        for (String id : user.ownedCapes) {
+                                            builder.suggest(id);
+                                        }
+                                    }
+
+                                    // Mojang capes from server-side map
                                     List<MojangCape> mojang = PLAYER_MOJANG_CAPES.get(player.getUuid());
+                                    System.out.println("SZAR: suggestions - mojang capes for " + player.getName().getString() + ": " + (mojang == null ? "null" : mojang.size()));
                                     if (mojang != null) {
-                                        for (MojangCape c : mojang)
+                                        for (MojangCape c : mojang) {
                                             builder.suggest(c.name);
+                                        }
                                     }
 
                                     builder.suggest("none");
@@ -173,10 +163,15 @@ public class ServerCosmetics {
                                 })
                                 .executes(ctx -> {
                                     ServerPlayerEntity player = ctx.getSource().getPlayer();
-                                    String id = StringArgumentType.getString(ctx, "id"); // this now includes spaces
+                                    String id = StringArgumentType.getString(ctx, "id");
 
-                                    UserCosmetics user = USERS.get(player.getUuid());
-                                    if (user == null) return 0;
+                                    // Create a default entry if player has no cosmetics profile
+                                    UserCosmetics user = USERS.computeIfAbsent(player.getUuid(), k -> {
+                                        UserCosmetics u = new UserCosmetics();
+                                        u.nameType = NameType.STATIC;
+                                        u.ownedCapes = new ArrayList<>();
+                                        return u;
+                                    });
 
                                     // Deselect
                                     if (id.equalsIgnoreCase("none")) {
@@ -186,12 +181,12 @@ public class ServerCosmetics {
                                         return 1;
                                     }
 
-                                    // Mojang cape selection (only from fetched list)
+                                    // Mojang cape selection
                                     List<MojangCape> mojang = PLAYER_MOJANG_CAPES.get(player.getUuid());
                                     if (mojang != null) {
                                         for (MojangCape c : mojang) {
                                             if (c.name.equalsIgnoreCase(id)) {
-                                                user.selectedCape = c.id; // vanilla cape
+                                                user.selectedCape = c.id;
                                                 sync(player, user);
                                                 player.sendMessage(Text.literal("Equipped Mojang cape: " + c.name), false);
                                                 return 1;
@@ -199,7 +194,7 @@ public class ServerCosmetics {
                                         }
                                     }
 
-                                    // Custom
+                                    // Custom cape check
                                     if (!user.ownedCapes.contains(id)) {
                                         player.sendMessage(Text.literal("You don't own this cape."), false);
                                         return 0;
@@ -216,49 +211,47 @@ public class ServerCosmetics {
 
     /* ---------------- SYNC ---------------- */
 
-    public static void sync(ServerPlayerEntity player, UserCosmetics user) {
-        List<ServerPlayerEntity> original =
-                player.getServer().getPlayerManager().getPlayerList();
-        List<ServerPlayerEntity> list = new ArrayList<>(original);
-        if (!list.contains(player)) {list.add(player);}
-        for (ServerPlayerEntity p : list) {
-            PacketByteBuf buf = PacketByteBufs.create();
-
-            // Write player UUID first
-            buf.writeUuid(player.getUuid());
-
-            // Cosmetic data
-            buf.writeEnumConstant(user.nameType);
-            buf.writeBoolean(user.staticColor != null);
-            if (user.staticColor != null) buf.writeInt(user.staticColor);
-
-            buf.writeBoolean(user.gradientStart != null);
-            if (user.gradientStart != null) {
-                buf.writeInt(user.gradientStart);
-                buf.writeInt(user.gradientEnd);
-            }
-
-            String textureUrl = null;
-            if (user.selectedCape != null) {
-                textureUrl = CAPES.get(user.selectedCape);
-                if (textureUrl == null) {
-                    List<MojangCape> mojang = PLAYER_MOJANG_CAPES.get(player.getUuid());
-                    if (mojang != null) {
-                        for (MojangCape c : mojang) {
-                            if (c.id.equalsIgnoreCase(user.selectedCape)) {
-                                textureUrl = c.url;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            buf.writeString(textureUrl == null ? "" : textureUrl);
-            ServerPlayNetworking.send(p, SYNC_PACKET, buf);
+    // Send ONE player's cosmetics to ALL online players (used for /cape changes)
+    public static void sync(ServerPlayerEntity owner, UserCosmetics user) {
+        for (ServerPlayerEntity p : owner.getServer().getPlayerManager().getPlayerList()) {
+            syncTo(p, owner, user);
         }
     }
     public enum NameType {
         STATIC,
         GRADIENT
+    }
+
+    // Send ONE player's cosmetics to ONE recipient
+    public static void syncTo(ServerPlayerEntity recipient, ServerPlayerEntity owner,
+                              UserCosmetics user) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeUuid(owner.getUuid()); // whose cosmetics these are
+        buf.writeEnumConstant(user.nameType);
+        buf.writeBoolean(user.staticColor != null);
+        if (user.staticColor != null) buf.writeInt(user.staticColor);
+        buf.writeBoolean(user.gradientStart != null);
+        if (user.gradientStart != null) {
+            buf.writeInt(user.gradientStart);
+            buf.writeInt(user.gradientEnd);
+        }
+
+        String textureUrl = null;
+        if (user.selectedCape != null) {
+            textureUrl = CAPES.get(user.selectedCape);
+            if (textureUrl == null) {
+                List<MojangCape> mojang = PLAYER_MOJANG_CAPES.get(owner.getUuid());
+                if (mojang != null) {
+                    for (MojangCape c : mojang) {
+                        if (c.id.equalsIgnoreCase(user.selectedCape)) {
+                            textureUrl = c.url;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        buf.writeString(textureUrl == null ? "" : textureUrl);
+        ServerPlayNetworking.send(recipient, SYNC_PACKET, buf);
     }
 }

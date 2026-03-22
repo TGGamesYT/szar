@@ -185,5 +185,7 @@
   "advancement.szar.dontknow.description": "Ask a question from Merl",
 
   "advancement.szar.backrooms.title": "Where did the world go?",
-  "advancement.szar.backrooms.description": "Step into the Backrooms"
+  "advancement.szar.backrooms.description": "Step into the Backrooms",
+
+  "block.szar.tictactoe": "Tic Tac Toe"
 }

@@ -66,10 +66,14 @@ public class ClientCosmetics {
         CosmeticProfile profile = PROFILES.get(uuid);
         if (profile == null) return null;
 
-        if (profile.nameType == NameType.STATIC && profile.staticColor != null) {
+        if (profile.nameType == NameType.STATIC) {
+            if (profile.staticColor == null) return null;
             return Text.literal(name)
                     .styled(s -> s.withColor(profile.staticColor).withBold(true));
         }
+
+        // GRADIENT
+        if (profile.gradientStart == null || profile.gradientEnd == null) return null;
 
         long time = Util.getMeasuringTimeMs();
         MutableText animated = Text.empty();
@@ -106,6 +110,7 @@ public class ClientCosmetics {
 
     public static void fetchMojangCapes(UUID uuid) {
         try {
+            System.out.println("SZAR: fetching Mojang capes for " + uuid);
             MinecraftClient client = MinecraftClient.getInstance();
             String accessToken = client.getSession().getAccessToken();
             if (accessToken == null) return;
@@ -150,6 +155,7 @@ public class ClientCosmetics {
                     buf.writeString(cape.name);
                     buf.writeString(cape.url);
                 }
+                System.out.println("SZAR: found " + list.size() + " Mojang capes, sending to server");
 
                 ClientPlayNetworking.send(MOJANG_CAPES_SYNC, buf);
             }
