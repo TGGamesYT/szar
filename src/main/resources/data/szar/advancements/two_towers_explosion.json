@@ -1,4 +1,5 @@
 {
+  "parent": "szar:szar",
   "criteria": {
     "boom": {
       "trigger": "minecraft:impossible"
@@ -8,7 +9,6 @@
     "icon": { "item": "szar:towers" },
     "title": {"translate": "advancement.szar.two_towers.title"},
     "description": {"translate": "advancement.szar.two_towers.description"},
-    "frame": "challenge",
     "show_toast": true,
     "announce_to_chat": true
   }

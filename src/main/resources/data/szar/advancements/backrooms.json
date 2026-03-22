@@ -2,10 +2,10 @@
   "parent": "szar:szar",
   "display": {
     "icon": {
-      "item": "szar:pop_tart"
+      "item": "szar:tracker"
     },
-    "title": {"translate": "advancement.szar.nyan.title"},
-    "description": {"translate": "advancement.szar.nyan.description"},
+    "title": {"translate": "advancement.szar.backrooms.title"},
+    "description": {"translate": "advancement.szar.backrooms.description"},
     "show_toast": true
   },
   "criteria": {

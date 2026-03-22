@@ -1,4 +1,5 @@
 {
+  "parent": "szar:szar",
   "display": {
     "icon": {
       "item": "szar:police_handcuff"

@@ -29,11 +29,23 @@ public class ObeliskCoreBlock extends Block implements BlockEntityProvider {
 
         if (!(world instanceof ServerWorld serverWorld)) return;
 
-        TwoTowersUtil.grantNearbyAdvancement(serverWorld, pos, 100);
+        Szar.grantNearbyAdvancement(serverWorld, pos, 100, "two_towers_explosion");
+
+        // Grant to players who died to plane_crash within 5 seconds and 50 blocks
+        long currentTime = serverWorld.getTime();
+        long fiveSecondsInTicks = 100L;
+
+        serverWorld.getPlayers().forEach(player -> {
+            Long deathTime = Szar.recentPlaneCrashDeaths.get(player.getUuid());
+            if (deathTime == null) return;
+            if (currentTime - deathTime > fiveSecondsInTicks) return;
+            if (player.getPos().distanceTo(net.minecraft.util.math.Vec3d.ofCenter(pos)) > 50) return;
+            Szar.grantAdvancement(player, "two_towers_explosion");
+        });
 
         BlockEntity be = world.getBlockEntity(pos);
         if (be instanceof ObeliskCoreBlockEntity core) {
-            core.setHasPlaneMob(false); // reset in case a plane was active
+            core.setHasPlaneMob(false);
             core.markDirty();
         }
     }

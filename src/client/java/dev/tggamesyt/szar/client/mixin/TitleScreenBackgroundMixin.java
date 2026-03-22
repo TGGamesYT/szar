@@ -70,7 +70,6 @@ public class TitleScreenBackgroundMixin {
     private static void loadFrames() {
         if (framesLoaded) return;
         framesLoaded = true;
-
         MinecraftClient client = MinecraftClient.getInstance();
         ResourceManager resourceManager = client.getResourceManager();
 
@@ -91,8 +90,13 @@ public class TitleScreenBackgroundMixin {
                 }
 
                 Identifier frameId = new Identifier("szar", "aprilfools/overlay_frame_" + i);
+
+                // Destroy old texture if it exists
+                client.getTextureManager().destroyTexture(frameId);
+
                 NativeImageBackedTexture texture = new NativeImageBackedTexture(frame);
                 client.getTextureManager().registerTexture(frameId, texture);
+                texture.upload();
                 FRAMES.add(frameId);
             }
 
@@ -102,11 +106,20 @@ public class TitleScreenBackgroundMixin {
         }
     }
 
+    @Inject(method = "init", at = @At("HEAD"))
+    private void onInit(CallbackInfo ci) {
+        if (!isAprilFools()) return;
+        framesLoaded = false;
+        FRAMES.clear();
+        currentFrame = 0;
+        lastFrameTime = 0;
+        loadFrames();
+    }
+
     @Inject(method = "render", at = @At("HEAD"))
     private void onRenderHead(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!isAprilFools()) return;
-        loadFrames();
-        if (FRAMES.isEmpty()) return; // don't advance if nothing loaded
+        if (FRAMES.isEmpty()) return;
 
         long now = System.currentTimeMillis();
         if (now - lastFrameTime >= FRAME_DURATION_MS) {
@@ -131,10 +144,7 @@ public class TitleScreenBackgroundMixin {
             context.drawTexture(texture, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
         }
-
-        float alpha = getFadeAlpha();
-        if (alpha <= 0f) return; // fully transparent, skip entirely
-
+        float alpha = backgroundFadeStart == 0L ? 1.0f : getFadeAlpha();
         // Apply alpha via RenderSystem before drawing
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);

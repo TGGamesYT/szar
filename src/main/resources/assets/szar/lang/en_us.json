@@ -117,12 +117,6 @@
   "item.szar.erika": "Music Disc",
   "item.szar.erika.desc": "Herms Niel - Erika",
 
-  "advancement.szar.nwordpass.title": "Nig-",
-  "advancement.szar.nwordpass.description": "Get an N-word pass",
-
-  "advancement.szar.two_towers.title": "Hmm, familiar...",
-  "advancement.szar.two_towers.description": "You were there when the towers fell",
-
   "item.szar.revolver": "Revolver",
   "item.szar.revolver_bullet": "Revolver Bullet",
   "item.szar.bullet_shell": "Revolver Bullet Shell",
@@ -157,30 +151,39 @@
   "item.szar.kebab": "Kebab",
   "death.attack.fart": "%1$s was farted on by %2$s",
 
-  "advancement.szar.high.title": "Did I always have no hands?",
+  "advancement.szar.nwordpass.title": "N̶i̶g̶",
+  "advancement.szar.nwordpass.description": "Use an N-word pass",
+
+  "advancement.szar.two_towers.title": "Hmm, familiar...",
+  "advancement.szar.two_towers.description": "You were there when the towers fell",
+
+  "advancement.szar.high.title": "Why is the sky green?",
   "advancement.szar.high.description": "Get high using weed.",
 
-  "advancement.szar.arrested.title": "Officer, I swear I didn't do anything!",
+  "advancement.szar.arrested.title": "I swear I'm innocent!",
   "advancement.szar.arrested.description": "Get arrested",
 
   "advancement.szar.files.title": "I wonder if I'm in the files..",
   "advancement.szar.files.description": "Read the Epstein files.",
 
-  "advancement.szar.nyan.title": "You are starting to annoy me!",
+  "advancement.szar.nyan.title": "nyan nyan nyan nyan...",
   "advancement.szar.nyan.description": "Get near a Nyan Cat",
 
-  "advancement.szar.oi.title": "DO THE THING",
+  "advancement.szar.oi.title": "OiOiOiAEyeEye",
   "advancement.szar.oi.description": "Play Firtana's sound",
 
-  "advancement.szar.crazy.title": "Crazy",
+  "advancement.szar.crazy.title": "No way",
   "advancement.szar.crazy.description": "Play a crazy music disc from the Szar Mod",
 
   "advancement.szar.gamble.title": "Let's go gambling!",
   "advancement.szar.gamble.description": "Gamble in a gambling machine.",
 
-  "advancement.szar.april.title": "I think you were used to be the other way, no?",
+  "advancement.szar.april.title": "Something feels off today...",
   "advancement.szar.april.description": "Play the game on April 1st",
 
   "advancement.szar.dontknow.title": "I think she doesn't know",
-  "advancement.szar.dontknow.description": "Ask a question from Merl"
+  "advancement.szar.dontknow.description": "Ask a question from Merl",
+
+  "advancement.szar.backrooms.title": "Where did the world go?",
+  "advancement.szar.backrooms.description": "Step into the Backrooms"
 }

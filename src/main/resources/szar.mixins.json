@@ -6,13 +6,16 @@
   "mixins": [
     "CraftingScreenHandlerMixin",
     "CraftingScreenHandlerMixin2",
+    "EntityCollisionMixin",
     "JukeboxMixin",
     "LevelSummaryMixin",
     "LivingEntityFallDamageMixin",
     "NoClipMixin",
     "PlaneBlockInteractionMixin",
+    "PlayerDropMixin",
     "PlayerEntityMixin",
     "PlayerInteractionMixin",
+    "PlayerSleepMixin",
     "RadiatedItemMixin"
   ],
   "injectors": {

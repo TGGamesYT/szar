@@ -37,7 +37,7 @@ public class NwordPassItem extends Item {
 
             // Grant advancement
             if (user instanceof ServerPlayerEntity serverPlayer) {
-                grantAdvancement(serverPlayer);
+                Szar.grantAdvancement(serverPlayer, "nwordpass");
             }
 
             // Consume item
@@ -45,24 +45,5 @@ public class NwordPassItem extends Item {
         }
 
         return TypedActionResult.success(stack, world.isClient);
-    }
-
-    private void grantAdvancement(ServerPlayerEntity player) {
-        ServerAdvancementLoader loader =
-                player.getServer().getAdvancementLoader();
-
-        Advancement advancement =
-                loader.get(new Identifier("szar", "nwordpass"));
-
-        if (advancement == null) return;
-
-        AdvancementProgress progress =
-                player.getAdvancementTracker().getProgress(advancement);
-
-        if (!progress.isDone()) {
-            for (String criterion : progress.getUnobtainedCriteria()) {
-                player.getAdvancementTracker().grantCriterion(advancement, criterion);
-            }
-        }
     }
 }

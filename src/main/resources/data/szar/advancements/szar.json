@@ -1,0 +1,16 @@
+{
+  "display": {
+    "icon": { "item": "szar:cannabis" },
+    "title": "Szar",
+    "description": "The Szar mod advancements",
+    "frame": "task",
+    "background": "szar:textures/block/wall_block.png",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "impossible": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

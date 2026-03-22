@@ -1,11 +1,14 @@
 {
+  "parent": "szar:szar",
   "display": {
     "icon": {
       "item": "szar:april"
     },
     "title": {"translate": "advancement.szar.april.title"},
     "description": {"translate": "advancement.szar.april.description"},
-    "show_toast": false
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "challenge"
   },
   "criteria": {
     "used_item": {

@@ -7,7 +7,9 @@ import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
@@ -164,6 +166,7 @@ public class Szar implements ModInitializer {
             );
     public static final SoundEvent MERL_SOUND =
             SoundEvent.of(new Identifier(MOD_ID, "merl"));
+    public static final Map<UUID, Long> recentPlaneCrashDeaths = new java.util.HashMap<>();
     public static final Identifier PLANE_ANIM_PACKET =
             new Identifier(MOD_ID, "plane_anim");
     public static final Identifier NAZI_HAND_GESTURE = new Identifier(MOD_ID, "hit_hand");
@@ -439,6 +442,19 @@ public class Szar implements ModInitializer {
     private final Map<UUID, BlockPos> sleepingPlayers = new HashMap<>();
     @Override
     public void onInitialize() {
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (!world.isClient) {
+                DrunkEffect.lastAttackTime.put(player.getUuid(),
+                        (world).getTime());
+            }
+            return net.minecraft.util.ActionResult.PASS;
+        });
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (!(entity instanceof ServerPlayerEntity player)) return;
+            if (damageSource.getType().msgId().equals("plane_crash")) {
+                Szar.recentPlaneCrashDeaths.put(player.getUuid(), player.getServerWorld().getTime());
+            }
+        });
         Registry.register(
                 Registries.CHUNK_GENERATOR,
                 new Identifier(MOD_ID, "backrooms"),
@@ -939,7 +955,26 @@ public class Szar implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             java.time.LocalDate today = java.time.LocalDate.now();
             if (today.getMonthValue() == april && today.getDayOfMonth() == fools) {
-                Szar.grantAdvancement(handler.player, "april");
+                // Delay by 60 ticks (3 seconds) so player is fully loaded in
+                ServerTickEvents.END_SERVER_TICK.register(
+                        new ServerTickEvents.EndTick() {
+                            int ticksWaited = 0;
+                            @Override
+                            public void onEndTick(MinecraftServer s) {
+                                ticksWaited++;
+                                if (ticksWaited >= 20) {
+                                    Szar.grantAdvancement(handler.player, "april");
+                                    // Unregister by... can't easily unregister FAPI events
+                                }
+                            }
+                        }
+                );
+            }
+        });
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            if (world.getRegistryKey() == Szar.BACKROOMS_LEVEL_KEY
+                    && entity instanceof PlayerEntity player) {
+                Szar.grantAdvancement(player, "backrooms");
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -2138,7 +2173,7 @@ public class Szar implements ModInitializer {
     private static Text filterMessage(ServerPlayerEntity player, Text original) {
 
         // If player has the advancement, do nothing
-        if (hasAdvancement(player)) {
+        if (hasAdvancement(player, "nwordpass")) {
             return original;
         }
 
@@ -2169,22 +2204,6 @@ public class Szar implements ModInitializer {
         }
 
         return Text.literal(filtered);
-    }
-
-
-    private static boolean hasAdvancement(ServerPlayerEntity player) {
-
-        Advancement advancement = player
-                .getServer()
-                .getAdvancementLoader()
-                .get(new Identifier(MOD_ID, "nwordpass"));
-
-        if (advancement == null) return false;
-
-        return player
-                .getAdvancementTracker()
-                .getProgress(advancement)
-                .isDone();
     }
     public static void playPlaneAnimation(PlaneAnimation animation, int entityId) {
         for (ServerWorld world : SERVER.getWorlds()) {
@@ -2377,6 +2396,10 @@ public class Szar implements ModInitializer {
         MinecraftServer server = serverPlayer.getServer();
         if (server == null) return;
 
+        if (!advancement.equals("szar")) {
+            grantAdvancement(player, "szar");
+        }
+
         var entry = server.getAdvancementLoader().get(new Identifier(Szar.MOD_ID, advancement));
         if (entry == null) return;
 
@@ -2386,6 +2409,40 @@ public class Szar implements ModInitializer {
         if (!progress.isDone()) {
             for (String criterion : progress.getUnobtainedCriteria()) {
                 serverPlayer.getAdvancementTracker().grantCriterion(entry, criterion);
+            }
+        }
+    }
+
+    private static boolean hasAdvancement(ServerPlayerEntity player, String advancementname) {
+
+        Advancement advancement = player
+                .getServer()
+                .getAdvancementLoader()
+                .get(new Identifier(MOD_ID, advancementname));
+
+        if (advancement == null) return false;
+
+        return player
+                .getAdvancementTracker()
+                .getProgress(advancement)
+                .isDone();
+    }
+
+    public static void grantNearbyAdvancement(
+            ServerWorld world,
+            BlockPos center,
+            int radius, String advancement
+    ) {
+        double radiusSq = radius * radius;
+
+        for (ServerPlayerEntity player : world.getPlayers()) {
+            if (player.getPos().squaredDistanceTo(
+                    center.getX() + 0.5,
+                    center.getY() + 0.5,
+                    center.getZ() + 0.5
+            ) <= radiusSq) {
+
+                grantAdvancement(player, advancement);
             }
         }
     }
