@@ -2,6 +2,7 @@
   "values": [
     "szar:roulette",
     "szar:slot_machine",
-    "szar:tictactoe"
+    "szar:tictactoe",
+    "szar:connectfour"
   ]
 }

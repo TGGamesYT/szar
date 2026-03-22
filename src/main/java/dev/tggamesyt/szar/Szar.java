@@ -385,6 +385,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ALMOND_WATER);
                         entries.add(Szar.KEBAB);
                         entries.add(Szar.TIC_TAC_TOE_ITEM);
+                        entries.add(Szar.CONNECT_FOUR_ITEM);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -398,11 +399,11 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.WHEEL);
                         entries.add(Szar.PLANE);
                         // drugs
+                        entries.add(Szar.BEER);
+                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
-                        entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
-                        entries.add(Szar.BEER);
                         // war guys
                         entries.add(Szar.HITTER_SPAWNEGG);
                         entries.add(Szar.NAZI_SPAWNEGG);
@@ -1337,6 +1338,15 @@ public class Szar implements ModInitializer {
                 }
             });
         });
+        ServerPlayNetworking.registerGlobalReceiver(C4_MAKE_MOVE, (server, player, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            int col = buf.readInt();
+            server.execute(() -> {
+                if (player.getWorld().getBlockEntity(pos) instanceof ConnectFourBlockEntity be) {
+                    be.handleMove(player, col);
+                }
+            });
+        });
     }
 
     public static final Block TIC_TAC_TOE_BLOCK = Registry.register(
@@ -1359,7 +1369,27 @@ public class Szar implements ModInitializer {
     public static final Identifier TTT_MAKE_MOVE = new Identifier(MOD_ID, "ttt_move");
     public static final Identifier TTT_STATE_SYNC = new Identifier(MOD_ID, "ttt_sync");
     public static final Identifier TTT_CLOSE_SCREEN = new Identifier(MOD_ID, "ttt_close");
+    public static final Block CONNECT_FOUR_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "connectfour"),
+            new ConnectFourBlock(AbstractBlock.Settings.create().strength(2f))
+    );
+    public static final BlockItem CONNECT_FOUR_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "connectfour"),
+            new BlockItem(CONNECT_FOUR_BLOCK, new Item.Settings())
+    );
+    public static final BlockEntityType<ConnectFourBlockEntity> CONNECT_FOUR_ENTITY =
+            Registry.register(
+                    Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "connectfour"),
+                    FabricBlockEntityTypeBuilder.create(ConnectFourBlockEntity::new,
+                            CONNECT_FOUR_BLOCK).build()
+            );
 
+    public static final Identifier C4_OPEN_SCREEN = new Identifier(MOD_ID, "c4_open");
+    public static final Identifier C4_MAKE_MOVE = new Identifier(MOD_ID, "c4_move");
+    public static final Identifier C4_STATE_SYNC = new Identifier(MOD_ID, "c4_sync");
+    public static final Identifier C4_CLOSE_SCREEN = new Identifier(MOD_ID, "c4_close");
+
+    public static final Map<UUID, BlockPos> c4ActivePlayers = new java.util.HashMap<>();
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "tracker"),

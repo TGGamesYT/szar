@@ -90,11 +90,17 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
-        // Open screen
+        // TTT
         ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_OPEN_SCREEN, (client, handler, buf, sender) -> {
             BlockPos pos = buf.readBlockPos();
             TicTacToeBlockEntity.State state = TicTacToeBlockEntity.readStateFromBuf(buf);
-            client.execute(() -> client.setScreen(new TicTacToeScreen(pos, state)));
+            client.execute(() -> {
+                if (client.currentScreen instanceof TicTacToeScreen existing) {
+                    existing.updateState(state); // just update, don't replace
+                } else {
+                    client.setScreen(new TicTacToeScreen(pos, state));
+                }
+            });
         });
         ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_CLOSE_SCREEN, (client, handler, buf, sender) -> {
             client.execute(() -> {
@@ -109,6 +115,37 @@ public class SzarClient implements ClientModInitializer {
             client.execute(() -> {
                 if (client.currentScreen instanceof TicTacToeScreen screen) {
                     screen.updateState(state);
+                }
+            });
+        });
+
+// C4
+        ClientPlayNetworking.registerGlobalReceiver(Szar.C4_OPEN_SCREEN, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            ConnectFourBlockEntity.State state = ConnectFourBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> {
+                if (client.currentScreen instanceof ConnectFourScreen existing) {
+                    existing.updateState(state);
+                } else {
+                    client.setScreen(new ConnectFourScreen(pos, state));
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Szar.C4_STATE_SYNC, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            ConnectFourBlockEntity.State state = ConnectFourBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> {
+                if (client.currentScreen instanceof ConnectFourScreen screen) {
+                    screen.updateState(state);
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Szar.C4_CLOSE_SCREEN, (client, handler, buf, sender) -> {
+            client.execute(() -> {
+                if (client.currentScreen instanceof ConnectFourScreen) {
+                    client.setScreen(null);
                 }
             });
         });

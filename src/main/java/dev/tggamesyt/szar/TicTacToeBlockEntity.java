@@ -52,7 +52,21 @@ public class TicTacToeBlockEntity extends BlockEntity {
 
         // Rejoin existing game
         if (uuid.equals(player1) || uuid.equals(player2)) {
-            openScreen(player);
+            if (player1 != null && player2 != null) {
+                // Game in progress — reopen screen
+                openScreen(player);
+            } else {
+                // Still waiting for second player — leave
+                if (uuid.equals(player1)) {
+                    Szar.tttActivePlayers.remove(player1); // use c4ActivePlayers for ConnectFour
+                    player1 = null;
+                } else {
+                    Szar.tttActivePlayers.remove(player2);
+                    player2 = null;
+                }
+                player.sendMessage(Text.literal("§7Left the game."), true);
+                markDirty();
+            }
             return;
         }
 
