@@ -3,6 +3,7 @@
     "szar:roulette",
     "szar:slot_machine",
     "szar:tictactoe",
-    "szar:connectfour"
+    "szar:connectfour",
+    "szar:chess"
   ]
 }

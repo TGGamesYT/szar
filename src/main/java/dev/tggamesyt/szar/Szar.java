@@ -386,6 +386,7 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.KEBAB);
                         entries.add(Szar.TIC_TAC_TOE_ITEM);
                         entries.add(Szar.CONNECT_FOUR_ITEM);
+                        entries.add(Szar.CHESS_ITEM);
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -1347,6 +1348,15 @@ public class Szar implements ModInitializer {
                 }
             });
         });
+        ServerPlayNetworking.registerGlobalReceiver(CHESS_MAKE_MOVE, (server, player, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            String move = buf.readString(); // UCI format e.g. "e2e4"
+            server.execute(() -> {
+                if (player.getWorld().getBlockEntity(pos) instanceof ChessBlockEntity be) {
+                    be.handleMove(player, move);
+                }
+            });
+        });
     }
 
     public static final Block TIC_TAC_TOE_BLOCK = Registry.register(
@@ -1390,6 +1400,28 @@ public class Szar implements ModInitializer {
     public static final Identifier C4_CLOSE_SCREEN = new Identifier(MOD_ID, "c4_close");
 
     public static final Map<UUID, BlockPos> c4ActivePlayers = new java.util.HashMap<>();
+
+    public static final Block CHESS_BLOCK = Registry.register(
+            Registries.BLOCK, new Identifier(MOD_ID, "chess"),
+            new ChessBlock(AbstractBlock.Settings.create().strength(2f))
+    );
+    public static final BlockItem CHESS_ITEM = Registry.register(
+            Registries.ITEM, new Identifier(MOD_ID, "chess"),
+            new BlockItem(CHESS_BLOCK, new Item.Settings())
+    );
+    public static final BlockEntityType<ChessBlockEntity> CHESS_ENTITY =
+            Registry.register(
+                    Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, "chess"),
+                    FabricBlockEntityTypeBuilder.create(ChessBlockEntity::new, CHESS_BLOCK).build()
+            );
+
+    public static final Identifier CHESS_OPEN_SCREEN = new Identifier(MOD_ID, "chess_open");
+    public static final Identifier CHESS_MAKE_MOVE = new Identifier(MOD_ID, "chess_move");
+    public static final Identifier CHESS_STATE_SYNC = new Identifier(MOD_ID, "chess_sync");
+    public static final Identifier CHESS_CLOSE_SCREEN = new Identifier(MOD_ID, "chess_close");
+
+    public static final Map<UUID, BlockPos> chessActivePlayers = new java.util.HashMap<>();
+
     // Blocks
     public static final TrackerBlock TRACKER_BLOCK = Registry.register(
             Registries.BLOCK, new Identifier(MOD_ID, "tracker"),

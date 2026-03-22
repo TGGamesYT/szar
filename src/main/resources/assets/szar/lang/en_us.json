@@ -188,5 +188,6 @@
   "advancement.szar.backrooms.description": "Step into the Backrooms",
 
   "block.szar.tictactoe": "Tic Tac Toe",
-  "block.szar.connectfour": "Connect Four"
+  "block.szar.connectfour": "Connect Four",
+  "block.szar.chess": "Chess"
 }

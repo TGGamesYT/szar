@@ -90,6 +90,35 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(Szar.CHESS_OPEN_SCREEN, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            ChessBlockEntity.State state = ChessBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> {
+                if (client.currentScreen instanceof ChessScreen existing) {
+                    existing.updateState(state);
+                } else {
+                    client.setScreen(new ChessScreen(pos, state));
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Szar.CHESS_STATE_SYNC, (client, handler, buf, sender) -> {
+            BlockPos pos = buf.readBlockPos();
+            ChessBlockEntity.State state = ChessBlockEntity.readStateFromBuf(buf);
+            client.execute(() -> {
+                if (client.currentScreen instanceof ChessScreen screen) {
+                    screen.updateState(state);
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Szar.CHESS_CLOSE_SCREEN, (client, handler, buf, sender) -> {
+            client.execute(() -> {
+                if (client.currentScreen instanceof ChessScreen) {
+                    client.setScreen(null);
+                }
+            });
+        });
         // TTT
         ClientPlayNetworking.registerGlobalReceiver(Szar.TTT_OPEN_SCREEN, (client, handler, buf, sender) -> {
             BlockPos pos = buf.readBlockPos();
