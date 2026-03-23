@@ -29,18 +29,14 @@ public class RadiationStatusEffect extends StatusEffect {
     @Override
     public void applyUpdateEffect(LivingEntity entity, int amplifier) {
         int level = amplifier + 1;
-
         float damage = (float) getInterpolatedDamage(level);
 
-        RegistryEntry<DamageType> radiationEntry = SERVER.getRegistryManager()
+        RegistryEntry<DamageType> radiationEntry = entity.getWorld().getRegistryManager()
                 .get(RegistryKeys.DAMAGE_TYPE)
                 .getEntry(RADIATION_DAMAGE)
                 .orElseThrow(() -> new IllegalStateException("Radiation DamageType not registered!"));
 
-        entity.damage(
-                new DamageSource(radiationEntry),
-                damage
-        );
+        entity.damage(new DamageSource(radiationEntry), damage);
     }
 
     /* ========================= */

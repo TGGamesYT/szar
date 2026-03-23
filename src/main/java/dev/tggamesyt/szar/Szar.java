@@ -101,7 +101,6 @@ import static dev.tggamesyt.szar.ServerCosmetics.sync;
 public class Szar implements ModInitializer {
     public static final String MOD_ID = "szar";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-    public static MinecraftServer SERVER;
     public static int april = 4;
     public static int fools = 1;
     public static final Identifier DRUNK_TYPE_PACKET = new Identifier(MOD_ID, "drunk_type");
@@ -570,7 +569,7 @@ public class Szar implements ModInitializer {
                             SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.5f, 1.8f);
 
                     if (isHeadshot) {
-                        RegistryEntry<DamageType> bullet_damage = SERVER.getRegistryManager()
+                        RegistryEntry<DamageType> bullet_damage = server.getRegistryManager()
                                 .get(RegistryKeys.DAMAGE_TYPE)
                                 .getEntry(BULLET_DAMAGE)
                                 .orElseThrow(() -> new IllegalStateException("Bullet DamageType not registered!"));
@@ -642,13 +641,6 @@ public class Szar implements ModInitializer {
                     ServerCosmetics.syncTo(other, joiner, joinerUser);
                 }
             }
-        });
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            SERVER = server;
-        });
-
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            SERVER = null;
         });
         // register block
         Registry.register(
@@ -2313,8 +2305,8 @@ public class Szar implements ModInitializer {
 
         return Text.literal(filtered);
     }
-    public static void playPlaneAnimation(PlaneAnimation animation, int entityId) {
-        for (ServerWorld world : SERVER.getWorlds()) {
+    public static void playPlaneAnimation(PlaneAnimation animation, int entityId, MinecraftServer server) {
+        for (ServerWorld world : server.getWorlds()) {
         for (ServerPlayerEntity player : world.getPlayers()) {
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeInt(entityId); // <-- important change

@@ -1,10 +1,10 @@
 package dev.tggamesyt.szar.client;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -106,7 +106,7 @@ public class VideoManager {
         ClientWorld world = client.world;
         if (world == null) return;
 
-        ClientPlayerEntity player = (ClientPlayerEntity) world.getPlayerByUuid(playerUuid);
+        PlayerEntity player = world.getPlayerByUuid(playerUuid);
         if (player == null) return;
 
         Identifier soundId = new Identifier(MOD_ID, "firtana");

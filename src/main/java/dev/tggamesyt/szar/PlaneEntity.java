@@ -14,6 +14,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -290,9 +291,13 @@ public class PlaneEntity extends Entity {
     }
     private void playServerAnimation(PlaneAnimation anim) {
         if (this.currentServerAnimation == anim) return;
+        if (this.getWorld().isClient) return;
+
+        MinecraftServer server = this.getWorld().getServer();
+        if (server == null) return;
 
         this.currentServerAnimation = anim;
-        Szar.playPlaneAnimation(anim, this.getId());
+        Szar.playPlaneAnimation(anim, this.getId(), server);
     }
 
     @Environment(EnvType.CLIENT)

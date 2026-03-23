@@ -123,7 +123,7 @@ public class FaszItem extends BlockItem {
             if (e.getBoundingBox().contains(px, py, pz)) {
                 if (e instanceof LivingEntity living) {
                     // Always deal half a heart
-                    RegistryEntry<DamageType> radiationEntry = SERVER.getRegistryManager()
+                    RegistryEntry<DamageType> radiationEntry = living.getServer().getRegistryManager()
                             .get(RegistryKeys.DAMAGE_TYPE)
                             .getEntry(FCK_DAMAGE)
                             .orElseThrow(() -> new IllegalStateException("FCK DamageType not registered!"));

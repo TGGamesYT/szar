@@ -17,16 +17,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static dev.tggamesyt.szar.Szar.RADIATION_DAMAGE;
-import static dev.tggamesyt.szar.Szar.SERVER;
-
 @Mixin(Item.class)
 public abstract class RadiatedItemMixin {
     @Inject(method = "use", at = @At("RETURN"))
     private void onUse(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         ItemStack stack = cir.getReturnValue().getValue();
         if (!world.isClient && stack.hasNbt() && stack.getNbt().getBoolean("Radiated")) {
-            RegistryEntry<DamageType> radiationEntry = Szar.SERVER.getRegistryManager()
+            RegistryEntry<DamageType> radiationEntry = world.getRegistryManager()
                     .get(RegistryKeys.DAMAGE_TYPE)
                     .getEntry(Szar.RADIATION_DAMAGE)
                     .orElseThrow();
