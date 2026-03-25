@@ -90,6 +90,12 @@ public class SzarClient implements ClientModInitializer {
     );
     @Override
     public void onInitializeClient() {
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_STAIRS_BE_TYPE, BlueprintBlockEntityRenderer::new);
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_SLAB_BE_TYPE,   BlueprintBlockEntityRenderer::new);
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_DOOR_BE_TYPE,   BlueprintBlockEntityRenderer::new);
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_TRAPDOOR_BE_TYPE, BlueprintBlockEntityRenderer::new);
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_WALL_BE_TYPE,   BlueprintBlockEntityRenderer::new);
+        BlockEntityRendererFactories.register(BlueprintBlocks.BLUEPRINT_FENCE_BE_TYPE,  BlueprintBlockEntityRenderer::new);
         ClientPlayNetworking.registerGlobalReceiver(Szar.CHESS_OPEN_SCREEN, (client, handler, buf, sender) -> {
             BlockPos pos = buf.readBlockPos();
             ChessBlockEntity.State state = ChessBlockEntity.readStateFromBuf(buf);
@@ -312,6 +318,7 @@ public class SzarClient implements ClientModInitializer {
             });
         });
         ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "weed_joint"), new Identifier(MOD_ID, "weed_joint_in_hand"));
+        ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "empty_joint"), new Identifier(MOD_ID, "empty_joint_in_hand"));
         ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "fasz"), new Identifier(MOD_ID, "fasz_in_hand"));
         ThirdpersonModelRegisterer.register(new Identifier(MOD_ID, "slot_machine"), new Identifier(MOD_ID, "slot_machine_3d"));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

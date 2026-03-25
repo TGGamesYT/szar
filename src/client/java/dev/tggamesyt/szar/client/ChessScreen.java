@@ -21,10 +21,6 @@ import java.util.*;
 
 public class ChessScreen extends Screen {
 
-    // Board background texture
-    private static final Identifier BOARD_TEX =
-            new Identifier("szar", "textures/gui/chess_board.png");
-
     // Piece textures — one per piece type
     // Naming: chess_wp.png (white pawn), chess_bn.png (black knight) etc.
     private static final Map<Piece, Identifier> PIECE_TEXTURES = new HashMap<>();

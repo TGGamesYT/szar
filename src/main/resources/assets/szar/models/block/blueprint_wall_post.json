@@ -1,0 +1,2 @@
+{ "parent": "minecraft:block/template_wall_post",
+  "textures": { "wall": "szar:block/blueprint" } }

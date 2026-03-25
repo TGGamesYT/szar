@@ -1,0 +1,2 @@
+{ "parent": "minecraft:block/slab_top",
+  "textures": { "bottom": "szar:block/blueprint", "top": "szar:block/blueprint", "side": "szar:block/blueprint" } }

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "szar:block/blueprint_slab" },
+    "type=double": { "model": "szar:block/blueprint_slab_double" },
+    "type=top":    { "model": "szar:block/blueprint_slab_top" }
+  }
+}

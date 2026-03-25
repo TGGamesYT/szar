@@ -1,0 +1,2 @@
+{ "parent": "minecraft:block/template_trapdoor_top",
+  "textures": { "texture": "szar:block/blueprint" } }

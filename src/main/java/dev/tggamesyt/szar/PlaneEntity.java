@@ -288,6 +288,14 @@ public class PlaneEntity extends Entity {
     @Override
     public void updatePassengerPosition(Entity passenger, PositionUpdater updater) {
         passenger.setPosition(getX(), getY() + 0.8, getZ());
+
+        if (passenger instanceof PlayerEntity player) {
+            float planeYaw = this.getYaw();
+            float relativeYaw = MathHelper.wrapDegrees(player.getYaw() - planeYaw);
+            float clampedRelative = MathHelper.clamp(relativeYaw, -85f, 85f);
+            player.setYaw(planeYaw + clampedRelative);
+            player.setHeadYaw(planeYaw + clampedRelative);
+        }
     }
     private void playServerAnimation(PlaneAnimation anim) {
         if (this.currentServerAnimation == anim) return;

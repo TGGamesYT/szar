@@ -6,3 +6,4 @@ accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
 accessible field net/minecraft/server/network/ServerPlayerInteractionManager player Lnet/minecraft/server/network/ServerPlayerEntity;
 accessible method net/minecraft/client/render/entity/LivingEntityRenderer addFeature (Lnet/minecraft/client/render/entity/feature/FeatureRenderer;)Z
 accessible field net/minecraft/client/render/entity/EntityRenderDispatcher renderers Ljava/util/Map;
+accessible method net/minecraft/world/GameRules$BooleanRule create (ZLjava/util/function/BiConsumer;)Lnet/minecraft/world/GameRules$Type;

@@ -2,19 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     " P ",
-    "PWP",
+    "P P",
     " P "
   ],
   "key": {
     "P": {
-      "item": "szar:weed"
-    },
-    "W": {
-      "item": "szar:empty_joint"
+      "item": "minecraft:paper"
     }
   },
   "result": {
-    "item": "szar:weed_joint",
+    "item": "szar:empty_joint",
     "count": 1
   }
 }

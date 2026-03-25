@@ -1,6 +1,7 @@
 package dev.tggamesyt.szar;
 
 import com.google.common.collect.ImmutableSet;
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -362,14 +363,15 @@ public class Szar implements ModInitializer {
                     .displayName(Text.translatable("itemgroup.szar_group"))
                     .icon(() -> new ItemStack(Szar.CANNABIS_ITEM)) // icon item
                     .entries((displayContext, entries) -> {
+                        boolean showRacist   = !ServerConfig.get("racist");
+                        boolean showGambling = !ServerConfig.get("gambling");
+                        boolean showNsfw     = !ServerConfig.get("nsfw");
                         // random ahh silly stuff
                         entries.add(Szar.POPTART);
                         entries.add(Szar.NYAN_SPAWNEGG);
                         entries.add(Szar.BAITER_DISC);
                         entries.add(Szar.MERL_SPAWNEGG);
                         entries.add(Szar.EFN_DISK);
-                        entries.add(Szar.SLOT_MACHINE);
-                        entries.add(Szar.ROULETTE);
                         entries.add(Szar.FIRTANA);
                         entries.add(Szar.HELLO_DISC);
                         entries.add(Szar.TRACKER_BLOCK_ITEM);
@@ -383,9 +385,22 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.CAN_OF_BEANS);
                         entries.add(Szar.ALMOND_WATER);
                         entries.add(Szar.KEBAB);
+
+                        entries.add(BlueprintBlocks.BLUEPRINT_DOOR_ITEM);
+                        entries.add(BlueprintBlocks.BLUEPRINT_TRAPDOOR_ITEM);
+                        entries.add(BlueprintBlocks.BLUEPRINT_FENCE_ITEM);
+                        entries.add(BlueprintBlocks.BLUEPRINT_SLAB_ITEM);
+                        entries.add(BlueprintBlocks.BLUEPRINT_WALL_ITEM);
+                        entries.add(BlueprintBlocks.BLUEPRINT_STAIRS_ITEM);
+
                         entries.add(Szar.TIC_TAC_TOE_ITEM);
                         entries.add(Szar.CONNECT_FOUR_ITEM);
                         entries.add(Szar.CHESS_ITEM);
+                        // gambing
+                        if (showGambling) {
+                            entries.add(Szar.SLOT_MACHINE);
+                            entries.add(Szar.ROULETTE);
+                        }
                         // crazy weponary
                         entries.add(Szar.BULLET_ITEM);
                         entries.add(Szar.AK47);
@@ -398,12 +413,17 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ATOM);
                         entries.add(Szar.WHEEL);
                         entries.add(Szar.PLANE);
+                        // police
+                        entries.add(Szar.POLICE_SPAWNEGG);
+                        entries.add(Szar.KEY_ITEM);
+                        entries.add(Szar.HANDCUFF_ITEM);
                         // drugs
                         entries.add(Szar.BEER);
                         entries.add(Szar.CHEMICAL_WORKBENCH_ITEM);
                         entries.add(Szar.CANNABIS_ITEM);
                         entries.add(Szar.WEED_ITEM);
                         entries.add(Szar.WEED_JOINT_ITEM);
+                        entries.add(Szar.EMPTY_JOINT);
                         // war guys
                         entries.add(Szar.HITTER_SPAWNEGG);
                         entries.add(Szar.NAZI_SPAWNEGG);
@@ -412,33 +432,35 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.ERIKA_DISC);
                         entries.add(Szar.USSR_DISC);
                         // racism
-                        entries.add(Szar.CIGANYBLOCK);
-                        entries.add(Szar.NWORD_PASS);
-                        entries.add(Szar.NIGGER_SPAWNEGG);
-                        entries.add(Szar.GYPSY_SPAWNEGG);
-                        entries.add(Szar.TERRORIST_SPAWNEGG);
-                        entries.add(Szar.POLICE_SPAWNEGG);
-                        entries.add(Szar.KEY_ITEM);
-                        entries.add(Szar.HANDCUFF_ITEM);
-                        // niggerite shits at the end
-                        entries.add(Szar.NIGGERITE_INGOT);
-                        entries.add(Szar.NIGGERITE_SWORD);
-                        entries.add(Szar.NIGGERITE_AXE);
-                        entries.add(Szar.NIGGERITE_PICKAXE);
-                        entries.add(Szar.NIGGERITE_SHOVEL);
-                        entries.add(Szar.NIGGERITE_HOE);
-                        entries.add(Szar.NIGGERITE_HELMET);
-                        entries.add(Szar.NIGGERITE_CHESTPLATE);
-                        entries.add(Szar.NIGGERITE_LEGGINGS);
-                        entries.add(Szar.NIGGERITE_BOOTS);
-                        entries.add(Szar.NIGGERITE_BLOCK);
+                        if (showRacist) {
+                            entries.add(Szar.CIGANYBLOCK);
+                            entries.add(Szar.NWORD_PASS);
+                            entries.add(Szar.NIGGER_SPAWNEGG);
+                            entries.add(Szar.GYPSY_SPAWNEGG);
+                            entries.add(Szar.TERRORIST_SPAWNEGG);
+
+                            // niggerite shits at the end
+                            entries.add(Szar.NIGGERITE_INGOT);
+                            entries.add(Szar.NIGGERITE_SWORD);
+                            entries.add(Szar.NIGGERITE_AXE);
+                            entries.add(Szar.NIGGERITE_PICKAXE);
+                            entries.add(Szar.NIGGERITE_SHOVEL);
+                            entries.add(Szar.NIGGERITE_HOE);
+                            entries.add(Szar.NIGGERITE_HELMET);
+                            entries.add(Szar.NIGGERITE_CHESTPLATE);
+                            entries.add(Szar.NIGGERITE_LEGGINGS);
+                            entries.add(Szar.NIGGERITE_BOOTS);
+                            entries.add(Szar.NIGGERITE_BLOCK);
+                        }
                         // nsfw
-                        entries.add(Szar.EPSTEIN_FILES);
-                        entries.add(Szar.EPSTEIN_SPAWNEGG);
-                        entries.add(Szar.FASZITEM);
-                        entries.add(Szar.CNDM);
-                        entries.add(Szar.LATEX);
-                        entries.add(Szar.WHITE_LIQUID);
+                        if (showNsfw) {
+                            entries.add(Szar.EPSTEIN_FILES);
+                            entries.add(Szar.EPSTEIN_SPAWNEGG);
+                            entries.add(Szar.FASZITEM);
+                            entries.add(Szar.CNDM);
+                            entries.add(Szar.LATEX);
+                            entries.add(Szar.WHITE_LIQUID);
+                        }
                     })
                     .build()
     );
@@ -1349,6 +1371,13 @@ public class Szar implements ModInitializer {
                 }
             });
         });
+        SzarGameRules.register();
+        ServerSettings.init();
+        ServerConfig.load();
+
+        ServerLifecycleEvents.SERVER_STARTED.register(SzarGameRules::pushToGameRules);
+
+        BlueprintBlocks.init();
     }
 
     public static final Block TIC_TAC_TOE_BLOCK = Registry.register(
@@ -2001,6 +2030,11 @@ public class Szar implements ModInitializer {
             Registries.ITEM,
             new Identifier(MOD_ID, "weed_joint"),
             new Joint(new Item.Settings())
+    );
+    public static final Item EMPTY_JOINT = Registry.register(
+            Registries.ITEM,
+            new Identifier(MOD_ID, "empty_joint"),
+            new Item(new Item.Settings())
     );
     public static final Item CIGANYBLOCK = Registry.register(
             Registries.ITEM,

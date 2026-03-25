@@ -1,0 +1,2 @@
+{ "parent": "minecraft:block/door_bottom_right_open",
+  "textures": { "bottom": "szar:block/blueprint", "top": "szar:block/blueprint" } }

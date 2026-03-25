@@ -189,5 +189,13 @@
 
   "block.szar.tictactoe": "Tic Tac Toe",
   "block.szar.connectfour": "Connect Four",
-  "block.szar.chess": "Chess"
+  "block.szar.chess": "Chess",
+  "item.szar.empty_joint": "Empty Joint",
+
+  "block.szar.blueprint_stairs": "Blueprint Stairs",
+  "block.szar.blueprint_slab": "Blueprint Slab",
+  "block.szar.blueprint_door": "Blueprint Door",
+  "block.szar.blueprint_trapdoor": "Blueprint Trapdoor",
+  "block.szar.blueprint_wall": "Blueprint Wall",
+  "block.szar.blueprint_fence": "Blueprint Fence"
 }

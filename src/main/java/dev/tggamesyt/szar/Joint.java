@@ -28,7 +28,7 @@ import static dev.tggamesyt.szar.Szar.MOD_ID;
 
 public class Joint extends SpyglassItem {
     public Joint(Settings settings) {
-        super(settings.maxDamage(20)); // max durability
+        super(settings.maxDamage(8)); // max durability
     }
     private static final int COOLDOWN_TICKS = 20 * 5;
     @Override
@@ -72,7 +72,24 @@ public class Joint extends SpyglassItem {
             Szar.PLAYER_ADDICTION_LEVEL.put(user.getUuid(), true);
         }
         // Consume 1 durability
-        stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+        int currentDamage = stack.getDamage();
+        int maxDamage = stack.getMaxDamage();
+
+        if (currentDamage + 1 >= maxDamage) {
+            // About to break — give empty joint instead
+            stack.setCount(0); // remove the joint
+            if (user instanceof PlayerEntity player) {
+                ItemStack emptyJoint = new ItemStack(Szar.EMPTY_JOINT);
+                if (!player.getInventory().insertStack(emptyJoint)) {
+                    // Inventory full, drop it at player's feet
+                    player.dropItem(emptyJoint, false);
+                }
+                player.sendToolBreakStatus(user.getActiveHand());
+            }
+        } else {
+            stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+        }
+
         if (user instanceof PlayerEntity player && !world.isClient) {
             player.getItemCooldownManager().set(this, COOLDOWN_TICKS);
         }

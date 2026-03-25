@@ -1,0 +1,2 @@
+{ "parent": "minecraft:block/fence_side",
+  "textures": { "texture": "szar:block/blueprint" } }
