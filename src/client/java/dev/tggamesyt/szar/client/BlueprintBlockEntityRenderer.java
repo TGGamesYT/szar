@@ -11,6 +11,7 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.random.Random;
 
 public class BlueprintBlockEntityRenderer implements BlockEntityRenderer<BlueprintBlockEntity> {
@@ -31,43 +32,19 @@ public class BlueprintBlockEntityRenderer implements BlockEntityRenderer<Bluepri
         BlockState storedState = block.getDefaultState();
         if (storedState.getRenderType() == BlockRenderType.INVISIBLE) return;
 
-        // Get the shape/state of the blueprint block itself
         BlockState blueprintState = entity.getCachedState();
-
-        // We want to render the stored block's TEXTURE but on the blueprint block's SHAPE.
-        // The way to do this: find the model for the blueprint block shape,
-        // but swap in the stored block's sprite via a custom render layer.
-        // Simplest approach: render the blueprint block's model with the stored block's
-        // textures by remapping the sprite.
-
         BlockRenderManager renderer = MinecraftClient.getInstance().getBlockRenderManager();
 
-        matrices.push();
-
-        // Render the blueprint shape using the stored block's texture
-        // by temporarily using the stored block's model sprites on our shape
-        renderWithStoredTexture(entity, blueprintState, storedState, matrices, vertexConsumers, light, overlay, renderer);
-
-        matrices.pop();
-    }
-
-    private void renderWithStoredTexture(BlueprintBlockEntity entity, BlockState blueprintState,
-                                         BlockState storedState, MatrixStack matrices,
-                                         VertexConsumerProvider vertexConsumers, int light, int overlay,
-                                         BlockRenderManager renderer) {
-        // Get the first (main) sprite from the stored block's model
         var storedModel = renderer.getModel(storedState);
         var blueprintModel = renderer.getModel(blueprintState);
+        var particleSprite = storedModel.getParticleSprite();
 
-        var sprites = storedModel.getParticleSprite(); // main texture of stored block
-
-        // Render blueprint model quads, replacing its texture with stored block's sprite
         var random = Random.create();
-        random.setSeed(42L);
+        var layer = net.minecraft.client.render.RenderLayers.getBlockLayer(storedState);
+        var consumer = vertexConsumers.getBuffer(layer);
 
-        var bufferSource = vertexConsumers;
-        var layer = net.minecraft.client.render.RenderLayers.getBlockLayer(blueprintState);
-        var consumer = bufferSource.getBuffer(layer);
+        matrices.push();
+// No scaling here anymore
 
         for (var direction : new net.minecraft.util.math.Direction[]{
                 null,
@@ -81,22 +58,68 @@ public class BlueprintBlockEntityRenderer implements BlockEntityRenderer<Bluepri
             random.setSeed(42L);
             var quads = blueprintModel.getQuads(blueprintState, direction, random);
             for (var quad : quads) {
-                // Emit the quad but with the stored block's sprite UV remapped
-                emitQuadWithSprite(consumer, matrices, quad, sprites, light, overlay);
+                int[] vertexData = quad.getVertexData().clone();
+                remapUVs(vertexData, quad.getSprite(), particleSprite);
+                offsetVertsAlongNormal(vertexData, quad.getFace(), 0.001f);
+
+                consumer.quad(
+                        matrices.peek(),
+                        new net.minecraft.client.render.model.BakedQuad(
+                                vertexData,
+                                quad.getColorIndex(),
+                                quad.getFace(),
+                                particleSprite,
+                                quad.hasShade()
+                        ),
+                        1f, 1f, 1f, light, overlay
+                );
             }
+        }
+
+        matrices.pop();
+
+    }
+
+    private void remapUVs(int[] vertexData,
+                          net.minecraft.client.texture.Sprite fromSprite,
+                          net.minecraft.client.texture.Sprite toSprite) {
+        // Vertex format: X, Y, Z, COLOR, U, V, UV2, NORMAL — each vertex is 8 ints
+        int vertexSize = 8;
+        for (int i = 0; i < 4; i++) {
+            int uvOffset = i * vertexSize + 4;
+            // Unpack UV floats from int bits
+            float u = Float.intBitsToFloat(vertexData[uvOffset]);
+            float v = Float.intBitsToFloat(vertexData[uvOffset + 1]);
+
+            // Normalize UV from the source sprite's atlas space to 0-1
+            float normalizedU = (u - fromSprite.getMinU()) / (fromSprite.getMaxU() - fromSprite.getMinU());
+            float normalizedV = (v - fromSprite.getMinV()) / (fromSprite.getMaxV() - fromSprite.getMinV());
+
+            // Remap to target sprite's atlas space
+            float newU = toSprite.getMinU() + normalizedU * (toSprite.getMaxU() - toSprite.getMinU());
+            float newV = toSprite.getMinV() + normalizedV * (toSprite.getMaxV() - toSprite.getMinV());
+
+            vertexData[uvOffset]     = Float.floatToRawIntBits(newU);
+            vertexData[uvOffset + 1] = Float.floatToRawIntBits(newV);
         }
     }
 
-    private void emitQuadWithSprite(net.minecraft.client.render.VertexConsumer consumer,
-                                    MatrixStack matrices,
-                                    net.minecraft.client.render.model.BakedQuad quad,
-                                    net.minecraft.client.texture.Sprite sprite,
-                                    int light, int overlay) {
-        // Re-emit the quad geometry but remap UVs to the new sprite
-        consumer.quad(matrices.peek(), quad, 1f, 1f, 1f, light, overlay);
-        // Note: this uses the quad's original UVs which point to the blueprint texture.
-        // For full texture remapping you'd need to manually rewrite vertex data.
-        // This gives correct shape with blueprint texture as fallback —
-        // see note below for full UV remapping.
+    private void offsetVertsAlongNormal(int[] vertexData, net.minecraft.util.math.Direction face, float amount) {
+        float dx = face.getOffsetX() * amount;
+        float dy = face.getOffsetY() * amount;
+        float dz = face.getOffsetZ() * amount;
+
+        int vertexSize = 8;
+        for (int i = 0; i < 4; i++) {
+            int base = i * vertexSize;
+            float x = Float.intBitsToFloat(vertexData[base]);
+            float y = Float.intBitsToFloat(vertexData[base + 1]);
+            float z = Float.intBitsToFloat(vertexData[base + 2]);
+
+            vertexData[base] = Float.floatToRawIntBits(x + dx);
+            vertexData[base + 1] = Float.floatToRawIntBits(y + dy);
+            vertexData[base + 2] = Float.floatToRawIntBits(z + dz);
+        }
     }
+
 }

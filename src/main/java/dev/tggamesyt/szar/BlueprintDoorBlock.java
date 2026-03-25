@@ -19,7 +19,7 @@ public class BlueprintDoorBlock extends DoorBlock implements BlockEntityProvider
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_DOOR_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

@@ -18,7 +18,7 @@ public class BlueprintWallBlock extends WallBlock implements BlockEntityProvider
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_WALL_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

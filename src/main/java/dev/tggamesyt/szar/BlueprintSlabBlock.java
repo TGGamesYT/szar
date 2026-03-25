@@ -18,7 +18,7 @@ public class BlueprintSlabBlock extends SlabBlock implements BlockEntityProvider
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_SLAB_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

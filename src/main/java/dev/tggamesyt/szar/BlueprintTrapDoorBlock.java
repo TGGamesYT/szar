@@ -18,7 +18,7 @@ public class BlueprintTrapDoorBlock extends TrapdoorBlock implements BlockEntity
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_TRAPDOOR_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

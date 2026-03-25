@@ -1,5 +1,6 @@
 package dev.tggamesyt.szar;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -16,8 +17,19 @@ public class BlueprintBlockEntity extends BlockEntity {
     @Nullable
     private String storedBlockId = null;
 
-    public BlueprintBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state);
+    public BlueprintBlockEntity(BlockPos pos, BlockState state) {
+        super(getBEType(state), pos, state);
+    }
+
+    private static BlockEntityType<BlueprintBlockEntity> getBEType(BlockState state) {
+        Block block = state.getBlock();
+        if (block instanceof BlueprintStairsBlock)   return BlueprintBlocks.BLUEPRINT_STAIRS_BE_TYPE;
+        if (block instanceof BlueprintSlabBlock)     return BlueprintBlocks.BLUEPRINT_SLAB_BE_TYPE;
+        if (block instanceof BlueprintDoorBlock)     return BlueprintBlocks.BLUEPRINT_DOOR_BE_TYPE;
+        if (block instanceof BlueprintTrapDoorBlock) return BlueprintBlocks.BLUEPRINT_TRAPDOOR_BE_TYPE;
+        if (block instanceof BlueprintWallBlock)     return BlueprintBlocks.BLUEPRINT_WALL_BE_TYPE;
+        if (block instanceof BlueprintFenceBlock)    return BlueprintBlocks.BLUEPRINT_FENCE_BE_TYPE;
+        throw new IllegalStateException("Unknown blueprint block: " + block);
     }
 
     public boolean hasStoredBlock() {

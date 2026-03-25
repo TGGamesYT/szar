@@ -4,6 +4,7 @@ import dev.tggamesyt.szar.Szar;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.MapColor;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -38,47 +39,44 @@ public class BlueprintBlocks {
 
     public static final BlueprintWallBlock BLUEPRINT_WALL =
             Registry.register(Registries.BLOCK, new Identifier(Szar.MOD_ID, "blueprint_wall"),
-                    new BlueprintWallBlock(settings()));
+                    new BlueprintWallBlock(AbstractBlock.Settings.copy(Blocks.STONE_BRICK_WALL)));
 
     public static final BlueprintFenceBlock BLUEPRINT_FENCE =
             Registry.register(Registries.BLOCK, new Identifier(Szar.MOD_ID, "blueprint_fence"),
-                    new BlueprintFenceBlock(settings()));
+                    new BlueprintFenceBlock(AbstractBlock.Settings.copy(Blocks.OAK_FENCE)));
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_STAIRS_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_stairs_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_STAIRS).build());
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_STAIRS_BE_TYPE;
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_SLAB_BE_TYPE;
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_DOOR_BE_TYPE;
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_TRAPDOOR_BE_TYPE;
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_WALL_BE_TYPE;
+    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_FENCE_BE_TYPE;
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_SLAB_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_slab_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_SLAB).build());
+    static {
+        BLUEPRINT_STAIRS_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_stairs_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_STAIRS).build());
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_DOOR_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_door_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_DOOR).build());
+        BLUEPRINT_SLAB_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_slab_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_SLAB).build());
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_TRAPDOOR_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_trapdoor_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_TRAPDOOR).build());
+        BLUEPRINT_DOOR_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_door_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_DOOR).build());
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_WALL_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_wall_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_WALL).build());
+        BLUEPRINT_TRAPDOOR_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_trapdoor_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_TRAPDOOR).build());
 
-    public static final BlockEntityType<BlueprintBlockEntity> BLUEPRINT_FENCE_BE_TYPE =
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(Szar.MOD_ID, "blueprint_fence_be"),
-                    FabricBlockEntityTypeBuilder.create(
-                            (pos, state) -> new BlueprintBlockEntity(null, pos, state),
-                            BLUEPRINT_FENCE).build());
+        BLUEPRINT_WALL_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_wall_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_WALL).build());
+
+        BLUEPRINT_FENCE_BE_TYPE = Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                new Identifier(Szar.MOD_ID, "blueprint_fence_be"),
+                FabricBlockEntityTypeBuilder.create(BlueprintBlockEntity::new, BLUEPRINT_FENCE).build());
+    }
     public static final BlockItem BLUEPRINT_STAIRS_ITEM = Registry.register(Registries.ITEM,
             new Identifier(Szar.MOD_ID, "blueprint_stairs"),
             new BlockItem(BLUEPRINT_STAIRS, new Item.Settings()));

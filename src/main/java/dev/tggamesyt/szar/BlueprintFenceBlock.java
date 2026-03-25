@@ -18,7 +18,7 @@ public class BlueprintFenceBlock extends FenceBlock implements BlockEntityProvid
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_FENCE_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

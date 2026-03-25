@@ -18,7 +18,7 @@ public class BlueprintStairsBlock extends StairsBlock implements BlockEntityProv
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BlueprintBlockEntity(BlueprintBlocks.BLUEPRINT_STAIRS_BE_TYPE, pos, state);
+        return new BlueprintBlockEntity(pos, state);
     }
 
     @Override

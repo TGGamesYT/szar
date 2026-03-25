@@ -29,13 +29,12 @@ public class BlueprintBehavior {
 
         ItemStack held = player.getStackInHand(hand);
 
-        if (held.isEmpty()) {
-            // Clear stored block
+        if (held.isEmpty() && player.isSneaking()) {
             blueprint.clearStoredBlock();
             return ActionResult.SUCCESS;
         }
 
-        if (held.getItem() instanceof BlockItem blockItem) {
+        if (!held.isEmpty() && held.getItem() instanceof BlockItem blockItem && !blueprint.hasStoredBlock()) {
             String id = Registries.BLOCK.getId(blockItem.getBlock()).toString();
             blueprint.setStoredBlock(id);
             if (!player.isCreative()) held.decrement(1);
