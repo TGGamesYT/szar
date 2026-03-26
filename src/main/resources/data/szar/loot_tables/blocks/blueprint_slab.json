@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "szar:blueprint_slab",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:block_state_property",
+                "block": "szar:blueprint_slab",
+                "property": "type",
+                "values": {
+                  "double": 2,
+                  "bottom": 1,
+                  "top": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -197,5 +197,6 @@
   "block.szar.blueprint_door": "Blueprint Door",
   "block.szar.blueprint_trapdoor": "Blueprint Trapdoor",
   "block.szar.blueprint_wall": "Blueprint Wall",
-  "block.szar.blueprint_fence": "Blueprint Fence"
+  "block.szar.blueprint_fence": "Blueprint Fence",
+  "item.szar.blueprint": "Blueprint"
 }

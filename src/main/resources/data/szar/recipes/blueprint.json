@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "BPB",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "tag": "szar:blue"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    }
+  },
+  "result": {
+    "item": "szar:blueprint",
+    "count": 1
+  }
+}

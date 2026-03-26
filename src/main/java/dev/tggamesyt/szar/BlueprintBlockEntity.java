@@ -52,6 +52,9 @@ public class BlueprintBlockEntity extends BlockEntity {
     public void clearStoredBlock() {
         this.storedBlockId = null;
         markDirty();
+        if (world != null && !world.isClient) {
+            world.updateListeners(pos, getCachedState(), getCachedState(), 3);
+        }
     }
 
     /** Gets the hardness of the stored block, or default if none. */

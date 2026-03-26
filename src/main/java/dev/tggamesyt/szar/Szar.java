@@ -366,7 +366,7 @@ public class Szar implements ModInitializer {
                         boolean showRacist   = !ServerConfig.get("racist");
                         boolean showGambling = !ServerConfig.get("gambling");
                         boolean showNsfw     = !ServerConfig.get("nsfw");
-                        // random ahh silly stuff
+                        // memes
                         entries.add(Szar.POPTART);
                         entries.add(Szar.NYAN_SPAWNEGG);
                         entries.add(Szar.BAITER_DISC);
@@ -374,6 +374,8 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.EFN_DISK);
                         entries.add(Szar.FIRTANA);
                         entries.add(Szar.HELLO_DISC);
+                        entries.add(Szar.KEBAB);
+                        // backrooms
                         entries.add(Szar.TRACKER_BLOCK_ITEM);
                         entries.add(Szar.PORTAL_BLOCK_ITEM);
                         entries.add(Szar.WALL_ITEM);
@@ -384,15 +386,15 @@ public class Szar implements ModInitializer {
                         entries.add(Szar.BEAN);
                         entries.add(Szar.CAN_OF_BEANS);
                         entries.add(Szar.ALMOND_WATER);
-                        entries.add(Szar.KEBAB);
-
+                        // blueprint stuff
+                        entries.add(BlueprintBlocks.BLUEPRINT);
                         entries.add(BlueprintBlocks.BLUEPRINT_DOOR_ITEM);
                         entries.add(BlueprintBlocks.BLUEPRINT_TRAPDOOR_ITEM);
                         entries.add(BlueprintBlocks.BLUEPRINT_FENCE_ITEM);
                         entries.add(BlueprintBlocks.BLUEPRINT_SLAB_ITEM);
                         entries.add(BlueprintBlocks.BLUEPRINT_WALL_ITEM);
                         entries.add(BlueprintBlocks.BLUEPRINT_STAIRS_ITEM);
-
+                        // board games
                         entries.add(Szar.TIC_TAC_TOE_ITEM);
                         entries.add(Szar.CONNECT_FOUR_ITEM);
                         entries.add(Szar.CHESS_ITEM);

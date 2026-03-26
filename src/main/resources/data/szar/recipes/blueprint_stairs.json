@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "B  ",
+    "BB ",
+    "BBB"
+  ],
+  "key": {
+    "B": {
+      "item": "szar:blueprint"
+    }
+  },
+  "result": {
+    "item": "szar:blueprint_stairs",
+    "count": 1
+  }
+}

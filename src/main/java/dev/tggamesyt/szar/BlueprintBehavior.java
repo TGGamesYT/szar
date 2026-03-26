@@ -1,13 +1,17 @@
 package dev.tggamesyt.szar;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.DoorBlock;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
@@ -35,6 +39,14 @@ public class BlueprintBehavior {
         }
 
         if (!held.isEmpty() && held.getItem() instanceof BlockItem blockItem && !blueprint.hasStoredBlock()) {
+            if (blockItem.getBlock() instanceof BlueprintStairsBlock ||
+                    blockItem.getBlock() instanceof BlueprintSlabBlock ||
+                    blockItem.getBlock() instanceof BlueprintDoorBlock ||
+                    blockItem.getBlock() instanceof BlueprintTrapDoorBlock ||
+                    blockItem.getBlock() instanceof BlueprintWallBlock ||
+                    blockItem.getBlock() instanceof BlueprintFenceBlock) {
+                return ActionResult.PASS;
+            }
             String id = Registries.BLOCK.getId(blockItem.getBlock()).toString();
             blueprint.setStoredBlock(id);
             if (!player.isCreative()) held.decrement(1);
@@ -50,12 +62,17 @@ public class BlueprintBehavior {
     public static float calcBreakingDelta(BlockState state, PlayerEntity player,
                                           BlockView world, BlockPos pos, float baseHardness) {
         BlockEntity be = world.getBlockEntity(pos);
+
         if (!(be instanceof BlueprintBlockEntity blueprint) || !blueprint.hasStoredBlock()) {
             return baseHardness;
         }
-        float hardness = blueprint.getStoredHardness();
-        if (hardness < 0) return 0f; // unbreakable
-        return player.getBlockBreakingSpeed(state) / hardness / 30f;
+
+        BlockState storedState = Registries.BLOCK
+                .get(new Identifier(blueprint.getStoredBlockId()))
+                .getDefaultState();
+
+        // Fully delegate to vanilla logic
+        return storedState.calcBlockBreakingDelta(player, world, pos);
     }
 
     /**
@@ -63,11 +80,28 @@ public class BlueprintBehavior {
      */
     public static void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
         BlockEntity be = world.getBlockEntity(pos);
-        if (!(be instanceof BlueprintBlockEntity blueprint) || !blueprint.hasStoredBlock()) return;
-        if (!player.isCreative()) {
-            ItemStack drop = blueprint.getStoredDrop();
-            if (!drop.isEmpty()) {
-                dropStack(world, pos, drop);
+
+        if (!(be instanceof BlueprintBlockEntity blueprint) || !blueprint.hasStoredBlock()) {
+            return;
+        }
+
+        // Drop stored block
+        if (!world.isClient) {
+            Block.dropStack(world, pos, blueprint.getStoredDrop());
+        }
+
+        // Handle doors (break other half properly)
+        if (state.getBlock() instanceof DoorBlock) {
+            DoubleBlockHalf half = state.get(DoorBlock.HALF);
+            BlockPos otherPos = (half == DoubleBlockHalf.LOWER) ? pos.up() : pos.down();
+
+            BlockState otherState = world.getBlockState(otherPos);
+            BlockEntity otherBe = world.getBlockEntity(otherPos);
+
+            if (otherBe instanceof BlueprintBlockEntity otherBlueprint && otherBlueprint.hasStoredBlock()) {
+                if (!world.isClient) {
+                    Block.dropStack(world, otherPos, otherBlueprint.getStoredDrop());
+                }
             }
         }
     }

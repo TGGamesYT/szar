@@ -8,3 +8,4 @@ accessible method net/minecraft/client/render/entity/LivingEntityRenderer addFea
 accessible field net/minecraft/client/render/entity/EntityRenderDispatcher renderers Ljava/util/Map;
 accessible method net/minecraft/world/GameRules$BooleanRule create (ZLjava/util/function/BiConsumer;)Lnet/minecraft/world/GameRules$Type;
 accessible method net/minecraft/client/render/block/BlockModelRenderer renderQuad (Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/client/util/math/MatrixStack$Entry;Lnet/minecraft/client/render/model/BakedQuad;FFFFIIIII)V
+accessible field net/minecraft/client/particle/ParticleManager world Lnet/minecraft/client/world/ClientWorld;

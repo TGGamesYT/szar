@@ -1,1 +1,1 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "szar:block/blueprint" } }
+{ "parent": "minecraft:item/generated", "textures": { "layer0": "szar:block/blueprint_door" } }

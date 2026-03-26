@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BDB",
+    "BDB"
+  ],
+  "key": {
+    "B": {
+      "item": "szar:blueprint"
+    },
+    "D": {
+      "tag": "szar:blue"
+    }
+  },
+  "result": {
+    "item": "szar:blueprint_fence",
+    "count": 1
+  }
+}

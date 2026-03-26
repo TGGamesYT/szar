@@ -1,34 +1,49 @@
 ![Showcase](https://tggamesyt.dev/assets/szar.gif)
 
 # Szar
+*Szar means <u>Shit</u> in Hungarian*
 
-Ez egy privát, kísérleti fabric Minecraft 1.20.1 mod.
+Szar is a private, experimental Fabric Minecraft 1.20.1 mod created as a school programming project and as a joke between classmates and friends.
 
-## FIGYELMEZTETÉS
-Ez a mod 18+ tartalmat tartalmaz, beleértve:
-- sértő, rasszista vagy provokatív elemeket
-- felnőtteknek szóló témákat
-- illegális vagy valós életben elfogadhatatlan dolgok fiktív megjelenítését
+The mod features a wide variety of over-the-top, humorous, and intentionally absurd ideas. Its content is entirely fictional and parody-style, designed for fun and creativity, and **not meant to be taken seriously**.
 
-A mod **nem oktatási célú**, **nem támogatja**, és **nem népszerűsíti** ezeket a témákat.
-Kizárólag saját használatra készült.
+## Features
 
-Ha ezek a tartalmak zavaróak számodra, **NE használd**.
-A mod használata **kizárólag saját felelősségre történik**.
+This mod includes (but is not limited to):
+
+- Crazy functional blocks
+- Custom music discs
+- Weapons such as guns
+- Casinos with multiple gambling machines
+- Police systems
+- Drugs, memes, and historical figures
+- Nukes and backrooms
+- Board games
+- And basically anything that would be “crazy in Minecraft”
+
+If you can imagine it being absurd or over-the-top in Minecraft, chances are this mod has it, if not, please contact me and it will!
+
+# Hungarian / Magyar
+# Szar
+*buzi ai forditas mer lusta vagyok*
 
 
-# Shit
+A Szar egy privát, kísérleti Fabric Minecraft 1.20.1 mod, amelyet iskolai programozási projektként és viccnek készítettek osztálytársak és barátok között.
 
-This is a private, experimental 1.20.1 fabric Minecraft mod.
+A mod számos túlzó, humoros és szándékosan abszurd ötletet tartalmaz. A tartalom teljesen fiktív és paródiaszerű, szórakoztatásra és kreativitásra készült, **nem szabad komolyan venni**.
 
-## WARNING (EN)
+### Funkciók
 
-This mod contains **18+ content**, including the following:
-- offensive, provocative, or otherwise inappropriate themes
-- adult themed content
-- fictional representations of content that would be unacceptable or illegal in real life
+A mod tartalmaz (de nem kizárólagosan):
 
-This mod is **not intended for public use**, does **not endorse** any of the themes depicted, and was created **for personal use only**.
+- Őrült, funkcionális blokkok
+- Egyedi zenélőlemezek
+- Fegyverek, például pisztolyok
+- Kaszinók többféle szerencsejáték géppel
+- Rendőrségi rendszerek
+- Drogok, mémek és történelmi személyek
+- Nukleáris fegyverek és backroomból inspirált helyszínek
+- Társasjátékok
+- És gyakorlatilag bármi, ami “őrült” lenne a Minecraftban
 
-If you find such content disturbing or offensive, **do not use this mod**.
-Use at your **own responsibility**.
+Ha el tudod képzelni, hogy valami túlzó vagy őrült lehet a Minecraftban, nagy valószínűséggel ez a mod tartalmazza, ha meg nem, akkor írj rám, és fogja!
