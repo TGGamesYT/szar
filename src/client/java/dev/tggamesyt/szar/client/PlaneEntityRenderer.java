@@ -38,31 +38,35 @@ public class PlaneEntityRenderer extends EntityRenderer<PlaneEntity> {
     ) {
         matrices.push();
 
-        // Smooth interpolation of rotation
-        float interpolatedYaw = entity.prevYaw + (entity.getYaw() - entity.prevYaw) * tickDelta;
+        float interpolatedYaw   = entity.prevYaw   + (entity.getYaw()   - entity.prevYaw)   * tickDelta;
         float interpolatedPitch = entity.prevPitch + (entity.getPitch() - entity.prevPitch) * tickDelta;
 
-        // Scale
-        matrices.scale(4.0F, 4.0F, 4.0F);
+        float pitchRad = (float) Math.toRadians(interpolatedPitch);
+        float yawRad   = (float) Math.toRadians(interpolatedYaw);
 
-        // Move model to correct pivot point
+        final float PIVOT_OFFSET = 4F;
+        final float ARC_RADIUS   = 8F;
+
+        float dy =  PIVOT_OFFSET * (1.0F - (float) Math.cos(pitchRad))
+                - (ARC_RADIUS  * (1.0F - (float) Math.cos(pitchRad)) - ARC_RADIUS * (1.0F - (float) Math.cos(pitchRad)));
+        float dz = ARC_RADIUS * (float) Math.sin(pitchRad);
+
+        float worldX = -dz * (float) Math.sin(yawRad);
+        float worldZ =  dz * (float) Math.cos(yawRad);
+        float worldY =  PIVOT_OFFSET * (1.0F - (float) Math.cos(pitchRad));
+
+        matrices.translate(worldX, worldY, worldZ);
+
+        matrices.scale(4.0F, 4.0F, 4.0F);
         matrices.translate(0.0, 1.5, 0.0);
 
-        // Rotate to match hitbox exactly
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-interpolatedYaw));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(interpolatedPitch));
-
-        // Rotate 180° to fix backwards-facing
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
-
-        // Flip model upright (Minecraft model fix)
         matrices.scale(-1.0F, -1.0F, 1.0F);
 
-        // Set model angles
         model.setAngles(
-                entity,
-                0,
-                0,
+                entity, 0, 0,
                 entity.age + tickDelta,
                 interpolatedYaw,
                 interpolatedPitch
@@ -72,10 +76,8 @@ public class PlaneEntityRenderer extends EntityRenderer<PlaneEntity> {
                 vertices.getBuffer(RenderLayer.getEntityCutout(getTexture(entity)));
 
         model.render(
-                matrices,
-                consumer,
-                light,
-                OverlayTexture.DEFAULT_UV,
+                matrices, consumer,
+                light, OverlayTexture.DEFAULT_UV,
                 1.0F, 1.0F, 1.0F, 1.0F
         );
 
